@@ -1,0 +1,353 @@
+import { computed, ref, watch } from 'vue';
+import { defineStore } from 'pinia';
+import {
+  API_BASE_URL,
+  ApiError,
+  apiRequest,
+  refreshSessionTokens,
+  clearAuthStorageMode,
+  getAuthStorage,
+  getAuthStorageMode,
+  setAuthStorageMode,
+  type AuthStorageMode,
+  type TokenResponse,
+  type UserInfo,
+} from '../services/api';
+import { useThemeStore } from './theme';
+
+const ACCESS_TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
+const USER_INFO_KEY = 'user_info';
+const OAUTH_REMEMBER_KEY = 'oauth_login_remember';
+const OAUTH_PROVIDER_KEY = 'oauth_login_provider';
+const OAUTH_NEXT_KEY = 'oauth_login_next';
+const AUTH_ROUTE_PREFIXES = ['/login', '/auth/callback'];
+
+type SessionPayload = TokenResponse | {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  token_type?: string;
+  user_info?: UserInfo;
+};
+
+interface PasswordLoginResponse {
+  success: boolean;
+  user_info?: UserInfo;
+  tokens: TokenResponse;
+}
+
+const readQueryValue = (value: unknown): string => {
+  if (Array.isArray(value)) {
+    return String(value[0] ?? '');
+  }
+
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  return String(value);
+};
+
+const readJson = <T>(key: string, storage: Storage = getAuthStorage()): T | null => {
+  const value = storage.getItem(key);
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    storage.removeItem(key);
+    return null;
+  }
+};
+
+const clearStoredSession = () => {
+  for (const storage of [localStorage, sessionStorage]) {
+    storage.removeItem(ACCESS_TOKEN_KEY);
+    storage.removeItem(REFRESH_TOKEN_KEY);
+    storage.removeItem(USER_INFO_KEY);
+  }
+
+  sessionStorage.removeItem(OAUTH_REMEMBER_KEY);
+  sessionStorage.removeItem(OAUTH_PROVIDER_KEY);
+  sessionStorage.removeItem(OAUTH_NEXT_KEY);
+  clearAuthStorageMode();
+};
+
+const normalizeOAuthErrorMessage = (error: string, errorDescription: string) => {
+  const combined = `${error} ${errorDescription}`.trim().toLowerCase();
+
+  if (combined.includes('timeout') || combined.includes('超时')) {
+    return '登录请求超时，请稍后重试。';
+  }
+
+  if (combined.includes('会话创建失败')) {
+    return '第三方登录页面未能创建授权会话，请稍后重试或联系统一认证服务维护方。';
+  }
+
+  if (combined.includes('access_denied') || combined.includes('denied') || combined.includes('拒绝')) {
+    return '你已取消授权，登录未完成。';
+  }
+
+  if (combined.includes('missing') || combined.includes('token') || combined.includes('缺少')) {
+    return '登录回调缺少必要凭证，请重新发起登录。';
+  }
+
+  return errorDescription || error || '登录失败，请稍后重试。';
+};
+
+const normalizeNextPath = (next: string) => {
+  const safeNext = next.startsWith('/') ? next : '/';
+  return AUTH_ROUTE_PREFIXES.some((prefix) => safeNext.startsWith(prefix)) ? '/' : safeNext;
+};
+
+const buildProviderLoginUrl = (provider: string, next: string) => {
+  // 所有提供商统一走后端 OAuth 流程：后端负责拼授权地址、保存 state，
+  // 并在回调后用本地 JWT 换回前端。前端直接拼 provider 授权地址会得到
+  // 授权码（code），而 /auth/callback 只认 access_token/refresh_token，
+  // 这会导致「登录回调缺少必要令牌」。因此不再自行构造 provider 直连地址。
+  const loginUrl = new URL(`${API_BASE_URL}/auth/login/${encodeURIComponent(provider)}`);
+  loginUrl.searchParams.set('next', next);
+  return loginUrl;
+};
+
+export const useAuthStore = defineStore('auth', () => {
+  const storageMode = ref<AuthStorageMode>(getAuthStorageMode());
+  const accessToken = ref(getAuthStorage(storageMode.value).getItem(ACCESS_TOKEN_KEY) || '');
+  const refreshToken = ref('');
+  localStorage.removeItem(REFRESH_TOKEN_KEY); sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  const userInfo = ref<UserInfo | null>(readJson<UserInfo>(USER_INFO_KEY, getAuthStorage(storageMode.value)));
+  const supportedProviders = ref<string[]>([]);
+  const isVerifying = ref(false);
+  const isLoadingProviders = ref(false);
+
+  watch(userInfo, (info) => {
+    if (info?.theme_preference) {
+      const themeStore = useThemeStore();
+      themeStore.applyUserTheme(info.theme_preference);
+    }
+  }, { immediate: true });
+
+  const isAuthenticated = computed(() => Boolean(accessToken.value));
+  const displayName = computed(() => (
+    userInfo.value?.name || userInfo.value?.username || userInfo.value?.email || '已登录用户'
+  ));
+  const userRole = computed(() => userInfo.value?.role || 'member');
+
+  const shouldClearAuthState = (error: unknown) => (
+    error instanceof ApiError && [400, 401, 403].includes(error.status)
+  );
+
+  const setSession = (
+    tokens: SessionPayload,
+    options: { remember?: boolean; storageMode?: AuthStorageMode } = {},
+  ) => {
+    const resolvedMode = options.storageMode
+      ?? (options.remember === undefined ? getAuthStorageMode() : options.remember ? 'local' : 'session');
+
+    clearStoredSession();
+    setAuthStorageMode(resolvedMode);
+    storageMode.value = resolvedMode;
+
+    const storage = getAuthStorage(resolvedMode);
+    accessToken.value = tokens.access_token;
+    refreshToken.value = '';
+    userInfo.value = tokens.user_info ?? null;
+
+    storage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
+
+
+    if (tokens.user_info) {
+      storage.setItem(USER_INFO_KEY, JSON.stringify(tokens.user_info));
+    } else {
+      storage.removeItem(USER_INFO_KEY);
+    }
+  };
+
+  const clearSession = () => {
+    accessToken.value = '';
+    refreshToken.value = '';
+    userInfo.value = null;
+    storageMode.value = 'local';
+    clearStoredSession();
+  };
+
+  const startOAuthLogin = (provider: string, next = '/', remember = true) => {
+    sessionStorage.setItem(OAUTH_REMEMBER_KEY, remember ? '1' : '0');
+    const safeNext = normalizeNextPath(next);
+    sessionStorage.setItem(OAUTH_PROVIDER_KEY, provider);
+    sessionStorage.setItem(OAUTH_NEXT_KEY, safeNext);
+    const loginUrl = buildProviderLoginUrl(provider, safeNext);
+    window.location.href = loginUrl.toString();
+  };
+
+  const startGithubLogin = (next = '/', remember = true) => {
+    startOAuthLogin('github', next, remember);
+  };
+
+  const completeOAuthCallback = async (query: Record<string, unknown>) => {
+    const error = readQueryValue(query.error);
+    if (error) {
+      const errorDescription = readQueryValue(query.error_description);
+      sessionStorage.removeItem(OAUTH_REMEMBER_KEY);
+      throw new Error(normalizeOAuthErrorMessage(error, errorDescription));
+    }
+
+    const code = readQueryValue(query.code);
+    if (!code) throw new Error('登录回调缺少兑换码，请重新发起登录。');
+    const tokens = await apiRequest<TokenResponse>('/auth/exchange', {
+      method: 'POST', skipAuth: true, credentials: 'include',
+      body: JSON.stringify({ code, remember: sessionStorage.getItem(OAUTH_REMEMBER_KEY) !== '0' }),
+    });
+
+    const rememberHint = readQueryValue(sessionStorage.getItem(OAUTH_REMEMBER_KEY));
+    sessionStorage.removeItem(OAUTH_REMEMBER_KEY);
+
+    const remember = rememberHint === '1' ? true : rememberHint === '0' ? false : undefined;
+    setSession(tokens, remember === undefined ? {} : { remember });
+  };
+
+  const loginWithPassword = async (identifier: string, password: string, remember = true) => {
+    const result = await apiRequest<PasswordLoginResponse>('/auth/login/password', {
+      method: 'POST',
+      skipAuth: true,
+      body: JSON.stringify({ identifier, password, remember }),
+    });
+
+    const tokens = {
+      ...result.tokens,
+      user_info: result.tokens.user_info ?? result.user_info,
+    };
+    setSession(tokens, { remember });
+    return tokens;
+  };
+
+  const loginWithProviderPassword = async (
+    provider: string,
+    identifier: string,
+    password: string,
+    remember = true,
+  ) => {
+    const result = await apiRequest<PasswordLoginResponse>(
+      `/auth/login/${encodeURIComponent(provider)}/password`,
+      {
+        method: 'POST',
+        skipAuth: true,
+        body: JSON.stringify({ identifier, password, remember }),
+      },
+    );
+
+    const tokens = {
+      ...result.tokens,
+      user_info: result.tokens.user_info ?? result.user_info,
+    };
+    setSession(tokens, { remember });
+    return tokens;
+  };
+
+  const loadSupportedProviders = async () => {
+    isLoadingProviders.value = true;
+    try {
+      const result = await apiRequest<{ providers: string[] }>('/auth/providers', {
+        skipAuth: true,
+      });
+      supportedProviders.value = Array.isArray(result.providers) ? result.providers : [];
+      return supportedProviders.value;
+    } catch {
+      supportedProviders.value = [];
+      return [];
+    } finally {
+      isLoadingProviders.value = false;
+    }
+  };
+
+  const verify = async (options: { clearOnFailure?: boolean } = {}) => {
+    if (!accessToken.value) {
+      return false;
+    }
+
+    isVerifying.value = true;
+    try {
+      const result = await apiRequest<{ valid: boolean; user_info?: UserInfo }>('/auth/verify');
+      if (result.user_info) {
+        userInfo.value = result.user_info;
+        getAuthStorage(storageMode.value).setItem(USER_INFO_KEY, JSON.stringify(result.user_info));
+      }
+      return result.valid;
+    } catch (error) {
+      if (options.clearOnFailure !== false && shouldClearAuthState(error)) {
+        clearSession();
+      }
+      return false;
+    } finally {
+      isVerifying.value = false;
+    }
+  };
+
+  const refresh = async () => {
+    try {
+      const tokens = await refreshSessionTokens();
+      setSession(tokens, { storageMode: storageMode.value });
+      return true;
+    } catch (error) {
+      if (shouldClearAuthState(error)) {
+        clearSession();
+      }
+      return false;
+    }
+  };
+
+  let restorePromise: Promise<boolean> | null = null;
+  const restoreSession = (): Promise<boolean> => {
+    if (window.location.pathname === '/auth/callback') return Promise.resolve(false);
+    if (restorePromise) return restorePromise;
+    restorePromise = (async () => {
+      if (accessToken.value && await verify({ clearOnFailure: false })) return true;
+      return refresh();
+    })().finally(() => { restorePromise = null; });
+    return restorePromise;
+  };
+
+  const logout = async () => {
+    // 服务端撤销成功后才清除本地状态，避免离线“登出”后 Cookie 自动恢复登录。
+    await apiRequest('/auth/logout', { method: 'POST', skipAuth: true });
+    clearSession();
+    localStorage.setItem('auth_logout_at', String(Date.now()));
+  };
+  window.addEventListener('storage', event => {
+    if (event.key === 'auth_logout_at') clearSession();
+  });
+
+  const updateUserInfo = (info: UserInfo) => {
+    userInfo.value = info;
+    const storage = getAuthStorage(storageMode.value);
+    storage.setItem(USER_INFO_KEY, JSON.stringify(info));
+  };
+
+  return {
+    accessToken,
+    refreshToken,
+    userInfo,
+    userRole,
+    supportedProviders,
+    isAuthenticated,
+    isVerifying,
+    isLoadingProviders,
+    displayName,
+    setSession,
+    clearSession,
+    startOAuthLogin,
+    startGithubLogin,
+    completeOAuthCallback,
+    loginWithPassword,
+    loginWithProviderPassword,
+    loadSupportedProviders,
+    verify,
+    refresh,
+    restoreSession,
+    logout,
+    updateUserInfo,
+  };
+});
