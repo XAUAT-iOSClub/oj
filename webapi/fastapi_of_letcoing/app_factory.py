@@ -109,6 +109,8 @@ def _provider_config_from_env(provider_name: str):
     - <PROVIDER>_REDIRECT_URI
     - <PROVIDER>_CALLBACK_URL
     - <PROVIDER>_SCOPE
+    - <PROVIDER>_SKIP_ID_TOKEN_VALIDATION
+    - <PROVIDER>_VALIDATE_ID_TOKEN
     """
     env_prefix = _normalize_provider_env_prefix(provider_name)
     issuer = os.environ.get(f'{env_prefix}_ISSUER', '').strip()
@@ -117,8 +119,23 @@ def _provider_config_from_env(provider_name: str):
     redirect_uri = os.environ.get(f'{env_prefix}_REDIRECT_URI', '').strip()
     callback_url = os.environ.get(f'{env_prefix}_CALLBACK_URL', '').strip()
     scope = os.environ.get(f'{env_prefix}_SCOPE', '').strip()
+    skip_id_token_validation = os.environ.get(
+        f'{env_prefix}_SKIP_ID_TOKEN_VALIDATION', ''
+    ).strip().casefold()
+    validate_id_token = os.environ.get(
+        f'{env_prefix}_VALIDATE_ID_TOKEN', ''
+    ).strip().casefold()
 
-    if not any((issuer, client_id, client_secret, redirect_uri, callback_url, scope)):
+    if not any((
+        issuer,
+        client_id,
+        client_secret,
+        redirect_uri,
+        callback_url,
+        scope,
+        skip_id_token_validation,
+        validate_id_token,
+    )):
         return None
 
     provider_config = {'name': provider_name}
@@ -134,6 +151,10 @@ def _provider_config_from_env(provider_name: str):
         provider_config['callback_url'] = callback_url
     if scope:
         provider_config['client_kwargs'] = {'scope': scope}
+    if skip_id_token_validation in ('1', 'true', 'yes', 'on'):
+        provider_config['skip_id_token_validation'] = True
+    if validate_id_token in ('0', 'false', 'no', 'off'):
+        provider_config['validate_id_token'] = False
 
     return provider_config
 
