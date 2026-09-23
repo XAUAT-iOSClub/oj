@@ -84,8 +84,8 @@ onMounted(loadData);
       </button>
 
       <div v-if="isLoading" class="space-y-4">
-        <div class="ui-skeleton h-24 w-full rounded-xl"></div>
-        <div v-for="i in 3" :key="i" class="ui-skeleton h-16 w-full rounded-xl"></div>
+        <div class="ui-skeleton h-24 w-full rounded-md"></div>
+        <div v-for="i in 3" :key="i" class="ui-skeleton h-16 w-full rounded-md"></div>
       </div>
 
       <div v-else-if="error" class="ui-empty">
@@ -100,7 +100,7 @@ onMounted(loadData);
           <div class="flex items-start justify-between">
             <div>
               <div class="flex items-center gap-3">
-                <h1 class="text-2xl font-black text-[#1E293B] dark:text-[#E5E7EB]">{{ contest.title }}</h1>
+                <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ contest.title }}</h1>
                 <span class="ui-badge" :class="contest.status === 'ongoing' ? 'ui-badge-green' : contest.status === 'upcoming' ? 'ui-badge-blue' : 'ui-badge-slate'">
                   {{ contest.status === 'ongoing' ? '进行中' : contest.status === 'upcoming' ? '即将开始' : '已结束' }}
                 </span>
@@ -165,7 +165,7 @@ onMounted(loadData);
                :disabled="!isContestOpen"
                @click="openProblem(p.id)"
              >
-              <span class="text-center text-sm font-black text-[#2563EB] dark:text-[#60A5FA]">{{ p.problem_index }}</span>
+              <span class="text-center text-sm font-bold text-[#2563EB] dark:text-[#60A5FA]">{{ p.problem_index }}</span>
               <span class="flex min-w-0 items-center gap-2">
                 <span class="min-w-0 truncate font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ p.title }}</span>
                 <span

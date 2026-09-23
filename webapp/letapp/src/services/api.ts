@@ -238,6 +238,15 @@ export const uploadAvatar = (file: File) => {
 export const getUserProfile = () =>
   apiRequest<UserInfo>('/users/me');
 
+export interface UserStats {
+  solved: number;
+  submissions: number;
+  favorites: number;
+}
+
+export const getMyStats = () =>
+  apiRequest<UserStats>('/users/me/stats');
+
 export interface AnnouncementData {
   id: number;
   title: string;

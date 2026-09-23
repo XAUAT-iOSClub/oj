@@ -151,7 +151,7 @@ onMounted(loadUsers);
   <div class="space-y-6">
     <div v-once class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-black tracking-tight">用户管理</h1>
+        <h1 class="text-3xl font-bold tracking-tight">用户管理</h1>
         <p class="mt-2 text-slate-600 dark:text-slate-300">管理平台用户，包括筛选、状态调整和删除。</p>
       </div>
     </div>
@@ -159,7 +159,7 @@ onMounted(loadUsers);
     <section class="admin-card">
       <div class="grid gap-4 md:grid-cols-4">
         <label class="md:col-span-2">
-          <span class="mb-2 block text-sm font-bold text-slate-600 dark:text-slate-300">搜索用户</span>
+          <span class="mb-2 block text-sm font-medium text-slate-600 dark:text-slate-300">搜索用户</span>
           <div class="relative">
             <input v-model="searchKeyword" type="text" placeholder="输入用户名或邮箱搜索..." class="form-control pl-11" />
             <Icon icon="material-symbols:search" class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -167,7 +167,7 @@ onMounted(loadUsers);
         </label>
 
         <label>
-          <span class="mb-2 block text-sm font-bold text-slate-600 dark:text-slate-300">角色</span>
+          <span class="mb-2 block text-sm font-medium text-slate-600 dark:text-slate-300">角色</span>
           <select v-model="filterRole" class="form-control">
             <option value="all">全部角色</option>
             <option value="manager">管理员</option>
@@ -177,7 +177,7 @@ onMounted(loadUsers);
         </label>
 
         <label>
-          <span class="mb-2 block text-sm font-bold text-slate-600 dark:text-slate-300">状态</span>
+          <span class="mb-2 block text-sm font-medium text-slate-600 dark:text-slate-300">状态</span>
           <select v-model="filterStatus" class="form-control">
             <option value="all">全部状态</option>
             <option value="active">活跃</option>
@@ -188,9 +188,9 @@ onMounted(loadUsers);
 
       <div class="mt-5 flex items-center justify-between border-t border-slate-200 pt-5 dark:border-slate-800">
         <div class="text-sm text-slate-600 dark:text-slate-300">
-          共 <span class="font-black">{{ totalUsers }}</span> 个用户
+          共 <span class="font-bold">{{ totalUsers }}</span> 个用户
         </div>
-        <button class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700" @click="handleResetFilter">
+        <button class="inline-flex items-center gap-2 rounded-md bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700" @click="handleResetFilter">
           <Icon icon="material-symbols:refresh" class="h-4 w-4" />
           重置筛选
         </button>
@@ -202,7 +202,7 @@ onMounted(loadUsers);
       <p class="font-bold text-slate-700 dark:text-slate-200">用户列表加载失败</p>
       <p class="text-sm text-slate-500 dark:text-slate-400">{{ loadError }}</p>
       <button
-        class="mt-1 rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-black text-slate-950 transition hover:bg-cyan-300"
+        class="mt-1 rounded-full bg-[#2563EB] px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-[#1D4ED8]"
         @click="loadUsers"
       >
         重新加载
@@ -210,7 +210,7 @@ onMounted(loadUsers);
     </div>
 
     <div v-else-if="loading" class="admin-card animate-pulse space-y-3">
-      <div v-for="i in 5" :key="i" class="h-12 rounded-2xl bg-slate-100 dark:bg-slate-800"></div>
+      <div v-for="i in 5" :key="i" class="h-12 rounded-md bg-slate-100 dark:bg-slate-800"></div>
     </div>
 
      <section v-else class="overflow-hidden rounded-md border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
@@ -231,24 +231,24 @@ onMounted(loadUsers);
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
             <tr v-for="user in users" :key="user.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/70">
-              <td class="table-cell font-black">{{ user.id }}</td>
+              <td class="table-cell font-bold">{{ user.id }}</td>
               <td class="table-cell">
                 <div class="flex items-center gap-3">
-                 <div class="grid h-9 w-9 place-items-center rounded-md bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300">
+                 <div class="grid h-9 w-9 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
                     <Icon icon="material-symbols:person" class="h-5 w-5" />
                   </div>
-                  <span class="font-black">{{ user.username || `用户#${user.id}` }}</span>
+                  <span class="font-bold">{{ user.username || `用户#${user.id}` }}</span>
                 </div>
               </td>
               <td class="table-cell text-slate-600 dark:text-slate-300">{{ user.email || '—' }}</td>
               <td class="table-cell text-slate-600 dark:text-slate-300">{{ user.provider || 'password' }}</td>
               <td class="table-cell">
-                <span class="rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-black text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300">
+                <span class="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-xs font-bold text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
                   {{ getRoleDisplayName(user.role) }}
                 </span>
               </td>
               <td class="table-cell">
-                <span :class="['rounded-full px-2.5 py-1 text-xs font-black', statusInfoMap[getStatusKey(user)].color]">
+                <span :class="['rounded-full px-2.5 py-1 text-xs font-bold', statusInfoMap[getStatusKey(user)].color]">
                   {{ statusInfoMap[getStatusKey(user)].name }}
                 </span>
               </td>
@@ -257,7 +257,7 @@ onMounted(loadUsers);
               <td v-if="canMutate" class="table-cell">
                 <div class="flex items-center justify-end gap-2" :class="{ 'opacity-50': mutatingId === user.id }">
                   <select
-                    class="rounded-xl border border-slate-200 bg-white px-2 py-1 text-xs dark:border-slate-800 dark:bg-slate-950"
+                    class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs dark:border-slate-800 dark:bg-slate-950"
                     :value="user.is_active ? 'active' : 'inactive'"
                     :disabled="mutatingId === user.id"
                     @change="handleStatusChange(user, ($event.target as HTMLSelectElement).value === 'active')"
@@ -277,14 +277,14 @@ onMounted(loadUsers);
 
       <div v-if="users.length === 0" class="px-6 py-12 text-center">
         <Icon icon="material-symbols:search-off" class="mx-auto mb-4 h-16 w-16 text-slate-400" />
-        <h3 class="text-lg font-black">未找到用户</h3>
+        <h3 class="text-lg font-bold">未找到用户</h3>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">请尝试调整筛选条件或搜索关键词。</p>
       </div>
     </section>
 
     <div v-if="totalPages > 1" class="admin-card flex items-center justify-between">
       <div class="text-sm text-slate-600 dark:text-slate-300">
-        第 <span class="font-black">{{ currentPage }}</span> 页，共 <span class="font-black">{{ totalPages }}</span> 页
+        第 <span class="font-bold">{{ currentPage }}</span> 页，共 <span class="font-bold">{{ totalPages }}</span> 页
       </div>
       <div class="flex items-center gap-2">
         <button class="page-button" :disabled="currentPage === 1" @click="handlePageChange(currentPage - 1)">上一页</button>
@@ -305,11 +305,11 @@ onMounted(loadUsers);
 }
 
 .form-control {
-   @apply w-full rounded-md border border-slate-200 bg-white px-4 py-2.5 text-slate-950 outline-none transition-colors focus:border-cyan-300 focus:ring-2 focus:ring-cyan-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-cyan-950;
+   @apply w-full rounded-md border border-slate-200 bg-white px-4 py-2.5 text-slate-950 outline-none transition-colors focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/25 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-[#2563EB]/25;
 }
 
 .table-head {
-  @apply px-6 py-3 text-left text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400;
+  @apply px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400;
 }
 
 .table-cell {
@@ -317,14 +317,14 @@ onMounted(loadUsers);
 }
 
 .action-button {
-  @apply rounded-xl p-2 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800;
+  @apply rounded-md p-2 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800;
 }
 
 .page-button {
-  @apply rounded-xl bg-slate-100 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
+  @apply rounded-md bg-slate-100 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
 }
 
 .page-button-active {
-  @apply bg-cyan-400 text-slate-950 hover:bg-cyan-300 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300;
+  @apply bg-[#2563EB] text-slate-950 hover:bg-[#1D4ED8] dark:bg-[#2563EB] dark:text-slate-950 dark:hover:bg-[#1D4ED8];
 }
 </style>

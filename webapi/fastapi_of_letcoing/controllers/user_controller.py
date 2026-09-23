@@ -160,6 +160,35 @@ class UserProfileController(Resource):
         return {'success': True, 'user_info': _user_to_dict(user)}, 200
 
 
+@api.route('/me/stats')
+class UserStatsController(Resource):
+    """当前用户的提交/收藏统计"""
+
+    @api.doc('get_my_stats')
+    @api.response(200, 'Success')
+    @api.response(401, 'Unauthorized')
+    def get(self):
+        """返回当前用户的解题数、提交数、收藏数（避免前端拉取全量提交）"""
+        user = _get_current_user()
+        if not user:
+            return {'error': '未登录或令牌无效'}, 401
+
+        from peewee import fn
+        from models.db_models import Submission, Favorite
+
+        solved = (Submission
+                  .select(fn.COUNT(fn.DISTINCT(Submission.problem)))
+                  .where((Submission.user == user.id) & (Submission.status == Submission.AC))
+                  .scalar()) or 0
+        submissions = Submission.select().where(Submission.user == user.id).count()
+        favorites = Favorite.select().where(Favorite.user == user.id).count()
+        return {
+            'solved': int(solved),
+            'submissions': int(submissions),
+            'favorites': int(favorites),
+        }, 200
+
+
 # 头像文件保存目录（相对于项目根目录）
 _AVATAR_DIR = os.path.join(os.path.dirname(__file__), '..', 'uploads', 'avatars')
 

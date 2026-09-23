@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, onMounted, onUnmounted, ref } from "vue";
+import { computed, markRaw, onMounted, ref } from "vue";
 import { Icon } from "@iconify/vue";
 import { useRouter } from "vue-router";
 import { apiRequest, listMySubmissions, listFavorites } from "../services/api";
@@ -8,158 +8,48 @@ import { formatDateTime as formatCSTDateTime } from "../utils/time";
 
 const router = useRouter();
 const terminalRef = ref<HTMLElement | null>(null);
-const particleCanvasRef = ref<HTMLCanvasElement | null>(null);
-const terminalStyle = ref<Record<string, string>>({});
 const currentLanguage = ref("cpp");
-let perspectiveFrame = 0;
-let particleFrame = 0;
-let particleResizeObserver: ResizeObserver | null = null;
-let lastParticleAt = 0;
-
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  size: number;
-  color: string;
-}
-
-const particles: Particle[] = [];
-const particleColors = ["#67e8f9", "#22d3ee", "#f0c75e"];
-
-const isMotionLimited = () =>
-  window.innerWidth < 1024 ||
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-  window.matchMedia("(hover: none), (pointer: coarse)").matches ||
-  (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4);
-
-const resizeParticleCanvas = () => {
-  const canvas = particleCanvasRef.value;
-  const element = terminalRef.value;
-  if (!canvas || !element) return;
-  const bounds = element.getBoundingClientRect();
-  const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
-  canvas.width = Math.max(1, Math.round(bounds.width * ratio));
-  canvas.height = Math.max(1, Math.round(bounds.height * ratio));
-  canvas.style.width = `${bounds.width}px`;
-  canvas.style.height = `${bounds.height}px`;
-};
-
-const renderParticles = () => {
-  const canvas = particleCanvasRef.value;
-  const context = canvas?.getContext("2d");
-  if (!canvas || !context) {
-    particleFrame = 0;
-    return;
-  }
-
-  const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
-  context.setTransform(ratio, 0, 0, ratio, 0, 0);
-  context.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
-
-  for (let index = particles.length - 1; index >= 0; index -= 1) {
-    const particle = particles[index];
-    if (!particle) continue;
-    particle.x += particle.vx;
-    particle.y += particle.vy;
-    particle.vy += 0.012;
-    particle.life -= 0.045;
-
-    if (particle.life <= 0) {
-      particles.splice(index, 1);
-      continue;
-    }
-
-    context.globalAlpha = Math.max(0, particle.life * 0.75);
-    context.fillStyle = particle.color;
-    context.fillRect(particle.x, particle.y, particle.size, particle.size);
-  }
-  context.globalAlpha = 1;
-
-  if (particles.length) {
-    particleFrame = requestAnimationFrame(renderParticles);
-  } else {
-    particleFrame = 0;
-    context.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
-  }
-};
-
-const emitParticles = (event: PointerEvent) => {
-  if (isMotionLimited() || event.timeStamp - lastParticleAt < 22) return;
-  const element = terminalRef.value;
-  if (!element) return;
-  const bounds = element.getBoundingClientRect();
-  const x = event.clientX - bounds.left;
-  const y = event.clientY - bounds.top;
-  lastParticleAt = event.timeStamp;
-
-  for (let index = 0; index < 2; index += 1) {
-    particles.push({
-      x: x + (Math.random() - 0.5) * 8,
-      y: y + (Math.random() - 0.5) * 8,
-      vx: (Math.random() - 0.5) * 0.9,
-      vy: -0.25 - Math.random() * 0.55,
-      life: 0.7 + Math.random() * 0.3,
-      size: 1.2 + Math.random() * 1.8,
-      color:
-        particleColors[Math.floor(Math.random() * particleColors.length)] ??
-        "#67e8f9",
-    });
-  }
-  if (particles.length > 48) particles.splice(0, particles.length - 48);
-  if (!particleFrame) particleFrame = requestAnimationFrame(renderParticles);
-};
 
 const languages = markRaw([
   {
     name: "JavaScript",
     value: "javascript",
     icon: "vscode-icons:file-type-js-official",
-    color: "#f7df1e",
   },
   {
     name: "Python",
     value: "python",
     icon: "vscode-icons:file-type-python",
-    color: "#3776ab",
   },
   {
     name: "Java",
     value: "java",
     icon: "vscode-icons:file-type-java",
-    color: "#ed8b00",
   },
   {
     name: "C++",
     value: "cpp",
     icon: "vscode-icons:file-type-cpp",
-    color: "#00599c",
   },
   {
     name: "Go",
     value: "go",
     icon: "vscode-icons:file-type-go",
-    color: "#00add8",
   },
   {
     name: "Rust",
     value: "rust",
     icon: "vscode-icons:file-type-rust",
-    color: "#dea584",
   },
   {
     name: "Swift",
     value: "swift",
     icon: "vscode-icons:file-type-swift",
-    color: "#fa7343",
   },
   {
     name: "Kotlin",
     value: "kotlin",
     icon: "vscode-icons:file-type-kotlin",
-    color: "#7f52ff",
   },
 ]);
 
@@ -194,28 +84,6 @@ const currentFileExt = computed(
 
 const selectLanguage = (lang: { value: string }) => {
   currentLanguage.value = lang.value;
-};
-
-const handlePointerMove = (event: PointerEvent) => {
-  emitParticles(event);
-  if (isMotionLimited()) return;
-  const element = terminalRef.value;
-  if (!element) return;
-  if (perspectiveFrame) cancelAnimationFrame(perspectiveFrame);
-  perspectiveFrame = requestAnimationFrame(() => {
-    const bounds = element.getBoundingClientRect();
-    const x = (event.clientX - bounds.left) / bounds.width;
-    const y = (event.clientY - bounds.top) / bounds.height;
-    terminalStyle.value = {
-      "--rotate-x": `${(0.5 - y) * 1.4}deg`,
-      "--rotate-y": `${(x - 0.5) * 1.8}deg`,
-    };
-    perspectiveFrame = 0;
-  });
-};
-
-const resetPerspective = () => {
-  terminalStyle.value = {};
 };
 
 const handleTerminalClick = (event: MouseEvent) => {
@@ -342,23 +210,6 @@ const loadDashboard = async () => {
 };
 
 onMounted(loadDashboard);
-
-onMounted(() => {
-  resizeParticleCanvas();
-  particleResizeObserver = new ResizeObserver(resizeParticleCanvas);
-  if (terminalRef.value) particleResizeObserver.observe(terminalRef.value);
-  terminalRef.value?.addEventListener("pointermove", handlePointerMove);
-  terminalRef.value?.addEventListener("pointerleave", resetPerspective);
-});
-
-onUnmounted(() => {
-  if (perspectiveFrame) cancelAnimationFrame(perspectiveFrame);
-  if (particleFrame) cancelAnimationFrame(particleFrame);
-  particleResizeObserver?.disconnect();
-  particles.length = 0;
-  terminalRef.value?.removeEventListener("pointermove", handlePointerMove);
-  terminalRef.value?.removeEventListener("pointerleave", resetPerspective);
-});
 </script>
 
 <template>
@@ -372,20 +223,16 @@ onUnmounted(() => {
           <span class="code-mark mark-comment" aria-hidden="true">//</span>
           <span class="hero-label intro intro-label">
             <span class="status-dot"></span>
-            Let Coding Online Judge
+            Let Coding · 在线评测
           </span>
 
           <h1 class="hero-title">
             <span class="title-line intro intro-title-one">写代码</span>
-            <span
-              class="title-line title-accent intro intro-title-two"
-              data-text="更加顺手"
-              >更加顺手</span
-            >
+            <span class="title-line title-accent intro intro-title-two">更加顺手</span>
           </h1>
 
           <p class="hero-desc intro intro-desc">
-            少一点切换，把注意力留给代码。
+            在线编写、运行和提交代码，支持多语言判题。
           </p>
 
           <div class="hero-actions intro intro-actions">
@@ -409,18 +256,12 @@ onUnmounted(() => {
         <div
           ref="terminalRef"
           class="terminal-stage intro intro-terminal"
-          :style="terminalStyle"
           role="link"
           tabindex="0"
           aria-label="进入在线编辑器"
           @click="handleTerminalClick"
           @keydown="handleTerminalKeydown"
         >
-          <canvas
-            ref="particleCanvasRef"
-            class="particle-canvas"
-            aria-hidden="true"
-          ></canvas>
           <div class="terminal-frame">
             <div class="terminal-toolbar">
               <div class="window-controls" aria-hidden="true">
@@ -444,7 +285,6 @@ onUnmounted(() => {
                     <span v-for="line in 7" :key="line">{{ line }}</span>
                   </div>
                   <pre><code v-html="currentCode"></code></pre>
-                  <div class="typing-mask" aria-hidden="true"></div>
                 </div>
               </section>
 
@@ -477,15 +317,11 @@ onUnmounted(() => {
               </div>
               <div class="language-grid">
                 <button
-                  v-for="(language, index) in languages"
+                  v-for="language in languages"
                   :key="language.value"
                   type="button"
                   class="language-button"
                   :class="{ active: currentLanguage === language.value }"
-                  :style="{
-                    '--language-color': language.color,
-                    '--language-delay': `${0.78 + index * 0.04}s`,
-                  }"
                   :aria-label="language.name"
                   @click.stop="selectLanguage(language)"
                 >
@@ -502,10 +338,10 @@ onUnmounted(() => {
       <div class="app-container">
         <div class="ui-card mb-4 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex items-center gap-3">
-            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]"><Icon icon="material-symbols:menu-book-rounded" class="h-5 w-5" /></span>
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]"><Icon icon="material-symbols:menu-book-rounded" class="h-5 w-5" /></span>
             <div>
-              <h2 class="ui-section-title leading-tight">{{ authStore.isAuthenticated ? (authStore.displayName || '同学') : '开始你的编程之旅' }}</h2>
-              <p class="text-xs text-[#64748B] dark:text-[#94A3B8]">{{ authStore.isAuthenticated ? '今天也要坚持刷题，保持手感。' : '登录后同步你的学习进度' }}</p>
+              <h2 class="ui-section-title leading-tight">{{ authStore.isAuthenticated ? (authStore.displayName || '同学') : '登录后开始刷题' }}</h2>
+              <p class="text-xs text-[#64748B] dark:text-[#94A3B8]">{{ authStore.isAuthenticated ? '查看最近提交与学习进度' : '同步提交记录、收藏与学习进度' }}</p>
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -526,31 +362,31 @@ onUnmounted(() => {
 
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div class="ui-card flex items-center gap-2.5 p-3">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]"><Icon icon="material-symbols:check-circle-rounded" class="h-4 w-4" /></span>
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#F1F5F9] text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]"><Icon icon="material-symbols:check-circle-rounded" class="h-4 w-4" /></span>
             <div class="min-w-0">
-              <p class="truncate text-[11px] font-bold text-[#64748B] dark:text-[#94A3B8]">已解决</p>
-              <p class="text-lg font-black leading-tight">{{ dashboardLoading ? '—' : solvedCount }}</p>
+              <p class="truncate text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">已解决</p>
+              <p class="text-xl font-bold leading-tight">{{ dashboardLoading ? '—' : solvedCount }}</p>
             </div>
           </div>
           <div class="ui-card flex items-center gap-2.5 p-3">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]"><Icon icon="material-symbols:history-rounded" class="h-4 w-4" /></span>
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#F1F5F9] text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]"><Icon icon="material-symbols:history-rounded" class="h-4 w-4" /></span>
             <div class="min-w-0">
-              <p class="truncate text-[11px] font-bold text-[#64748B] dark:text-[#94A3B8]">提交总数</p>
-              <p class="text-lg font-black leading-tight">{{ dashboardLoading ? '—' : submissionTotal }}</p>
+              <p class="truncate text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">提交总数</p>
+              <p class="text-xl font-bold leading-tight">{{ dashboardLoading ? '—' : submissionTotal }}</p>
             </div>
           </div>
           <div class="ui-card flex items-center gap-2.5 p-3">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]"><Icon icon="material-symbols:star-rounded" class="h-4 w-4" /></span>
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#F1F5F9] text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]"><Icon icon="material-symbols:star-rounded" class="h-4 w-4" /></span>
             <div class="min-w-0">
-              <p class="truncate text-[11px] font-bold text-[#64748B] dark:text-[#94A3B8]">收藏</p>
-              <p class="text-lg font-black leading-tight">{{ dashboardLoading ? '—' : favoriteCount }}</p>
+              <p class="truncate text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">收藏</p>
+              <p class="text-xl font-bold leading-tight">{{ dashboardLoading ? '—' : favoriteCount }}</p>
             </div>
           </div>
           <div class="ui-card flex items-center gap-2.5 p-3">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]"><Icon icon="material-symbols:library-books-rounded" class="h-4 w-4" /></span>
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#F1F5F9] text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]"><Icon icon="material-symbols:library-books-rounded" class="h-4 w-4" /></span>
             <div class="min-w-0">
-              <p class="truncate text-[11px] font-bold text-[#64748B] dark:text-[#94A3B8]">题库题量</p>
-              <p class="text-lg font-black leading-tight">{{ dashboardLoading ? '—' : totalProblems }}</p>
+              <p class="truncate text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">题库题量</p>
+              <p class="text-xl font-bold leading-tight">{{ dashboardLoading ? '—' : totalProblems }}</p>
             </div>
           </div>
         </div>
@@ -559,7 +395,7 @@ onUnmounted(() => {
           <div class="ui-card p-4">
             <div class="mb-3 flex items-center justify-between">
               <h3 class="ui-section-title">继续学习</h3>
-              <router-link to="/problems" class="text-xs font-bold text-[#2563EB] dark:text-[#60A5FA]">全部题目</router-link>
+              <router-link to="/problems" class="text-xs font-medium text-[#2563EB] dark:text-[#60A5FA]">全部题目</router-link>
             </div>
             <div v-if="dashboardLoading" class="space-y-1.5">
               <div v-for="i in 6" :key="i" class="ui-skeleton h-9 rounded-lg"></div>
@@ -569,20 +405,20 @@ onUnmounted(() => {
                 v-for="p in recentProblems"
                 :key="p.id"
                 :to="`/problems/${p.id}`"
-                class="flex items-center gap-2.5 rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-sm transition hover:border-[#2563EB] dark:border-[#1E293B] dark:hover:border-[#60A5FA]"
+                class="flex items-center gap-2.5 rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-sm transition-colors hover:border-[#CBD5E1] hover:bg-[#F8FAFC] dark:border-[#1E293B] dark:hover:border-[#334155] dark:hover:bg-[#172554]"
               >
                 <span class="min-w-0 flex-1 truncate font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ p.title }}</span>
                 <span v-if="p.difficulty" class="ui-diff text-[11px]" :class="p.difficulty === '简单' ? 'ui-diff-easy' : p.difficulty === '中等' ? 'ui-diff-mid' : 'ui-diff-hard'">{{ p.difficulty }}</span>
                 <span class="shrink-0 text-[11px] text-[#64748B] dark:text-[#94A3B8]">通过率 {{ formatRate(p.accepted_count, p.submission_count) }}</span>
               </router-link>
             </div>
-            <p v-else class="ui-empty">暂无题目，去题库探索吧</p>
+            <p v-else class="ui-empty">暂无题目</p>
           </div>
 
           <div class="ui-card p-4">
             <div class="mb-3 flex items-center justify-between">
               <h3 class="ui-section-title">最近活动</h3>
-              <router-link to="/submissions" class="text-xs font-bold text-[#2563EB] dark:text-[#60A5FA]">全部记录</router-link>
+              <router-link to="/submissions" class="text-xs font-medium text-[#2563EB] dark:text-[#60A5FA]">全部记录</router-link>
             </div>
             <div v-if="dashboardLoading" class="space-y-1.5">
               <div v-for="i in 6" :key="i" class="ui-skeleton h-9 rounded-lg"></div>
@@ -592,7 +428,7 @@ onUnmounted(() => {
                 v-for="s in recentSubmissions"
                 :key="s.id"
                 type="button"
-                class="flex w-full items-center gap-2.5 rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-left text-sm transition hover:border-[#2563EB] dark:border-[#1E293B] dark:hover:border-[#60A5FA]"
+                class="flex w-full items-center gap-2.5 rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-left text-sm transition-colors hover:border-[#CBD5E1] hover:bg-[#F8FAFC] dark:border-[#1E293B] dark:hover:border-[#334155] dark:hover:bg-[#172554]"
                 @click="goProblem(s.problem_id)"
               >
                 <span class="ui-badge text-[11px]" :class="statusClass(s.status)">{{ statusLabel(s.status) }}</span>
@@ -600,7 +436,7 @@ onUnmounted(() => {
                 <span class="shrink-0 text-[11px] text-[#64748B] dark:text-[#94A3B8]">{{ formatDateShort(s.created_at) }}</span>
               </button>
             </div>
-            <p v-else class="ui-empty">还没有提交记录，去<router-link to="/problems" class="font-bold text-[#2563EB] dark:text-[#60A5FA]">题库</router-link>试试吧</p>
+            <p v-else class="ui-empty">暂无提交记录</p>
           </div>
         </div>
 
@@ -636,21 +472,21 @@ onUnmounted(() => {
   justify-content: center;
   gap: 0.4rem;
   padding: 0.6rem 1.2rem;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   font-size: 0.8125rem;
-  font-weight: 700;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
   cursor: pointer;
 }
 .hero-dash-primary {
   background: #2563EB;
   color: #fff;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 .hero-dash-primary:hover {
   background: #1D4ED8;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-  transform: translateY(-1px);
 }
 .hero-dash-secondary {
   background: #EFF6FF;
@@ -660,7 +496,6 @@ onUnmounted(() => {
 .hero-dash-secondary:hover {
   background: #DBEAFE;
   border-color: #93C5FD;
-  transform: translateY(-1px);
 }
 .hero-dash-outline {
   background: transparent;
@@ -671,7 +506,6 @@ onUnmounted(() => {
   background: #F8FAFC;
   border-color: #94A3B8;
   color: #1E293B;
-  transform: translateY(-1px);
 }
 .dark .hero-dash-secondary {
   background: #172554;
@@ -701,7 +535,7 @@ onUnmounted(() => {
 .hero-grid {
   position: absolute;
   inset: 0;
-  opacity: 0.65;
+  opacity: 0.4;
   background-image:
     linear-gradient(rgba(71, 85, 105, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(71, 85, 105, 0.08) 1px, transparent 1px);
@@ -750,10 +584,10 @@ onUnmounted(() => {
   top: 5%;
   right: -3rem;
   z-index: 0;
-  font-size: 9rem;
+  font-size: 6rem;
   line-height: 1;
   color: #9fb4c4;
-  opacity: 0.1;
+  opacity: 0.06;
 }
 .mark-comment {
   right: 0.5rem;
@@ -772,8 +606,7 @@ onUnmounted(() => {
   padding: 0.55rem 0.8rem;
   color: #0e7490;
   font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 .status-dot {
   width: 0.45rem;
@@ -784,7 +617,7 @@ onUnmounted(() => {
 .hero-title {
   margin: 1.5rem 0 0;
   font-size: clamp(2.8rem, 7vw, 6.4rem);
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.08;
   letter-spacing: 0;
 }
@@ -798,19 +631,10 @@ onUnmounted(() => {
   padding-block: 0.35rem;
   font-size: 1.06em;
   line-height: 1.28;
-  background: linear-gradient(100deg, #0e7da0 0%, #23a9cc 50%, #5fcdee 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #0e7490;
 }
-.title-accent::after {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  color: #f0c75e;
-  clip-path: inset(0 100% 0 0);
-  pointer-events: none;
-  animation: decode-flash 0.52s steps(8, end) 1.05s 1 both;
+.dark .title-accent {
+  color: #67e8f9;
 }
 .hero-actions {
   display: flex;
@@ -827,64 +651,50 @@ onUnmounted(() => {
   line-height: 1.6;
 }
 .hero-button {
-  position: relative;
-  isolation: isolate;
   display: inline-flex;
   min-height: 3rem;
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
-  overflow: hidden;
   border: 1px solid #9aa9b6;
-  border-radius: 1.25rem;
+  border-radius: 0.5rem;
   padding: 0.75rem 1.25rem;
   font-size: 0.875rem;
-  font-weight: 800;
+  font-weight: 600;
   transition:
-    color 0.25s ease,
-    border-color 0.25s ease,
-    transform 0.25s ease;
-}
-.hero-button::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  transform: scaleX(0);
-  transform-origin: left;
-  background: #22d3ee;
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.hero-button:hover::before {
-  transform: scaleX(1);
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 .hero-button:hover {
-  border-color: #22d3ee;
-  color: #082f49;
+  border-color: #64748b;
+  color: #0f172a;
 }
 .hero-button svg {
   width: 1.2rem;
   height: 1.2rem;
-  transition: transform 0.25s ease;
-}
-.hero-button:hover svg {
-  transform: translateX(4px);
 }
 .hero-primary {
-  border-color: #0891b2;
+  border-color: #0e7490;
   background: #0e7490;
   color: white;
+}
+.hero-primary:hover {
+  border-color: #155e75;
+  background: #155e75;
+  color: #ffffff;
 }
 .hero-secondary {
   background: rgba(248, 250, 252, 0.8);
   color: #334155;
 }
+.hero-secondary:hover {
+  background: #eef2f5;
+}
 .terminal-stage {
   position: relative;
   isolation: isolate;
   min-width: 0;
-  perspective: 1200px;
-  transform-style: preserve-3d;
   cursor: pointer;
   outline: none;
 }
@@ -894,32 +704,21 @@ onUnmounted(() => {
   z-index: -1;
   inset: 0;
   border: 1px solid #52616d;
-  border-radius: 1.5rem;
-  transform: translate(10px, 10px);
+  border-radius: 0.85rem;
+  transform: translate(8px, 8px);
   pointer-events: none;
 }
 .terminal-stage:focus-visible .terminal-frame {
   border-color: #22d3ee;
-  box-shadow:
-    0 0 0 2px rgba(34, 211, 238, 0.2),
-    0 24px 48px rgba(2, 8, 12, 0.28);
-}
-.particle-canvas {
-  position: absolute;
-  z-index: 6;
-  inset: 0;
-  display: block;
-  pointer-events: none;
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
 }
 .terminal-frame {
   position: relative;
   overflow: hidden;
   border: 1px solid #8393a1;
-  border-radius: 1.5rem;
+  border-radius: 0.75rem;
   background: #111820;
-  box-shadow: 0 24px 48px rgba(2, 8, 12, 0.24);
-  transform: rotateX(var(--rotate-x, 0)) rotateY(var(--rotate-y, 0));
-  transition: transform 0.18s ease-out;
+  box-shadow: 0 8px 24px rgba(2, 8, 12, 0.18);
 }
 .terminal-frame::before {
   content: "";
@@ -928,17 +727,6 @@ onUnmounted(() => {
   inset: 0;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: inherit;
-  pointer-events: none;
-}
-.terminal-frame::after {
-  content: "";
-  position: absolute;
-  z-index: 5;
-  top: 0;
-  left: 14%;
-  width: 26%;
-  height: 2px;
-  background: #22d3ee;
   pointer-events: none;
 }
 .terminal-toolbar {
@@ -1049,33 +837,11 @@ onUnmounted(() => {
   height: 1.72rem;
   border-left: 2px solid #22d3ee;
   background: rgba(34, 211, 238, 0.065);
-  opacity: 0;
-  transform: scaleX(0.92);
-  transform-origin: left;
-  animation: active-line-in 0.22s ease-out 0.95s 1 forwards;
 }
 .line-numbers,
 .editor-body pre {
   position: relative;
   z-index: 1;
-}
-.typing-mask {
-  position: absolute;
-  z-index: 2;
-  inset: 0 0 0 2.4rem;
-  background: #0b1117;
-  transform-origin: bottom;
-  animation: reveal-code 0.72s steps(7, end) 0.82s 1 both;
-}
-.typing-mask::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 1.2rem;
-  width: 1px;
-  height: 1.1rem;
-  background: #67e8f9;
-  animation: caret-blink 0.24s step-end 0.82s 3;
 }
 :deep(.code-directive),
 :deep(.code-type) {
@@ -1126,9 +892,6 @@ onUnmounted(() => {
   padding-left: 0;
   color: #687986;
   font: 700 0.7rem/1 monospace;
-  opacity: 0;
-  transform: translateY(5px);
-  animation: status-in 0.28s ease forwards;
 }
 .judge-status span {
   width: 0.4rem;
@@ -1138,15 +901,8 @@ onUnmounted(() => {
   position: relative;
   z-index: 1;
 }
-.status-compiling {
-  animation-delay: 1.55s;
-}
-.status-running {
-  animation-delay: 1.8s;
-}
 .status-accepted {
   color: #8ce8ae;
-  animation-delay: 2.05s;
 }
 .status-accepted svg {
   position: relative;
@@ -1162,8 +918,6 @@ onUnmounted(() => {
   padding: 0.8rem;
   color: #8ce8ae;
   font: 0.72rem/1.4 monospace;
-  opacity: 0;
-  animation: status-in 0.22s ease 2.18s forwards;
 }
 .language-panel {
   display: grid;
@@ -1193,11 +947,9 @@ onUnmounted(() => {
   filter: grayscale(1);
   opacity: 0.42;
   transition:
-    background 0.2s ease,
-    filter 0.2s ease,
-    opacity 0.2s ease,
-    transform 0.2s ease;
-  animation: language-on 0.18s ease var(--language-delay) forwards;
+    background 0.15s ease,
+    filter 0.15s ease,
+    opacity 0.15s ease;
 }
 .language-button:hover,
 .language-button.active {
@@ -1206,7 +958,6 @@ onUnmounted(() => {
   opacity: 1;
 }
 .language-button.active {
-  transform: translateY(-2px);
   box-shadow: inset 0 -2px #22d3ee;
 }
 .language-button svg {
@@ -1242,7 +993,7 @@ html:not(.dark) .terminal-stage::before {
 html:not(.dark) .terminal-frame {
   border-color: #9eacb7;
   background: #eef3f6;
-  box-shadow: 0 24px 48px rgba(51, 65, 85, 0.16);
+  box-shadow: 0 8px 24px rgba(51, 65, 85, 0.12);
 }
 html:not(.dark) .terminal-frame::before {
   border-color: rgba(71, 85, 105, 0.16);
@@ -1283,12 +1034,6 @@ html:not(.dark) .editor-body pre {
 html:not(.dark) .active-line {
   border-color: #0891b2;
   background: rgba(8, 145, 178, 0.08);
-}
-html:not(.dark) .typing-mask {
-  background: #f5f7f9;
-}
-html:not(.dark) .typing-mask::after {
-  background: #0891b2;
 }
 html:not(.dark) .result-panel {
   background: #eaf0f3;
@@ -1340,7 +1085,7 @@ html:not(.dark) .language-button.active {
   background: #080e13;
 }
 .dark .hero-grid {
-  opacity: 0.5;
+  opacity: 0.3;
   background-image:
     linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
     linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
@@ -1447,90 +1192,23 @@ html:not(.dark) .language-button.active {
     width: 1.15rem;
     height: 1.15rem;
   }
-  .hero-coordinate {
-    display: none;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .intro,
-  .title-accent::after,
-  .typing-mask,
-  .typing-mask::after,
-  .active-line,
-  .judge-status,
-  .preview-output,
-  .language-button {
+  .intro {
     animation: none !important;
     opacity: 1;
     transform: none;
-    clip-path: inset(0 100% 0 0);
-  }
-  .typing-mask {
-    display: none;
-  }
-  .particle-canvas {
-    display: none;
   }
   .terminal-frame,
   .hero-button,
-  .hero-button::before,
-  .hero-button svg,
   .language-button {
     transition-duration: 0.01ms !important;
-  }
-}
-@media (hover: none), (pointer: coarse) {
-  .terminal-frame {
-    transform: none !important;
-    transition: none;
   }
 }
 @keyframes intro-in {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-@keyframes decode-flash {
-  0% {
-    clip-path: inset(0 100% 0 0);
-  }
-  48% {
-    clip-path: inset(0 0 0 0);
-  }
-  100% {
-    clip-path: inset(0 0 0 100%);
-  }
-}
-@keyframes reveal-code {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
-  }
-}
-@keyframes active-line-in {
-  to {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-}
-@keyframes caret-blink {
-  50% {
-    opacity: 0;
-  }
-}
-@keyframes status-in {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-@keyframes language-on {
-  to {
-    filter: grayscale(0);
-    opacity: 0.88;
   }
 }
 </style>

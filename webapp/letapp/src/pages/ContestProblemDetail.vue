@@ -50,7 +50,7 @@ onMounted(loadData);
 
       <div v-if="isLoading" class="space-y-4">
         <div class="ui-skeleton h-10 w-64 rounded-lg"></div>
-        <div class="ui-skeleton h-64 w-full rounded-xl"></div>
+        <div class="ui-skeleton h-64 w-full rounded-md"></div>
       </div>
 
       <div v-else-if="error" class="ui-empty">
@@ -63,8 +63,8 @@ onMounted(loadData);
         <!-- 题目摘要 -->
         <div class="mb-6 border-b border-[#E2E8F0] pb-4 dark:border-[#1E293B]">
           <div class="flex items-center gap-3">
-            <span class="text-sm font-black text-[#2563EB] dark:text-[#60A5FA]">{{ problem.problem_index }}</span>
-            <h1 class="text-2xl font-black text-[#1E293B] dark:text-[#E5E7EB]">{{ problem.title }}</h1>
+            <span class="text-sm font-bold text-[#2563EB] dark:text-[#60A5FA]">{{ problem.problem_index }}</span>
+            <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ problem.title }}</h1>
           </div>
           <div class="mt-3 flex flex-wrap items-center gap-3">
             <span :class="difficultyClass(problem.difficulty)">{{ problem.difficulty }}</span>

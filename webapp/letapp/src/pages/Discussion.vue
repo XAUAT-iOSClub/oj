@@ -66,6 +66,10 @@ const getTags = (tags: string | null) => {
   return tags.split(',').map(t => t.trim()).filter(Boolean);
 };
 
+const LIST_TAG_LIMIT = 2;
+const visibleTags = (tags: string | null) => getTags(tags).slice(0, LIST_TAG_LIMIT);
+const extraTagCount = (tags: string | null) => Math.max(0, getTags(tags).length - LIST_TAG_LIMIT);
+
 const filteredDiscussions = computed(() => {
   if (activeCategory.value === '全部') return discussions.value;
   return discussions.value.filter(d => d.category === activeCategory.value);
@@ -294,7 +298,7 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
       <section class="min-w-0 flex-1">
         <div class="mb-4 flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-black text-[#1E293B] dark:text-[#E5E7EB]">讨论区</h1>
+            <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">讨论区</h1>
             <p class="ui-section-sub mt-1">交流算法心得，分享学习经验</p>
           </div>
            <button class="ui-btn ui-btn-primary ui-btn-md" @click="openCreate">
@@ -304,7 +308,7 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
 
         <!-- 加载中 -->
         <div v-if="isLoading" class="space-y-3">
-          <div v-for="i in 4" :key="i" class="ui-skeleton h-24 w-full rounded-xl"></div>
+          <div v-for="i in 4" :key="i" class="ui-skeleton h-24 w-full rounded-md"></div>
         </div>
 
         <!-- 错误 -->
@@ -330,8 +334,9 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
                  <span v-if="d.is_pinned" class="ui-badge ui-badge-amber inline-flex items-center gap-1 text-[10px]"><Icon icon="material-symbols:push-pin" class="h-3 w-3" />置顶</span>
                 <h3 class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ d.title }}</h3>
               </div>
-              <div v-if="getTags(d.tags).length" class="mt-1.5 flex flex-wrap gap-1.5">
-                <span v-for="tag in getTags(d.tags)" :key="tag" class="rounded-md px-2 py-0.5 text-[11px] font-medium" :class="tagColors[tag] || 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'">{{ tag }}</span>
+              <div v-if="getTags(d.tags).length" class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <span v-for="tag in visibleTags(d.tags)" :key="tag" class="rounded-md px-2 py-0.5 text-[11px] font-medium" :class="tagColors[tag] || 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'">{{ tag }}</span>
+                <span v-if="extraTagCount(d.tags)" class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">+{{ extraTagCount(d.tags) }}</span>
               </div>
               <p class="mt-2 text-xs text-[#94A3B8]">{{ d.author_name }} · {{ formatTime(d.created_at) }}</p>
             </div>
@@ -383,7 +388,7 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
                      <span v-if="currentDiscussion.is_pinned" class="ui-badge ui-badge-amber inline-flex items-center gap-1 text-[10px]"><Icon icon="material-symbols:push-pin" class="h-3 w-3" />置顶</span>
                     <span class="ui-badge ui-badge-blue text-[10px]">{{ currentDiscussion.category }}</span>
                   </div>
-                  <h2 class="text-xl font-black text-[#1E293B] dark:text-[#E5E7EB]">{{ currentDiscussion.title }}</h2>
+                  <h2 class="text-xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ currentDiscussion.title }}</h2>
                   <p class="mt-1 text-xs text-[#94A3B8]">{{ currentDiscussion.author_name }} · {{ formatFullTime(currentDiscussion.created_at) }}</p>
                 </div>
 
@@ -504,7 +509,7 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
                     <button
                       v-for="cat in ['问答', '分享', '闲聊', '综合']"
                       :key="cat"
-                      class="rounded-full border px-3 py-1 text-xs font-bold transition-colors"
+                      class="rounded-md border px-3 py-1 text-xs font-medium transition-colors"
                       :class="createForm.category === cat
                         ? 'border-[#2563EB] bg-[#EFF6FF] text-[#2563EB] dark:border-[#60A5FA] dark:bg-[#172554] dark:text-[#60A5FA]'
                         : 'border-[#E2E8F0] text-[#64748B] dark:border-[#334155] dark:text-[#94A3B8]'"

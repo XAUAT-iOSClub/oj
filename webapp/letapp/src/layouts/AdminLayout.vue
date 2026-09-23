@@ -38,13 +38,13 @@ const logout = async () => {
 
 <template>
   <div class="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
-    <header class="sticky top-0 z-50 border-b border-slate-200/30 bg-transparent backdrop-blur-2xl dark:border-slate-800/20">
+    <header class="sticky top-0 z-50 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div class="flex h-16 items-center justify-between px-4">
         <div class="flex items-center gap-3">
           <button class="admin-icon-button" aria-label="返回首页" title="返回首页" @click="goHome">
             <Icon icon="material-symbols:home-rounded" class="h-6 w-6" />
           </button>
-          <h1 class="text-xl font-black">Let Coding 管理后台</h1>
+          <h1 class="text-xl font-bold">Let Coding 管理后台</h1>
         </div>
 
         <div class="flex items-center gap-3">
@@ -60,19 +60,19 @@ const logout = async () => {
 
     <div class="flex">
       <aside
-        class="app-sidebar fixed bottom-0 top-16 z-40 flex flex-col overflow-y-auto border-r border-slate-200 bg-slate-100/95 backdrop-blur-xl transition-all duration-300 dark:border-slate-700/50 dark:bg-slate-950/95"
+        class="app-sidebar fixed bottom-0 top-16 z-40 flex flex-col overflow-y-auto border-r border-slate-200 bg-slate-100 transition-all duration-200 dark:border-slate-700/50 dark:bg-slate-950"
         :class="sidebarExpanded ? 'w-64' : 'w-20'"
       >
         <nav class="flex-1 p-4">
           <button
             v-for="item in navMenu"
             :key="item.route"
-            class="mb-2 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left font-bold transition"
+            class="mb-2 flex w-full items-center gap-3 rounded-md px-4 py-3 text-left font-medium transition-colors"
             :class="[
               sidebarExpanded ? 'justify-start' : 'justify-center',
               activePath === item.route
-                ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-200'
-                : 'text-slate-600 hover:bg-white/70 dark:text-slate-300 dark:hover:bg-slate-800',
+                ? 'bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]'
+                : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800',
             ]"
             @click="navigateTo(item.route)"
           >
@@ -97,7 +97,7 @@ const logout = async () => {
         </div>
       </aside>
 
-      <main class="flex-1 p-6 transition-all duration-300" :class="sidebarExpanded ? 'ml-64' : 'ml-20'">
+      <main class="flex-1 p-6 transition-all duration-200" :class="sidebarExpanded ? 'ml-64' : 'ml-20'">
         <router-view />
       </main>
     </div>
@@ -108,25 +108,25 @@ const logout = async () => {
 @reference 'tailwindcss';
 
 .admin-icon-button {
-  @apply grid h-10 w-10 place-items-center rounded-2xl text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800;
+  @apply grid h-10 w-10 place-items-center rounded-md text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800;
 }
 
 .app-sidebar {
-  border-radius: 0 1.5rem 1.5rem 0;
-  box-shadow: 8px 0 28px rgba(15, 23, 42, 0.06);
+  border-radius: 0;
+  box-shadow: 2px 0 8px rgba(15, 23, 42, 0.04);
 }
 
 .dark .app-sidebar {
-  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.18);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.12);
 }
 
 .sidebar-toggle {
   display: flex;
   align-items: center;
   min-height: 2.75rem;
-  border-radius: 0.875rem;
+  border-radius: 0.375rem;
   color: #475569;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .sidebar-toggle:hover {

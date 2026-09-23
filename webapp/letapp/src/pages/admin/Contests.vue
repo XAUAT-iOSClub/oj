@@ -611,7 +611,7 @@ onMounted(loadContests);
 
     <!-- 比赛列表 -->
     <div v-if="isLoadingContests" class="space-y-3">
-      <div v-for="i in 3" :key="i" class="ui-skeleton h-20 w-full rounded-xl"></div>
+      <div v-for="i in 3" :key="i" class="ui-skeleton h-20 w-full rounded-md"></div>
     </div>
 
     <div v-else-if="contests.length === 0" class="ui-empty">
@@ -665,7 +665,7 @@ onMounted(loadContests);
     <!-- 题目管理区 -->
     <div v-if="selectedContestId" class="mt-8">
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-xl font-black">{{ selectedContest?.title }} - 题目管理</h2>
+        <h2 class="text-xl font-bold">{{ selectedContest?.title }} - 题目管理</h2>
         <button class="add-problem-btn" @click="openProblemForm()">
           <Icon icon="material-symbols:add" class="h-4 w-4" />
           <span>添加题目</span>
@@ -673,7 +673,7 @@ onMounted(loadContests);
       </div>
 
       <div v-if="isLoadingProblems" class="space-y-3">
-        <div v-for="i in 3" :key="i" class="ui-skeleton h-16 w-full rounded-xl"></div>
+        <div v-for="i in 3" :key="i" class="ui-skeleton h-16 w-full rounded-md"></div>
       </div>
 
       <div v-else-if="problems.length === 0" class="ui-empty">
@@ -684,7 +684,7 @@ onMounted(loadContests);
 
       <div v-else class="space-y-2">
         <div v-for="p in problems" :key="p.id" class="ui-card flex items-center gap-4 p-4">
-          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-sm font-black text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-sm font-bold text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
             {{ p.problem_index }}
           </div>
           <div class="min-w-0 flex-1">

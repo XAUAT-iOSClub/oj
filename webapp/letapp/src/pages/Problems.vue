@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef } from 'vue';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { useMessage } from 'naive-ui';
@@ -29,6 +29,18 @@ interface ProblemListResponse {
 const router = useRouter();
 const message = useMessage();
 const searchQuery = ref('');
+// 输入防抖：避免每次按键都对整表做模糊匹配
+const activeSearchQuery = ref('');
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+watch(searchQuery, (value) => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    activeSearchQuery.value = value;
+  }, 150);
+});
+onUnmounted(() => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+});
 const difficultyFilter = ref<string>('');
 const categoryFilter = ref('');
 const statusFilter = ref<'' | 'solved' | 'unsolved' | 'attempted' | 'favorite'>('');
@@ -108,7 +120,7 @@ const categories = computed<CategoryOption[]>(() => {
 });
 
 const filteredProblems = computed(() => {
-  const q = searchQuery.value.trim();
+  const q = activeSearchQuery.value.trim();
   return problems.value
     .filter((p) => {
       if (categoryFilter.value && p.category !== categoryFilter.value) return false;

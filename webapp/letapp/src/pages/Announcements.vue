@@ -190,7 +190,7 @@ watch(
           <!-- 标题区 -->
           <div class="mb-4">
             <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-black text-[#1E293B] dark:text-[#E5E7EB]">公告中心</h1>
+              <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">公告中心</h1>
               <span class="ui-badge ui-badge-blue">{{ filteredAnnouncements.length }} 条</span>
             </div>
             <p class="ui-section-sub mt-1">平台通知与最新动态</p>
@@ -203,7 +203,7 @@ watch(
 
           <!-- 加载骨架 -->
           <div v-if="isLoadingList" class="space-y-3">
-            <div v-for="i in 5" :key="i" class="ui-skeleton h-24 w-full rounded-xl"></div>
+            <div v-for="i in 5" :key="i" class="ui-skeleton h-24 w-full rounded-md"></div>
           </div>
 
           <!-- 错误 -->
@@ -230,7 +230,7 @@ watch(
               @click="openAnnouncement(item)"
             >
               <!-- 左侧图标 48px -->
-              <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl" :class="getCategoryColor(item)">
+              <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md" :class="getCategoryColor(item)">
                 <Icon :icon="getCategoryIcon(item)" class="ann-ico" />
               </span>
               <!-- 中间标题+摘要 -->
@@ -268,7 +268,7 @@ watch(
           </div>
           <div v-else class="px-10 py-10 sm:px-16">
             <div class="mb-6 border-b border-[#E2E8F0] pb-4 dark:border-[#1E293B]">
-              <h2 class="text-[30px] font-black leading-tight text-[#1E293B] dark:text-[#E5E7EB]">{{ selectedContent?.title }}</h2>
+              <h2 class="text-[30px] font-bold leading-tight text-[#1E293B] dark:text-[#E5E7EB]">{{ selectedContent?.title }}</h2>
               <p class="mt-2 text-sm font-medium text-[#64748B] dark:text-[#94A3B8]">
                 {{ formatTime(selectedContent?.date) }}
               </p>

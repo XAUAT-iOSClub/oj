@@ -153,7 +153,7 @@
     <transition name="drawer-backdrop">
       <div
         v-if="menuVisible"
-        class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
+        class="fixed inset-0 z-40 bg-black/40 md:hidden"
         aria-label="关闭导航菜单"
         @click="closeMenu"
       ></div>
@@ -169,11 +169,11 @@
             <img
               src="/assets/logo.png"
               alt="Let Coding Logo"
-              class="h-10 w-10 rounded-xl object-cover"
+              class="h-10 w-10 rounded-md object-cover"
             />
             <div>
-              <div class="font-black">Let Coding</div>
-              <div class="text-[10px] uppercase text-[#94A3B8]">Online Judge</div>
+              <div class="font-bold">Let Coding</div>
+              <div class="text-[10px] text-[#94A3B8]">在线评测</div>
             </div>
           </div>
           <button class="ui-icon-btn" aria-label="关闭导航菜单" @click="closeMenu">
@@ -360,7 +360,7 @@ watch(menuVisible, toggleMenuLock);
 .dropdown-fade-enter-from,
 .dropdown-fade-leave-to {
   opacity: 0;
-  transform: translateY(-6px) scale(0.97);
+  transform: translateY(-4px);
 }
 
 .mobile-drawer {
@@ -384,7 +384,7 @@ watch(menuVisible, toggleMenuLock);
 
 .drawer-slide-enter-active,
 .drawer-slide-leave-active {
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .drawer-slide-enter-from,
 .drawer-slide-leave-to {
@@ -392,7 +392,7 @@ watch(menuVisible, toggleMenuLock);
 }
 .drawer-backdrop-enter-active,
 .drawer-backdrop-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 .drawer-backdrop-enter-from,
 .drawer-backdrop-leave-to {

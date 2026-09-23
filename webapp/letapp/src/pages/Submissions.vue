@@ -92,9 +92,8 @@ onMounted(loadSubmissions);
       <!-- 标题区 88px -->
       <div class="mb-4 flex items-center justify-between" style="min-height:88px">
         <div>
-          <p class="text-sm font-black uppercase tracking-[0.22em] text-[#2563EB] dark:text-[#60A5FA]">Submissions</p>
-          <h1 class="mt-1 text-2xl font-black text-[#1E293B] dark:text-[#E5E7EB]">提交记录</h1>
-          <p class="ui-section-sub mt-1">每一次判题都会留档，点击记录可回到对应题目继续练习。</p>
+          <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">提交记录</h1>
+          <p class="ui-section-sub mt-1">每次判题都会留档，点击记录可回到对应题目。</p>
         </div>
         <span class="ui-badge ui-badge-blue">共 {{ total }} 次提交</span>
       </div>
@@ -130,7 +129,7 @@ onMounted(loadSubmissions);
 
       <!-- 加载骨架 -->
       <div v-if="loading" class="space-y-2">
-        <div v-for="i in 6" :key="i" class="ui-skeleton h-14 w-full rounded-xl"></div>
+        <div v-for="i in 6" :key="i" class="ui-skeleton h-14 w-full rounded-md"></div>
       </div>
 
       <!-- 错误 -->

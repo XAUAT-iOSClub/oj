@@ -313,7 +313,7 @@ onMounted(loadList);
       >
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-3">
-            <h2 class="min-w-0 truncate text-base font-black text-slate-950 dark:text-white">
+            <h2 class="min-w-0 truncate text-base font-bold text-slate-950 dark:text-white">
               {{ item.title }}
             </h2>
             <span

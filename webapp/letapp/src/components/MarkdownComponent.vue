@@ -621,7 +621,7 @@ onUnmounted(() => {
   </div>
 
   <div v-else class="flex h-full flex-col items-center justify-center p-8 text-center">
-    <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-900">
+    <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-md border-2 border-dashed border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-900">
       <Icon icon="mdi:file-document-outline" width="32" height="32" class="text-slate-500 dark:text-slate-400" />
     </div>
     <p class="text-lg text-slate-500 dark:text-slate-400">请选择一篇资料开始阅读</p>

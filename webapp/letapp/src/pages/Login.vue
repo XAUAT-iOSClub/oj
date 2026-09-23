@@ -58,35 +58,32 @@ const handleLogout = async () => {
 
 <template>
   <div class="min-h-screen bg-[#F6F8FC] px-4 py-12 text-[#1E293B] dark:bg-[#0F172A] dark:text-[#E5E7EB] sm:px-6 lg:px-8">
-    <div class="mx-auto flex w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] border border-[#E2E8F0] bg-white shadow-2xl dark:border-[#1E293B] dark:bg-[#111827] lg:grid lg:grid-cols-[0.95fr_1.05fr]">
+    <div class="mx-auto flex w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-[#E2E8F0] bg-white shadow-sm dark:border-[#1E293B] dark:bg-[#111827] lg:grid lg:grid-cols-[0.95fr_1.05fr]">
       <!-- 左侧品牌区 -->
       <div class="relative overflow-hidden bg-[#0F172A] px-8 py-10 text-white dark:bg-[#020617] lg:px-10 lg:py-12">
-        <div class="absolute -left-10 top-12 h-32 w-32 rounded-full bg-[#2563EB]/20 blur-3xl"></div>
-        <div class="absolute bottom-0 right-0 h-40 w-40 rounded-full bg-[#F59E0B]/10 blur-3xl"></div>
-
         <div class="relative">
-          <div class="inline-flex items-center gap-3 rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#60A5FA]">
+          <div class="inline-flex items-center gap-3 rounded-md bg-white/10 px-4 py-2 text-xs font-semibold text-[#93C5FD]">
             <img src="/assets/logo.png" alt="Let Coding" class="h-6 w-6" />
-            Let Coding Access
+            Let Coding 在线评测
           </div>
 
-          <h1 class="mt-8 text-4xl font-black tracking-tight">登录后继续你的代码练习</h1>
+          <h1 class="mt-8 text-3xl font-bold tracking-tight">登录后继续你的代码练习</h1>
           <p class="mt-5 text-base leading-8 text-slate-300">
-            这里使用 iOSClub 账号完成身份验证。登录成功后会自动回到你刚才访问的页面。
+            使用 iOSClub 账号登录，登录成功后自动回到刚才访问的页面。
           </p>
 
           <div class="mt-10 space-y-4">
             <div class="info-card">
               <Icon icon="material-symbols:verified-user" class="h-5 w-5 text-[#60A5FA]" />
-              <span>统一账号验证，减少重复注册和重复登录。</span>
+              <span>使用 iOSClub 账号登录。</span>
             </div>
             <div class="info-card">
               <Icon icon="material-symbols:lock-open-right" class="h-5 w-5 text-[#60A5FA]" />
-              <span>登录成功后签发本站会话，可继续访问学习资源和练习页面。</span>
+              <span>登录后签发本站会话，可提交代码、收藏题目、同步学习记录。</span>
             </div>
             <div class="info-card">
               <Icon icon="material-symbols:route" class="h-5 w-5 text-[#60A5FA]" />
-              <span>完成后会自动返回你刚才访问的页面。</span>
+              <span>登录后自动返回刚才访问的页面。</span>
             </div>
           </div>
         </div>
@@ -95,21 +92,21 @@ const handleLogout = async () => {
       <!-- 右侧表单区 -->
       <div class="px-8 py-10 lg:px-10 lg:py-12">
         <div class="max-w-md">
-          <p class="text-sm font-black uppercase tracking-[0.22em] text-[#2563EB] dark:text-[#60A5FA]">Secure Sign In</p>
-          <h2 class="mt-3 text-3xl font-black tracking-tight">登录 Let Coding</h2>
+          <p class="text-sm font-semibold text-[#2563EB] dark:text-[#60A5FA]">账号登录</p>
+          <h2 class="mt-3 text-2xl font-bold tracking-tight">登录 Let Coding</h2>
           <p class="mt-3 text-sm leading-7 text-[#64748B] dark:text-[#94A3B8]">
             输入你的 iOSClub 账号和密码。
           </p>
 
-          <div v-if="authStore.isAuthenticated" class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-7 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">
-            当前已登录：<span class="font-black">{{ authStore.displayName }}</span>。如果需要切换账号，可以先退出再重新登录。
+          <div v-if="authStore.isAuthenticated" class="mt-8 rounded-md border border-emerald-200 bg-emerald-50 p-5 text-sm leading-7 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">
+            当前已登录：<span class="font-bold">{{ authStore.displayName }}</span>。如果需要切换账号，可以先退出再重新登录。
             <div class="mt-4">
               <button class="ui-btn ui-btn-danger" @click="handleLogout">退出当前账号</button>
             </div>
           </div>
 
           <form class="mt-8 space-y-5" @submit.prevent="handlePasswordLogin">
-            <div v-if="loginError" class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300">
+            <div v-if="loginError" class="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300">
               {{ loginError }}
             </div>
 
@@ -172,6 +169,6 @@ const handleLogout = async () => {
 @reference 'tailwindcss';
 
 .info-card {
-  @apply flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200;
+  @apply flex items-start gap-3 rounded-md border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200;
 }
 </style>

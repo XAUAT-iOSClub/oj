@@ -34,13 +34,13 @@ onMounted(loadData);
   <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[#F6F8FC] dark:bg-[#0F172A]">
     <div class="app-container max-w-[1200px] py-6">
       <div class="mb-6">
-        <h1 class="text-2xl font-black text-[#1E293B] dark:text-[#E5E7EB]">排行榜</h1>
+        <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">排行榜</h1>
 
       </div>
 
       <!-- 加载中 -->
       <div v-if="isLoading" class="space-y-4">
-        <div v-for="i in 5" :key="i" class="ui-skeleton h-16 w-full rounded-xl"></div>
+        <div v-for="i in 5" :key="i" class="ui-skeleton h-16 w-full rounded-md"></div>
       </div>
 
       <!-- 错误 -->
@@ -61,7 +61,7 @@ onMounted(loadData);
           <!-- 排名 -->
           <div class="w-12 shrink-0 text-center">
             <Icon v-if="user.rank <= 3" :icon="`material-symbols:${rankIcons[user.rank - 1]}`" class="h-9 w-9 text-amber-500" />
-            <span v-else class="text-lg font-black text-[#64748B] dark:text-[#94A3B8]">#{{ user.rank }}</span>
+            <span v-else class="text-lg font-bold text-[#64748B] dark:text-[#94A3B8]">#{{ user.rank }}</span>
           </div>
 
           <!-- 头像 -->
@@ -81,13 +81,13 @@ onMounted(loadData);
 
           <!-- 解题数 -->
           <div class="shrink-0 text-center">
-            <div class="text-lg font-black text-[#1E293B] dark:text-[#E5E7EB]">{{ user.solved_count }}</div>
+            <div class="text-lg font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ user.solved_count }}</div>
             <div class="text-[11px] text-[#94A3B8]">解题</div>
           </div>
 
           <!-- 积分 -->
           <div class="shrink-0 text-center">
-            <div class="text-2xl font-black text-[#2563EB] dark:text-[#60A5FA]">{{ user.rating }}</div>
+            <div class="text-2xl font-bold text-[#2563EB] dark:text-[#60A5FA]">{{ user.rating }}</div>
             <div class="text-[11px] text-[#94A3B8]">积分</div>
           </div>
         </div>

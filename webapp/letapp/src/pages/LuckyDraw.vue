@@ -18,7 +18,7 @@
     </section>
 
     <section class="prizes-section">
-      <div class="section-heading"><span>PRIZES</span><strong>奖品一览</strong></div>
+      <div class="section-heading"><strong>奖品一览</strong></div>
       <div class="prize-grid">
         <article v-for="(item, index) in config.items" :key="item.name" class="prize">
           <div class="prize-icon">{{ icons[index % icons.length] }}</div>

@@ -143,7 +143,7 @@ const scheduleSave = () => {
     } catch {
       saveStatus.value = 'error';
     }
-  }, 1200);
+  }, 2500);
 };
 const saveNow = async () => {
   if (saveTimer) clearTimeout(saveTimer);
@@ -151,7 +151,6 @@ const saveNow = async () => {
     await saveCode(problemId.value, language.value, code.value);
     saveStatus.value = 'saved';
     lastSavedTime.value = new Date();
-    message.success('已保存');
   } catch {
     saveStatus.value = 'error';
     message.error('保存失败，请检查网络');

@@ -87,7 +87,7 @@ onUnmounted(() => {
 
       <!-- 加载中 -->
       <div v-if="isLoading" class="space-y-3">
-        <div v-for="i in 5" :key="i" class="ui-skeleton h-14 w-full rounded-xl"></div>
+        <div v-for="i in 5" :key="i" class="ui-skeleton h-14 w-full rounded-md"></div>
       </div>
 
       <!-- 错误 -->
@@ -124,7 +124,7 @@ onUnmounted(() => {
             >
               <td class="px-4 py-3">
                  <Icon v-if="row.rank <= 3" icon="material-symbols:military-tech" class="h-8 w-8 text-amber-500" />
-                <span v-else class="text-lg font-black text-[#64748B] dark:text-[#94A3B8]">#{{ row.rank }}</span>
+                <span v-else class="text-lg font-bold text-[#64748B] dark:text-[#94A3B8]">#{{ row.rank }}</span>
               </td>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
@@ -157,7 +157,7 @@ onUnmounted(() => {
                 <span v-else class="text-[#CBD5E1] dark:text-[#475569]">—</span>
               </td>
               <td class="px-4 py-3 text-center">
-                <span class="text-lg font-black text-[#2563EB] dark:text-[#60A5FA]">
+                <span class="text-lg font-bold text-[#2563EB] dark:text-[#60A5FA]">
                   {{ isOI() ? row.score : row.solved_count }}
                 </span>
               </td>

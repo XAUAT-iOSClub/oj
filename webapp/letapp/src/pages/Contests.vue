@@ -97,7 +97,7 @@ onMounted(loadData);
     <div class="app-container py-6">
       <div class="contest-header mb-6 flex items-start justify-between gap-4">
         <div class="contest-header__main min-w-0">
-          <h1 class="text-2xl font-black text-[#1E293B] dark:text-[#E5E7EB]">比赛</h1>
+          <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">比赛</h1>
           <p class="ui-section-sub mt-1">参与编程竞赛，挑战自我</p>
           <div class="mt-4 flex flex-wrap gap-2">
             <button v-for="tab in (['ongoing','upcoming','past'] as const)" :key="tab"
@@ -128,7 +128,7 @@ onMounted(loadData);
       </div>
 
       <div v-if="isLoading" class="space-y-4">
-        <div v-for="i in 3" :key="i" class="ui-skeleton h-32 w-full rounded-xl"></div>
+        <div v-for="i in 3" :key="i" class="ui-skeleton h-32 w-full rounded-md"></div>
       </div>
 
       <div v-else-if="error" class="ui-empty">

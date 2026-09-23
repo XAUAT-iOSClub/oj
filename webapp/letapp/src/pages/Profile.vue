@@ -4,8 +4,7 @@ import { useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { useAuthStore } from '../stores/auth';
 import {
-  listMySubmissions,
-  listFavorites,
+  getMyStats,
   updateUserProfile,
   uploadAvatar,
   type UserProfileUpdate,
@@ -102,23 +101,10 @@ const handleAvatarUpload = async (event: Event) => {
 const loadStats = async () => {
   statsLoading.value = true;
   try {
-    const [subRes, favRes] = await Promise.all([
-      listMySubmissions(1, 1).catch(() => null),
-      listFavorites().catch(() => null),
-    ]);
-    if (subRes) submissionTotal.value = subRes.total || 0;
-    if (favRes) favoriteCount.value = Array.isArray(favRes.data) ? favRes.data.length : 0;
-    // solvedCount 需要后端提供，暂用 submissions 推断
-    if (subRes) {
-      const allSubs = await listMySubmissions(1, 1000).catch(() => null);
-      if (allSubs) {
-        const solved = new Set<number>();
-        allSubs.data.forEach((s: any) => {
-          if (s.status === 'AC' && s.problem_id != null) solved.add(s.problem_id);
-        });
-        solvedCount.value = solved.size;
-      }
-    }
+    const stats = await getMyStats();
+    solvedCount.value = stats.solved || 0;
+    submissionTotal.value = stats.submissions || 0;
+    favoriteCount.value = stats.favorites || 0;
   } catch {
     // 统计加载失败不影响页面
   } finally {
@@ -154,7 +140,7 @@ onMounted(loadStats);
             <Icon v-else icon="material-symbols:person-rounded" class="h-12 w-12" />
           </div>
           <label
-            class="absolute bottom-0 right-0 grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-[#2563EB] text-white shadow-lg transition hover:bg-[#1D4ED8]"
+            class="absolute bottom-0 right-0 grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-[#2563EB] text-white shadow-sm transition-colors hover:bg-[#1D4ED8]"
             title="更换头像"
           >
             <Icon icon="material-symbols:camera-alt-rounded" class="h-4 w-4" />
@@ -165,7 +151,7 @@ onMounted(loadStats);
         <!-- 资料区 -->
         <div class="min-w-0 flex-1">
           <template v-if="!isEditing">
-            <h1 class="text-2xl font-black text-[#1E293B] dark:text-[#E5E7EB]">
+            <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">
               {{ authStore.userInfo?.name || authStore.displayName }}
             </h1>
             <p class="mt-1 text-sm text-[#64748B] dark:text-[#94A3B8]">@{{ authStore.userInfo?.username }}</p>
@@ -213,44 +199,44 @@ onMounted(loadStats);
       </div>
 
       <!-- 提示消息 -->
-      <div v-if="saveMessage" class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">
+      <div v-if="saveMessage" class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">
         {{ saveMessage }}
       </div>
-      <div v-if="saveError" class="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300">
+      <div v-if="saveError" class="mb-4 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300">
         {{ saveError }}
       </div>
 
       <!-- 数据概览 4 卡 -->
       <div class="ui-grid ui-grid-4 mb-6">
         <div class="ui-card flex items-center gap-3 p-5">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
             <Icon icon="material-symbols:check-circle-rounded" class="h-5 w-5" />
           </span>
           <div>
             <p class="text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">已解决</p>
-            <p class="text-2xl font-black leading-tight">{{ statsLoading ? '—' : solvedCount }}</p>
+            <p class="text-2xl font-bold leading-tight">{{ statsLoading ? '—' : solvedCount }}</p>
           </div>
         </div>
         <div class="ui-card flex items-center gap-3 p-5">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
             <Icon icon="material-symbols:history-rounded" class="h-5 w-5" />
           </span>
           <div>
             <p class="text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">提交次数</p>
-            <p class="text-2xl font-black leading-tight">{{ statsLoading ? '—' : submissionTotal }}</p>
+            <p class="text-2xl font-bold leading-tight">{{ statsLoading ? '—' : submissionTotal }}</p>
           </div>
         </div>
         <div class="ui-card flex items-center gap-3 p-5">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
             <Icon icon="material-symbols:star-rounded" class="h-5 w-5" />
           </span>
           <div>
             <p class="text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">收藏题目</p>
-            <p class="text-2xl font-black leading-tight">{{ statsLoading ? '—' : favoriteCount }}</p>
+            <p class="text-2xl font-bold leading-tight">{{ statsLoading ? '—' : favoriteCount }}</p>
           </div>
         </div>
         <div class="ui-card flex items-center gap-3 p-5">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
             <Icon icon="material-symbols:calendar-today-rounded" class="h-5 w-5" />
           </span>
           <div>
@@ -263,7 +249,7 @@ onMounted(loadStats);
       <!-- 快捷入口 -->
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <button class="ui-card ui-card-hover flex items-center gap-4 p-5 text-left" @click="goSubmissions">
-          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
             <Icon icon="material-symbols:history-rounded" class="h-6 w-6" />
           </span>
           <div>
@@ -272,7 +258,7 @@ onMounted(loadStats);
           </div>
         </button>
         <button class="ui-card ui-card-hover flex items-center gap-4 p-5 text-left" @click="goFavorites">
-          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
             <Icon icon="material-symbols:star-rounded" class="h-6 w-6" />
           </span>
           <div>
@@ -281,7 +267,7 @@ onMounted(loadStats);
           </div>
         </button>
         <button class="ui-card ui-card-hover flex items-center gap-4 p-5 text-left" @click="router.push('/problems')">
-          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
             <Icon icon="material-symbols:library-books-rounded" class="h-6 w-6" />
           </span>
           <div>
