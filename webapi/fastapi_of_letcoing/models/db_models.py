@@ -1083,6 +1083,20 @@ _SCHEMA_MIGRATIONS = [
         "DELETE FROM contest_scoreboard_snapshots WHERE snapshot_kind='PUBLIC_FREEZE';",
     ]),
     ('0021_production_controls', []),
+    ('0022_users_lookup_indexes', [
+        # 登录热路径：provider + provider_id 定位第三方用户
+        "CREATE INDEX IF NOT EXISTS idx_users_provider_identity ON users(provider, provider_id);",
+        # 大小写不敏感的用户名/邮箱精确匹配兜底
+        "CREATE INDEX IF NOT EXISTS idx_users_lower_username ON users(LOWER(username));",
+        "CREATE INDEX IF NOT EXISTS idx_users_lower_email ON users(LOWER(email));",
+        # 模糊搜索：pg_trgm 不可用时静默跳过（权限/扩展缺失不阻塞部署）
+        "DO $mig$ BEGIN "
+        "CREATE EXTENSION IF NOT EXISTS pg_trgm; "
+        "CREATE INDEX IF NOT EXISTS idx_users_username_trgm ON users USING gin (LOWER(username) gin_trgm_ops); "
+        "CREATE INDEX IF NOT EXISTS idx_users_email_trgm ON users USING gin (LOWER(email) gin_trgm_ops); "
+        "EXCEPTION WHEN OTHERS THEN RAISE NOTICE 'pg_trgm unavailable, skipping trigram indexes'; "
+        "END $mig$;",
+    ]),
 ]
 
 

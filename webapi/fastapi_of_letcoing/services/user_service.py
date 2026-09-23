@@ -24,6 +24,24 @@ from utils.role_utils import normalize_role, pick_highest_role, extract_highest_
 
 BEIJING_TZ = timezone(timedelta(hours=8))
 
+# 列表/搜索只取公开字段，避免 SELECT * 把 password_hash 等一并读回
+_USER_LIST_FIELDS = (
+    User.id,
+    User.username,
+    User.name,
+    User.email,
+    User.is_active,
+    User.role,
+    User.last_login,
+    User.provider,
+    User.provider_id,
+    User.avatar_url,
+    User.bio,
+    User.theme_preference,
+    User.created_at,
+    User.updated_at,
+)
+
 
 class UserService(DatabaseService, Injectable):
     """
@@ -190,7 +208,7 @@ class UserService(DatabaseService, Injectable):
             用户信息字典列表
         """
         try:
-            query = User.select()
+            query = User.select(*_USER_LIST_FIELDS)
             if active_only:
                 query = query.where(User.is_active == True)
 
@@ -212,10 +230,16 @@ class UserService(DatabaseService, Injectable):
             匹配的用户信息字典列表
         """
         try:
-            search_pattern = f"%{keyword}%"
-            query = (User.select()
-                    .where((User.username.contains(search_pattern)) |
-                           (User.email.contains(search_pattern)))
+            # 大小写不敏感 + 转义 LIKE 通配符；LOWER(col) ILIKE 可走 pg_trgm GIN 索引
+            lowered = (keyword or '').strip().lower()
+            if not lowered:
+                return []
+            escaped = (
+                lowered.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+            )
+            query = (User.select(*_USER_LIST_FIELDS)
+                    .where((fn.LOWER(User.username).contains(escaped)) |
+                           (fn.LOWER(User.email).contains(escaped)))
                     .limit(limit))
 
             return [user.to_dict() for user in query]
