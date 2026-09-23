@@ -90,6 +90,47 @@ def _load_oidc_providers_config():
             except Exception:
                 pass
 
+    # 环境变量缺失或无法解析时，回退到 .env 文件。
+    # 多行 JSON 无法被 python-dotenv 解析（只会得到 "["），必须用正则整块提取。
+    current_file = Path(__file__).resolve()
+    root_dotenv_path = (
+        current_file.parents[2] / '.env'
+        if len(current_file.parents) > 2
+        else current_file.with_name('.env')
+    )
+    found_dotenv = find_dotenv(usecwd=True)
+    dotenv_candidates = [
+        current_file.with_name('.env'),
+        Path(found_dotenv) if found_dotenv else None,
+        root_dotenv_path,
+    ]
+
+    for dotenv_path in dotenv_candidates:
+        if not dotenv_path or not dotenv_path.exists():
+            continue
+
+        try:
+            dotenv_content = dotenv_path.read_text(encoding='utf-8')
+        except OSError:
+            continue
+
+        match = re.search(
+            r'^OIDC_PROVIDERS\s*=\s*(\{[\s\S]*?\}|\[[\s\S]*?\])',
+            dotenv_content,
+            re.MULTILINE,
+        )
+        if not match:
+            continue
+
+        raw_block = match.group(1).strip()
+        for parser in (json.loads, ast.literal_eval):
+            try:
+                parsed = parser(raw_block)
+                if isinstance(parsed, (dict, list)):
+                    return _merge_oidc_providers_with_env(parsed)
+            except Exception:
+                pass
+
     return _merge_oidc_providers_with_env({})
 
 
@@ -200,9 +241,39 @@ def _merge_oidc_providers_with_env(base_config):
     return list(merged_configs.values())
 
 
+def _load_local_env():
+    """
+    本地开发环境变量加载。
+
+    优先级（后加载覆盖先加载）：
+    1. 后端 .env（与 app_factory.py 同级）
+    2. 仓库根目录 .env
+    3. 后端 .env.local（override=True，本地覆盖，不被 Git 追踪）
+    4. 当前工作目录下由 find_dotenv 找到的 .env
+
+    仅在 APP_ENV=development 时调用；生产环境由平台注入环境变量。
+    """
+    current_file = Path(__file__).resolve()
+    backend_env = current_file.with_name('.env')
+    backend_env_local = current_file.with_name('.env.local')
+    root_env = (
+        current_file.parents[2] / '.env'
+        if len(current_file.parents) > 2
+        else backend_env
+    )
+
+    if backend_env.exists():
+        load_dotenv(backend_env, override=False)
+    if root_env.exists():
+        load_dotenv(root_env, override=False)
+    if backend_env_local.exists():
+        load_dotenv(backend_env_local, override=True)
+    load_dotenv()
+
+
 def create_app(overrides=None):
     if os.environ.get('APP_ENV') == 'development':
-        load_dotenv(Path(__file__).with_name('.env'), override=False)
+        _load_local_env()
     app = Flask(__name__)
 
     # 配置 ProxyFix 中间件，用于处理反向代理（如 Nginx）传递的请求头信息
