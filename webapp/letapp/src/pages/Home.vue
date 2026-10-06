@@ -17,8 +17,6 @@ const languages = markRaw([
   { name: "C++", value: "cpp", icon: "vscode-icons:file-type-cpp" },
   { name: "Go", value: "go", icon: "vscode-icons:file-type-go" },
   { name: "Rust", value: "rust", icon: "vscode-icons:file-type-rust" },
-  { name: "Swift", value: "swift", icon: "vscode-icons:file-type-swift" },
-  { name: "Kotlin", value: "kotlin", icon: "vscode-icons:file-type-kotlin" },
 ]);
 
 const codeSamples: Record<string, string> = {
@@ -28,8 +26,6 @@ const codeSamples: Record<string, string> = {
   java: `<span class="tok-keyword">public</span> <span class="tok-type">class</span> <span class="tok-function">Main</span> {\n  <span class="tok-keyword">public</span> <span class="tok-type">static void</span> <span class="tok-function">main</span>(<span class="tok-object">String</span>[] args) {\n    <span class="tok-object">System.out</span>.<span class="tok-function">println</span>(<span class="tok-string">"Hello, Let Coding!"</span>);\n  }\n}`,
   go: `<span class="tok-keyword">package</span> <span class="tok-function">main</span>\n<span class="tok-keyword">import</span> <span class="tok-string">"fmt"</span>\n\n<span class="tok-type">func</span> <span class="tok-function">main</span>() {\n  <span class="tok-object">fmt</span>.<span class="tok-function">Println</span>(<span class="tok-string">"Hello, Let Coding!"</span>)\n}`,
   rust: `<span class="tok-type">fn</span> <span class="tok-function">main</span>() {\n  <span class="tok-object">println!</span>(<span class="tok-string">"Hello, Let Coding!"</span>);\n}`,
-  swift: `<span class="tok-keyword">print</span>(<span class="tok-string">"Hello, Let Coding!"</span>)`,
-  kotlin: `<span class="tok-type">fun</span> <span class="tok-function">main</span>() {\n  <span class="tok-object">println</span>(<span class="tok-string">"Hello, Let Coding!"</span>)\n}`,
 };
 
 const extMap: Record<string, string> = {
@@ -39,8 +35,6 @@ const extMap: Record<string, string> = {
   java: "java",
   go: "go",
   rust: "rs",
-  swift: "swift",
-  kotlin: "kt",
 };
 
 const currentCode = computed(
@@ -214,11 +208,6 @@ onMounted(loadDashboard);
     <section class="hero">
       <div class="app-container hero-layout">
         <div class="hero-copy">
-          <p class="hero-eyebrow">
-            <span class="hero-dot" aria-hidden="true"></span>
-            Let Coding · 在线评测
-          </p>
-
           <h1 class="hero-title">写代码，更加顺手</h1>
 
           <p class="hero-desc">
@@ -307,19 +296,25 @@ onMounted(loadDashboard);
 
             <section class="language-panel">
               <h2 class="panel-heading">支持语言</h2>
-              <div class="language-grid">
-                <button
-                  v-for="language in languages"
-                  :key="language.value"
-                  type="button"
-                  class="language-button"
-                  :class="{ 'is-active': currentLanguage === language.value }"
-                  :aria-label="language.name"
-                  :aria-pressed="currentLanguage === language.value"
-                  @click.stop="selectLanguage(language)"
+              <div class="language-segment">
+                <div
+                  class="ui-segmented ui-segmented-fill"
+                  role="group"
+                  aria-label="示例代码语言"
                 >
-                  <Icon :icon="language.icon" aria-hidden="true" />
-                </button>
+                  <button
+                    v-for="language in languages"
+                    :key="language.value"
+                    type="button"
+                    class="ui-segmented-item language-tab"
+                    :class="{ 'is-active': currentLanguage === language.value }"
+                    :aria-label="language.name"
+                    :aria-pressed="currentLanguage === language.value"
+                    @click.stop="selectLanguage(language)"
+                  >
+                    <Icon :icon="language.icon" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             </section>
           </div>
@@ -554,7 +549,7 @@ onMounted(loadDashboard);
 }
 
 /* ============================================================
-   终端：首页唯一重点视觉（固定深色表面）
+   终端：首页唯一重点视觉（跟随主题的代码表面）
    ============================================================ */
 .terminal {
   min-width: 0;
@@ -567,20 +562,10 @@ onMounted(loadDashboard);
 }
 
 .terminal-frame {
-  /* 终端是固定深色表面，其调色板独立于页面主题（深色主题下自动抬升一档） */
-  --t-bg: var(--color-term-bg);
-  --t-surface: var(--color-term-surface);
-  --t-line: var(--color-term-line);
-  --t-line-soft: var(--color-term-line-soft);
-  --t-muted: var(--color-term-muted);
-  --t-accent: var(--color-term-accent);
-  --t-ok: #4ade80;
-  --t-warn: #efc463;
-
   overflow: hidden;
-  border: 1px solid var(--t-line);
+  border: 1px solid var(--color-term-line);
   border-radius: var(--radius-tool);
-  background: var(--t-bg);
+  background: var(--color-term-bg);
   box-shadow: var(--shadow-tool);
 }
 
@@ -589,8 +574,8 @@ onMounted(loadDashboard);
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   min-height: 2.75rem;
-  border-bottom: 1px solid var(--t-line);
-  background: var(--t-surface);
+  border-bottom: 1px solid var(--color-term-line);
+  background: var(--color-term-surface);
   padding: 0 1rem;
 }
 .terminal-dots {
@@ -601,20 +586,20 @@ onMounted(loadDashboard);
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 999px;
-  background: #2b3946;
+  background: var(--color-term-dot-3);
 }
 .terminal-dots span:first-child {
-  background: #3d4b58;
+  background: var(--color-term-dot-1);
 }
 .terminal-dots span:nth-child(2) {
-  background: #4a4530;
+  background: var(--color-term-dot-2);
 }
 .terminal-path {
   max-width: 14rem;
   overflow: hidden;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  color: #93a3b1;
+  color: var(--color-term-path);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -622,7 +607,7 @@ onMounted(loadDashboard);
   justify-self: end;
   width: 1.05rem;
   height: 1.05rem;
-  color: var(--t-accent);
+  color: var(--color-term-accent);
 }
 
 .terminal-workspace {
@@ -637,24 +622,24 @@ onMounted(loadDashboard);
   gap: 0.4rem;
   min-height: 2.4rem;
   margin: 0;
-  border-bottom: 1px solid var(--t-line-soft);
+  border-bottom: 1px solid var(--color-term-line-soft);
   padding: 0 0.9rem;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: var(--t-muted);
+  color: var(--color-term-muted);
 }
 .panel-heading :deep(svg) {
   width: 0.95rem;
   height: 0.95rem;
-  color: var(--t-accent);
+  color: var(--color-term-accent);
 }
 
 .terminal-code {
   min-width: 0;
-  border-right: 1px solid var(--t-line);
-  background: var(--t-bg);
+  border-right: 1px solid var(--color-term-line);
+  background: var(--color-term-bg);
 }
 
 .editor-body {
@@ -672,7 +657,7 @@ onMounted(loadDashboard);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   line-height: 1.7rem;
-  color: #3e4c58;
+  color: var(--color-term-gutter);
   user-select: none;
 }
 .editor-body pre {
@@ -693,8 +678,8 @@ onMounted(loadDashboard);
   right: 0;
   left: 2.5rem;
   height: 1.7rem;
-  border-left: 2px solid var(--t-accent);
-  background: rgba(56, 198, 212, 0.07);
+  border-left: 2px solid var(--color-term-accent);
+  background: var(--color-term-active-line);
 }
 .editor-gutter,
 .editor-body pre {
@@ -702,33 +687,33 @@ onMounted(loadDashboard);
   z-index: 1;
 }
 
-/* 代码语义色：浅色令牌在深色终端内单独定义，保证对比度 */
+/* 代码语义色：浅色/深色各自定义，保证在对应表面上的对比度 */
 :deep(.tok-directive),
 :deep(.tok-type) {
-  color: #6fd8e4;
+  color: var(--color-term-code-directive);
 }
 :deep(.tok-muted) {
-  color: #6b7a88;
+  color: var(--color-term-code-muted);
 }
 :deep(.tok-function),
 :deep(.tok-number) {
-  color: #efc463;
+  color: var(--color-term-code-function);
 }
 :deep(.tok-object) {
-  color: #a8becd;
+  color: var(--color-term-code-object);
 }
 :deep(.tok-string) {
-  color: #7ed9a6;
+  color: var(--color-term-code-string);
 }
 :deep(.tok-keyword) {
-  color: #f0a6b0;
+  color: var(--color-term-code-keyword);
 }
 
 .terminal-result {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  background: var(--t-surface);
+  background: var(--color-term-surface);
 }
 
 .judge-timeline {
@@ -754,78 +739,69 @@ onMounted(loadDashboard);
 }
 /* 状态同时使用图标 + 文字 + 颜色，不依赖单一颜色差异 */
 .is-compiling {
-  color: var(--t-warn);
+  color: var(--color-term-warn);
 }
 .is-running {
-  color: var(--t-accent);
+  color: var(--color-term-accent);
 }
 .is-accepted {
-  color: var(--t-ok);
+  color: var(--color-term-ok);
 }
 
 .judge-output {
   display: grid;
   gap: 0.35rem;
   margin: auto 0.9rem 0.9rem;
-  border: 1px solid var(--t-line);
+  border: 1px solid var(--color-term-line);
   border-radius: var(--radius-card);
-  background: var(--t-bg);
+  background: var(--color-term-bg);
   padding: 0.7rem 0.8rem;
 }
 .judge-output-label {
   font-family: var(--font-mono);
   font-size: 0.625rem;
   letter-spacing: 0.04em;
-  color: var(--t-muted);
+  color: var(--color-term-muted);
 }
 .judge-output-value {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: #7ed9a6;
+  color: var(--color-term-code-string);
 }
 
 .language-panel {
   display: grid;
   grid-template-columns: 7.5rem minmax(0, 1fr);
-  border-top: 1px solid var(--t-line);
-  background: var(--t-surface);
+  border-top: 1px solid var(--color-term-line);
+  background: var(--color-term-surface);
 }
 .language-panel > .panel-heading {
   min-height: 3.4rem;
-  border-right: 1px solid var(--t-line-soft);
+  border-right: 1px solid var(--color-term-line-soft);
   border-bottom: 0;
   padding: 0 1rem;
 }
-.language-grid {
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--t-line-soft);
+/* 语言切换复用全局 .ui-segmented（iOS 分段控件），此处只补图标专用的尺寸与未选中态 */
+.language-segment {
+  display: flex;
+  align-items: center;
+  padding: 0.375rem 0.9rem;
 }
-.language-button {
-  display: grid;
-  min-width: 0;
-  min-height: 3.4rem;
-  place-items: center;
-  border: 0;
-  background: var(--t-surface);
-  cursor: pointer;
-  opacity: 0.5;
-  transition:
-    background-color 0.15s ease,
-    opacity 0.15s ease;
+.language-tab {
+  padding-inline: 0.25rem;
+  opacity: 0.45;
+  transition: opacity 0.18s ease;
 }
-.language-button :deep(svg) {
-  width: 1.3rem;
-  height: 1.3rem;
+.language-tab:hover {
+  opacity: 0.75;
 }
-.language-button:hover,
-.language-button.is-active {
+.language-tab.is-active,
+.language-tab.is-active:hover {
   opacity: 1;
-  background: var(--color-term-hover);
 }
-.language-button.is-active {
-  box-shadow: inset 0 -2px 0 var(--t-accent);
+.language-tab :deep(svg) {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* ============================================================
@@ -1083,7 +1059,7 @@ onMounted(loadDashboard);
   }
   .terminal-code {
     border-right: 0;
-    border-bottom: 1px solid var(--t-line);
+    border-bottom: 1px solid var(--color-term-line);
   }
   .editor-body {
     min-height: 15rem;
@@ -1109,13 +1085,14 @@ onMounted(loadDashboard);
   .language-panel > .panel-heading {
     min-height: 2.25rem;
     border-right: 0;
-    border-bottom: 1px solid var(--t-line-soft);
+    border-bottom: 1px solid var(--color-term-line-soft);
   }
-  .language-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .language-segment {
+    padding: 0.375rem 0.6rem;
   }
-  .language-button {
-    min-height: 3rem;
+  .language-tab :deep(svg) {
+    width: 1.1rem;
+    height: 1.1rem;
   }
   .dash-action {
     padding: 1rem;
@@ -1134,7 +1111,7 @@ onMounted(loadDashboard);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .language-button,
+  .language-tab,
   .dash-row {
     transition-duration: 0.01ms !important;
   }

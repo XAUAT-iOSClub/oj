@@ -73,15 +73,28 @@
   --color-segment-track: #edf0f4;
   --color-segment-thumb: #ffffff;
 
-  /* ---- 终端工具：固定深色表面，深色主题下抬升以保持层次 ---- */
-  --color-term-bg: #0b1117;
-  --color-term-surface: #10161d;
-  --color-term-line: #1e2a34;
-  --color-term-line-soft: #17212a;
-  --color-term-hover: #16202a;
-  --color-term-muted: #6b7a88;
-  --color-term-text: #d7e2ea;
-  --color-term-accent: #38c6d4;
+  /* ---- 终端工具：跟随主题的代码表面（浅色为白底卡片，深色为深色工具面） ---- */
+  --color-term-bg: #ffffff;
+  --color-term-surface: #f5f7f9;
+  --color-term-line: #e2e7ed;
+  --color-term-line-soft: #eef1f5;
+  --color-term-muted: #5b6472;
+  --color-term-text: #1f2937;
+  --color-term-accent: #0b7c8a;
+  --color-term-path: #475569;
+  --color-term-gutter: #9aa4b0;
+  --color-term-active-line: rgb(11 124 138 / 0.06);
+  --color-term-ok: #047857;
+  --color-term-warn: #b45309;
+  --color-term-dot-1: #c3ccd7;
+  --color-term-dot-2: #d9cdb4;
+  --color-term-dot-3: #e0e6ec;
+  --color-term-code-directive: #0b7c8a;
+  --color-term-code-muted: #6b7684;
+  --color-term-code-function: #b45309;
+  --color-term-code-object: #475569;
+  --color-term-code-string: #047857;
+  --color-term-code-keyword: #be185d;
 
   /* ---- 形态 ---- */
   --radius-card: 8px;
@@ -162,10 +175,23 @@
     --color-term-surface: #141c25;
     --color-term-line: #2a3742;
     --color-term-line-soft: #1e2832;
-    --color-term-hover: #1b242e;
     --color-term-muted: #7b8b99;
     --color-term-text: #dbe6ee;
     --color-term-accent: #38c6d4;
+    --color-term-path: #93a3b1;
+    --color-term-gutter: #3e4c58;
+    --color-term-active-line: rgb(56 198 212 / 0.07);
+    --color-term-ok: #4ade80;
+    --color-term-warn: #efc463;
+    --color-term-dot-1: #3d4b58;
+    --color-term-dot-2: #4a4530;
+    --color-term-dot-3: #2b3946;
+    --color-term-code-directive: #6fd8e4;
+    --color-term-code-muted: #6b7a88;
+    --color-term-code-function: #efc463;
+    --color-term-code-object: #a8becd;
+    --color-term-code-string: #7ed9a6;
+    --color-term-code-keyword: #f0a6b0;
 
     --shadow-thumb: 0 1px 2px rgb(0 0 0 / 0.45);
     --shadow-overlay: 0 4px 16px rgb(0 0 0 / 0.45), 0 1px 3px rgb(0 0 0 / 0.35);
