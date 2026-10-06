@@ -25,7 +25,7 @@
 
 - 后端 `python -m pytest -q`：60 项全部通过，包含 PostgreSQL 临时集群、Redis Unix socket、本地 HTTP 上游和显式开发执行器；不连接用户部署数据库。
 - 前端 `npm run build` 已成功，`npx playwright test` 的 5 项登录/现有样式测试全部通过。
-- 依赖审计初次报告 11 个包、125 条已知漏洞记录；升级锁定版本后 `pip-audit -r requirements.txt` 返回 `No known vulnerabilities found`。这表示查询时的公开公告结果，不代表不存在未知漏洞。
+- 依赖审计初次报告 11 个包、125 条已知漏洞记录；升级锁定版本后 对 `uv export --no-dev` 导出的锁定生产依赖集执行 `pip-audit` 返回 `No known vulnerabilities found`。这表示查询时的公开公告结果，不代表不存在未知漏洞。
 - 两份 Compose 已通过 `docker compose config --no-env-resolution --quiet` 的配置语法验证。
 - 本机没有可用 Docker daemon，未完成镜像构建或容器隔离验收。CI 包含镜像构建及 `tests/sandbox_integration.py`，缺少 daemon、镜像或 cgroup v2 会失败，不会跳过。必须在部署环境完成该项后再开放比赛判题。
 - 没有执行生产数据迁移、线上 OAuth 提供商联调或生产负载测试；没有给出虚构的 QPS、P95 或性能提升比例。上线前应用真实数据量与并发基线验证索引计划、队列等待时间和 JVM/Go 冷编译开销。

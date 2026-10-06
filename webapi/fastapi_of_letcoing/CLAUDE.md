@@ -24,7 +24,7 @@ This is a **Flask-based code execution API service** (LetCoding API) that allows
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+uv sync      # 或 uv add <包名>
 
 # Run development server (port 6173)
 python main.py
