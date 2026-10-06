@@ -45,6 +45,13 @@ interface HeadingItem {
   children: HeadingItem[];
 }
 
+/** 抛给父级的扁平标题大纲，用于把目录渲染到组件外（例如学习页的侧栏）。 */
+interface HeadingOutline {
+  id: string;
+  text: string;
+  level: number;
+}
+
 const props = withDefaults(defineProps<{
   content?: Content;
   source?: string;
@@ -59,6 +66,8 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   (e: 'navigate', file: string): void;
+  (e: 'headings', headings: HeadingOutline[]): void;
+  (e: 'active-heading', id: string): void;
 }>();
 
 const route = useRoute();
@@ -335,8 +344,15 @@ md.core.ruler.push('resolve_images', (state) => {
   });
 });
 
+// \u5fc5\u987b\u4e0e markdown-it-anchor \u7684\u9ed8\u8ba4 slugify \u4fdd\u6301\u4e00\u81f4\uff0c\u5426\u5219\u76ee\u5f55\u62ff\u5230\u7684 id \u4e0e\u6807\u9898\u5b9e\u9645
+// \u5199\u5165 DOM \u7684 id \u4e0d\u540c\uff0c\u951a\u70b9\u8df3\u8f6c\u548c\u5f53\u524d\u5c0f\u8282\u9ad8\u4eae\u90fd\u4f1a\u5931\u6548\u3002
+const slugifyHeading = (text: string) =>
+  encodeURIComponent(text.trim().toLowerCase().replace(/\s+/g, '-'));
+
 const extractHeadings = (tokens: ReturnType<typeof md.parse>) => {
   const extractedHeadings: HeadingItem[] = [];
+  // markdown-it-anchor \u4f1a\u7ed9\u91cd\u590d\u6807\u9898\u4f9d\u6b21\u8ffd\u52a0 -1\u3001-2\uff0c\u8fd9\u91cc\u590d\u73b0\u540c\u6837\u7684\u53bb\u91cd\u89c4\u5219\u3002
+  const usedSlugs = new Set<string>();
 
   for (let i = 0; i < tokens.length; i += 1) {
     const token = tokens[i];
@@ -348,10 +364,21 @@ const extractHeadings = (tokens: ReturnType<typeof md.parse>) => {
     const nextToken = tokens[i + 1];
 
     if (nextToken?.type === 'inline') {
-      const text = nextToken.content;
-      const id = text.toLowerCase()
-        .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+      // \u4e0e markdown-it-anchor \u7684 getTokensText \u4e00\u81f4\uff1a\u53ea\u53d6\u6587\u672c\u4e0e\u884c\u5185\u4ee3\u7801\u3002
+      // permalinkSpace \u4f1a\u5f80 children \u91cc\u585e\u4e00\u4e2a " "\uff0c\u5fc5\u987b trim \u6389\u518d\u4f5c\u4e3a\u6807\u9898\u6587\u672c\u3002
+      const text = (nextToken.children || [])
+        .filter((child) => child.type === 'text' || child.type === 'code_inline')
+        .map((child) => child.content)
+        .join('')
+        .trim();
+      const base = slugifyHeading(text);
+      let id = base;
+      let suffix = 1;
+      while (usedSlugs.has(id)) {
+        id = `${base}-${suffix}`;
+        suffix += 1;
+      }
+      usedSlugs.add(id);
 
       extractedHeadings.push({
         id,
@@ -399,10 +426,23 @@ const buildHeadingTree = (flatHeadings: HeadingItem[]) => {
   return tree;
 };
 
+/** 按阅读顺序摊平标题树，父级在前、子级紧随其后。 */
+function flattenHeadings(nodes: HeadingItem[]): HeadingOutline[] {
+  return nodes.flatMap((node) => [
+    { id: node.id, text: node.text, level: node.level },
+    ...flattenHeadings(node.children),
+  ]);
+}
+
 const render = async (markdown: string) => {
   const env = { baseDir: props.baseDir };
   const tokens = md.parse(markdown, env);
-  headings.value = buildHeadingTree(extractHeadings(tokens));
+  const tree = buildHeadingTree(extractHeadings(tokens));
+  headings.value = tree;
+  // 换文档时先清掉上一份的当前小节，避免滚动前残留高亮。
+  activeHeadingId.value = '';
+  // immediate 时本函数仍在 setup 期间执行，推迟一拍再通知父级，避免父级在渲染中被改写。
+  void nextTick(() => emit('headings', flattenHeadings(tree)));
   const renderedHtml = md.renderer.render(tokens, md.options, env);
   const finalHtml = props.showHeadingLinks
     ? renderedHtml
@@ -475,6 +515,9 @@ watch(
   { immediate: true },
 );
 
+// 当前小节由窗口滚动驱动，这里只把它转告给父级（例如学习页的侧栏目录）。
+watch(activeHeadingId, (id) => emit('active-heading', id));
+
 const anchorLinks = computed(() => headings.value);
 import { formatDate } from '../utils/time';
 const date = computed(() => (props.content?.date ? formatDate(props.content?.date) : ''));
@@ -482,7 +525,8 @@ const hasHeaderMeta = computed(() => Boolean(props.content?.title || props.conte
 
 const handleAnchorClick = (event: Event, href: string) => {
   event.preventDefault();
-  const targetElement = document.querySelector(href);
+  // id 经过 encodeURIComponent，含 % 无法直接拼进 CSS 选择器，只能按 id 查找。
+  const targetElement = document.getElementById(href.replace(/^#/, ''));
 
   if (targetElement) {
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -670,7 +714,7 @@ onUnmounted(() => {
 
 .reading-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #2563EB, #3B82F6);
+  background: var(--color-accent);
   border-radius: 0 2px 2px 0;
   transition: width 0.1s ease-out;
 }
@@ -694,27 +738,27 @@ onUnmounted(() => {
 .toc-nav {
   padding: 20px 20px 24px;
   border-radius: 12px;
-  border: 1px solid #E2E8F0;
-  background: white;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 :global(html.dark) .toc-nav {
-  border-color: #1E293B;
-  background: #111827;
+  border-color: var(--color-border);
+  background: var(--color-surface);
 }
 
 .toc-title {
   font-size: 15px;
   font-weight: 650;
-  color: #1E293B;
+  color: var(--color-foreground);
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--color-border);
 }
 
 :global(html.dark) .toc-title {
-  color: #E5E7EB;
-  border-color: #1E293B;
+  color: var(--color-foreground);
+  border-color: var(--color-border);
 }
 
 .toc-list {
@@ -735,24 +779,24 @@ onUnmounted(() => {
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  color: #475569;
+  color: var(--color-muted-foreground);
   text-decoration: none;
   transition: all 0.15s;
   line-height: 1.5;
 }
 
 .toc-link:hover {
-  background: #F8FAFC;
-  color: #2563EB;
+  background: var(--color-surface-muted);
+  color: var(--color-accent-text);
 }
 
 :global(html.dark) .toc-link {
-  color: #94A3B8;
+  color: var(--color-muted-foreground);
 }
 
 :global(html.dark) .toc-link:hover {
-  background: #1E293B;
-  color: #60A5FA;
+  background: var(--color-surface-muted);
+  color: var(--color-accent-text);
 }
 
 .toc-indicator {
@@ -760,13 +804,13 @@ onUnmounted(() => {
   width: 2px;
   height: 16px;
   border-radius: 1px;
-  background: #2563EB;
+  background: var(--color-accent-solid);
   flex-shrink: 0;
 }
 
 .toc-link.active {
-  background: #EFF6FF;
-  color: #2563EB;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
   font-weight: 600;
 }
 
@@ -775,8 +819,8 @@ onUnmounted(() => {
 }
 
 :global(html.dark) .toc-link.active {
-  background: #172554;
-  color: #60A5FA;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
 }
 
 .toc-sublist {
@@ -794,58 +838,58 @@ onUnmounted(() => {
   padding: 4px 10px;
   border-radius: 5px;
   font-size: 13px;
-  color: #64748B;
+  color: var(--color-muted-foreground);
   text-decoration: none;
   transition: all 0.15s;
   line-height: 1.5;
 }
 
 .toc-sublink:hover {
-  background: #F8FAFC;
-  color: #2563EB;
+  background: var(--color-surface-muted);
+  color: var(--color-accent-text);
 }
 
 .toc-sublink.active {
-  background: #EFF6FF;
-  color: #2563EB;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
   font-weight: 600;
 }
 
 :global(html.dark) .toc-sublink {
-  color: #64748B;
+  color: var(--color-muted-foreground);
 }
 
 :global(html.dark) .toc-sublink:hover {
-  background: #1E293B;
-  color: #60A5FA;
+  background: var(--color-surface-muted);
+  color: var(--color-accent-text);
 }
 
 :global(html.dark) .toc-sublink.active {
-  background: #172554;
-  color: #60A5FA;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
 }
 
 /* ===== 文章头部 ===== */
 .article-header {
   margin-bottom: 36px;
   padding-bottom: 28px;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--color-border);
 }
 
 :global(html.dark) .article-header {
-  border-color: #1E293B;
+  border-color: var(--color-border);
 }
 
 .article-title {
   font-size: 34px;
   font-weight: 700;
   line-height: 1.3;
-  color: #0F172A;
+  color: var(--color-foreground);
   letter-spacing: -0.02em;
 }
 
 :global(html.dark) .article-title {
-  color: #F1F5F9;
+  color: var(--color-foreground);
 }
 
 .article-meta {
@@ -861,7 +905,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 5px;
   font-size: 13px;
-  color: #94A3B8;
+  color: var(--color-muted-foreground);
 }
 
 /* ===== 设计令牌（统一 Markdown 内容组件体系） ===== */
@@ -875,25 +919,25 @@ onUnmounted(() => {
   --md-radius-md: 8px;
   --md-radius-lg: 10px;
   /* 边框与背景（亮色） */
-  --md-border: #E5E7EB;
-  --md-border-soft: #EEF2F7;
-  --md-tint: #F8FAFC;
+  --md-border: var(--color-border);
+  --md-border-soft: var(--color-border);
+  --md-tint: var(--color-surface-muted);
   --md-tint-2: #F1F5F9;
   /* 文本 */
-  --md-text: #334155;
-  --md-text-strong: #1E293B;
-  --md-text-muted: #64748B;
-  --md-accent: #2563EB;
+  --md-text: var(--color-foreground);
+  --md-text-strong: var(--color-foreground);
+  --md-text-muted: var(--color-muted-foreground);
+  --md-accent: var(--color-accent);
 }
 :global(html.dark) .markdown-content {
-  --md-border: #334155;
-  --md-border-soft: #1E293B;
-  --md-tint: #0F172A;
+  --md-border: var(--color-border-strong);
+  --md-border-soft: var(--color-border);
+  --md-tint: var(--color-background);
   --md-tint-2: #1E293B;
-  --md-text: #CBD5E1;
-  --md-text-strong: #F1F5F9;
-  --md-text-muted: #94A3B8;
-  --md-accent: #60A5FA;
+  --md-text: var(--color-foreground);
+  --md-text-strong: var(--color-foreground);
+  --md-text-muted: var(--color-muted-foreground);
+  --md-accent: var(--color-accent);
 }
 
 /* ===== 正文 Markdown 内容 ===== */
@@ -902,7 +946,7 @@ onUnmounted(() => {
   font-weight: 700;
   margin-top: 52px;
   margin-bottom: 18px;
-  color: #0F172A;
+  color: var(--color-foreground);
   line-height: 1.35;
   letter-spacing: -0.01em;
 }
@@ -912,8 +956,15 @@ onUnmounted(() => {
   font-weight: 650;
   margin-top: 40px;
   margin-bottom: 14px;
-  color: #1E293B;
+  color: var(--color-foreground);
   line-height: 1.4;
+}
+
+/* 正文首行的标题就是文档标题，上方已有页面工具条，不需要再加一段间距。 */
+.markdown-content :deep(> h1:first-child),
+.markdown-content :deep(h1:first-child) {
+  margin-top: 0;
+  letter-spacing: -0.02em;
 }
 
 .markdown-content :deep(h3) {
@@ -921,7 +972,7 @@ onUnmounted(() => {
   font-weight: 600;
   margin-top: 32px;
   margin-bottom: 12px;
-  color: #1E293B;
+  color: var(--color-foreground);
   line-height: 1.45;
 }
 
@@ -930,53 +981,55 @@ onUnmounted(() => {
   font-weight: 600;
   margin-top: 28px;
   margin-bottom: 10px;
-  color: #334155;
+  color: var(--color-foreground);
 }
 
 :global(html.dark) .markdown-content :deep(h1),
 :global(html.dark) .markdown-content :deep(h2),
 :global(html.dark) .markdown-content :deep(h3),
 :global(html.dark) .markdown-content :deep(h4) {
-  color: #F1F5F9;
+  color: var(--color-foreground);
 }
 
 .markdown-content :deep(p) {
   font-size: 15.5px;
   line-height: 1.85;
-  color: #334155;
+  color: var(--color-foreground);
   margin-bottom: 16px;
 }
 
 :global(html.dark) .markdown-content :deep(p) {
-  color: #CBD5E1;
+  color: var(--color-foreground);
 }
 
 .markdown-content :deep(strong) {
   font-weight: 600;
-  color: #1E293B;
+  color: var(--color-foreground);
 }
 
 :global(html.dark) .markdown-content :deep(strong) {
-  color: #F1F5F9;
+  color: var(--color-foreground);
 }
 
 .markdown-content :deep(a) {
-  color: #2563EB;
+  color: var(--color-accent-text);
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.15s;
+  /* 正文里常有整条 URL，窄屏必须允许在任意位置断行，否则会撑出横向滚动。 */
+  overflow-wrap: anywhere;
 }
 
 .markdown-content :deep(a:hover) {
-  border-bottom-color: #2563EB;
+  border-bottom-color: var(--color-accent);
 }
 
 :global(html.dark) .markdown-content :deep(a) {
-  color: #60A5FA;
+  color: var(--color-accent-text);
 }
 
 :global(html.dark) .markdown-content :deep(a:hover) {
-  border-bottom-color: #60A5FA;
+  border-bottom-color: var(--color-accent);
 }
 
 /* ===== 标题锚点链接 ===== */
@@ -984,7 +1037,7 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   margin-left: 6px;
-  color: #CBD5E1;
+  color: var(--color-foreground);
   font-size: 0.8em;
   opacity: 0;
   transition: opacity 0.15s;
@@ -1000,7 +1053,7 @@ onUnmounted(() => {
 }
 
 :global(html.dark) .markdown-content :deep(.heading-anchor) {
-  color: #475569;
+  color: var(--color-muted-foreground);
 }
 
 /* ===== 列表 ===== */
@@ -1013,12 +1066,12 @@ onUnmounted(() => {
 .markdown-content :deep(li) {
   font-size: 15.5px;
   line-height: 1.85;
-  color: #334155;
+  color: var(--color-foreground);
   padding: 3px 0;
 }
 
 :global(html.dark) .markdown-content :deep(li) {
-  color: #CBD5E1;
+  color: var(--color-foreground);
 }
 
 .markdown-content :deep(ul li) {
@@ -1103,7 +1156,7 @@ onUnmounted(() => {
   color: var(--md-text-strong);
 }
 .markdown-content :deep(.code-copy-btn.copied) {
-  color: #16A34A;
+  color: var(--color-signal-text);
 }
 .markdown-content :deep(pre) {
   margin: 0;
@@ -1226,16 +1279,13 @@ onUnmounted(() => {
   margin-bottom: 0;
 }
 /* 各语义类型仅通过强调色区分，结构完全统一 */
-.markdown-content :deep(.tip)     { --accent: #06B6D4; --accent-bg: #ECFEFF; }
-.markdown-content :deep(.note)     { --accent: #2563EB; --accent-bg: #EFF6FF; }
-.markdown-content :deep(.warning)  { --accent: #F59E0B; --accent-bg: #FFFBEB; }
-.markdown-content :deep(.danger)   { --accent: #F43F5E; --accent-bg: #FFF1F2; }
+.markdown-content :deep(.tip)     { --accent: var(--color-accent); --accent-bg: var(--color-accent-soft); }
+.markdown-content :deep(.note)     { --accent: var(--color-progress); --accent-bg: var(--color-progress-soft); }
+.markdown-content :deep(.warning)  { --accent: var(--color-warning); --accent-bg: var(--color-warning-soft); }
+.markdown-content :deep(.danger)   { --accent: var(--color-danger); --accent-bg: var(--color-danger-soft); }
 .markdown-content :deep(.example)  { --accent: #8B5CF6; --accent-bg: #F5F3FF; }
-.markdown-content :deep(.success)  { --accent: #16A34A; --accent-bg: #F0FDF4; }
-:global(html.dark) .markdown-content :deep(.tip)    { --accent: #22D3EE; --accent-bg: #083344; }
-:global(html.dark) .markdown-content :deep(.note)   { --accent: #60A5FA; --accent-bg: #172554; }
-:global(html.dark) .markdown-content :deep(.warning){ --accent: #FBBF24; --accent-bg: #422006; }
-:global(html.dark) .markdown-content :deep(.danger) { --accent: #FB7185; --accent-bg: #4C0519; }
+.markdown-content :deep(.success)  { --accent: var(--color-signal); --accent-bg: var(--color-signal-soft); }
+/* example 为分类色（非状态），沿用独立色板 */
 :global(html.dark) .markdown-content :deep(.example){ --accent: #A78BFA; --accent-bg: #2E1065; }
 :global(html.dark) .markdown-content :deep(.success){ --accent: #4ADE80; --accent-bg: #052E16; }
 
@@ -1316,7 +1366,7 @@ onUnmounted(() => {
 }
 /* 行内公式：与正文基线一致，不另起样式 */
 .markdown-content :deep(.katex-error) {
-  color: #DC2626;
+  color: var(--color-danger-text);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -1371,49 +1421,49 @@ onUnmounted(() => {
 <style>
 /* ===== 全局 Markdown 文章样式（非 scoped，确保渲染内容生效） ===== */
 html:not(.dark) .markdown-article {
-  color: #334155;
+  color: var(--color-foreground);
 }
 
 html.dark .markdown-article {
-  color: #CBD5E1;
+  color: var(--color-foreground);
 }
 
 html:not(.dark) .markdown-article .markdown-content :is(p, li, blockquote, td, th, dd, dt, figcaption, span),
 html:not(.dark) .markdown-article header,
 html:not(.dark) .markdown-article header time,
 html:not(.dark) .markdown-article header span {
-  color: #334155;
+  color: var(--color-foreground);
 }
 
 html.dark .markdown-article .markdown-content :is(p, li, blockquote, td, th, dd, dt, figcaption, span),
 html.dark .markdown-article header,
 html.dark .markdown-article header time,
 html.dark .markdown-article header span {
-  color: #CBD5E1;
+  color: var(--color-foreground);
 }
 
 html:not(.dark) .markdown-article .markdown-content :is(h1, h2, h3, h4, h5, h6) {
-  color: #0F172A;
+  color: var(--color-foreground);
 }
 
 html.dark .markdown-article .markdown-content :is(h1, h2, h3, h4, h5, h6) {
-  color: #F1F5F9;
+  color: var(--color-foreground);
 }
 
 html:not(.dark) .markdown-article .markdown-content :is(a, a:visited) {
-  color: #2563EB;
+  color: var(--color-accent-text);
 }
 
 html.dark .markdown-article .markdown-content :is(a, a:visited) {
-  color: #60A5FA;
+  color: var(--color-accent-text);
 }
 
 html:not(.dark) .markdown-article .markdown-content :is(code):not(pre code):not(.code-block-wrapper code) {
-  color: #2563EB;
+  color: var(--color-accent-text);
 }
 
 html.dark .markdown-article .markdown-content :is(code):not(pre code):not(.code-block-wrapper code) {
-  color: #60A5FA;
+  color: var(--color-accent-text);
 }
 
 /* Prism token 色彩覆盖 - 亮色主题 */
@@ -1421,11 +1471,11 @@ html:not(.dark) .token.comment,
 html:not(.dark) .token.prolog,
 html:not(.dark) .token.doctype,
 html:not(.dark) .token.cdata {
-  color: #64748b !important;
+  color: var(--color-muted-foreground) !important;
 }
 
 html:not(.dark) .token.punctuation {
-  color: #64748b !important;
+  color: var(--color-muted-foreground) !important;
 }
 
 html:not(.dark) .token.property,
@@ -1444,13 +1494,13 @@ html:not(.dark) .token.string,
 html:not(.dark) .token.char,
 html:not(.dark) .token.builtin,
 html:not(.dark) .token.inserted {
-  color: #059669 !important;
+  color: var(--color-signal-text) !important;
 }
 
 html:not(.dark) .token.operator,
 html:not(.dark) .token.entity,
 html:not(.dark) .token.url {
-  color: #334155 !important;
+  color: var(--color-foreground) !important;
 }
 
 html:not(.dark) .token.atrule,
@@ -1461,13 +1511,13 @@ html:not(.dark) .token.keyword {
 
 html:not(.dark) .token.function,
 html:not(.dark) .token.class-name {
-  color: #2563eb !important;
+  color: var(--color-accent-text) !important;
 }
 
 html:not(.dark) .token.regex,
 html:not(.dark) .token.important,
 html:not(.dark) .token.variable {
-  color: #d97706 !important;
+  color: var(--color-warning-text) !important;
 }
 
 /* Prism token 色彩覆盖 - 暗色主题 */
@@ -1475,11 +1525,11 @@ html.dark .token.comment,
 html.dark .token.prolog,
 html.dark .token.doctype,
 html.dark .token.cdata {
-  color: #6b7280 !important;
+  color: var(--color-muted-foreground) !important;
 }
 
 html.dark .token.punctuation {
-  color: #9ca3af !important;
+  color: var(--color-muted-foreground) !important;
 }
 
 html.dark .token.property,
@@ -1489,7 +1539,7 @@ html.dark .token.number,
 html.dark .token.constant,
 html.dark .token.symbol,
 html.dark .token.deleted {
-  color: #f59e0b !important;
+  color: var(--color-warning-text) !important;
 }
 
 html.dark .token.selector,
@@ -1498,13 +1548,13 @@ html.dark .token.string,
 html.dark .token.char,
 html.dark .token.builtin,
 html.dark .token.inserted {
-  color: #34d399 !important;
+  color: var(--color-signal-text) !important;
 }
 
 html.dark .token.operator,
 html.dark .token.entity,
 html.dark .token.url {
-  color: #d1d5db !important;
+  color: var(--color-foreground) !important;
 }
 
 html.dark .token.atrule,
@@ -1515,25 +1565,25 @@ html.dark .token.keyword {
 
 html.dark .token.function,
 html.dark .token.class-name {
-  color: #60a5fa !important;
+  color: var(--color-accent-text) !important;
 }
 
 html.dark .token.regex,
 html.dark .token.important,
 html.dark .token.variable {
-  color: #fbbf24 !important;
+  color: var(--color-warning-text) !important;
 }
 
 /* 暗色主题代码块背景 */
 html.dark .markdown-content pre[class*='language-'],
 html.dark .markdown-content code[class*='language-'] {
-  background: #0F172A !important;
-  color: #E2E8F0 !important;
+  background: var(--color-background) !important;
+  color: var(--color-foreground) !important;
 }
 
 html:not(.dark) .markdown-content pre[class*='language-'],
 html:not(.dark) .markdown-content code[class*='language-'] {
-  background: #F8FAFC !important;
-  color: #0F172A !important;
+  background: var(--color-surface-muted) !important;
+  color: var(--color-foreground) !important;
 }
 </style>

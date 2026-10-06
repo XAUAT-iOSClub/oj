@@ -94,7 +94,7 @@ onMounted(loadStats);
       <p class="font-bold text-slate-700 dark:text-slate-200">统计数据加载失败</p>
       <p class="text-sm text-slate-500 dark:text-slate-400">{{ loadError }}</p>
       <button
-        class="mt-1 rounded-md bg-[#2563EB] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8]"
+        class="mt-1 rounded-md bg-[var(--color-accent-solid)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent-solid-hover)]"
         @click="loadStats"
       >
         重新加载
@@ -133,7 +133,7 @@ onMounted(loadStats);
         <section class="admin-card">
           <div class="mb-4 flex items-center justify-between">
             <h2 class="text-xl font-bold">最近注册用户</h2>
-            <button class="text-sm font-bold text-[#2563EB] dark:text-[#60A5FA]" @click="goUsers">查看全部</button>
+            <button class="text-sm font-bold text-[var(--color-accent-text)]" @click="goUsers">查看全部</button>
           </div>
           <div v-if="stats?.recent_users?.length" class="space-y-3">
             <div
@@ -142,7 +142,7 @@ onMounted(loadStats);
               class="flex items-center justify-between rounded-md p-3 transition hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <div class="flex items-center gap-3">
-                <div class="grid h-11 w-11 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+                <div class="grid h-11 w-11 place-items-center rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
                   <Icon icon="material-symbols:person" class="h-6 w-6" />
                 </div>
                 <div>
@@ -175,7 +175,7 @@ onMounted(loadStats);
         <section class="admin-card">
           <div class="mb-4 flex items-center justify-between">
             <h2 class="text-xl font-bold">最近公告</h2>
-            <button class="text-sm font-bold text-[#2563EB] dark:text-[#60A5FA]" @click="goAnnouncements">查看全部</button>
+            <button class="text-sm font-bold text-[var(--color-accent-text)]" @click="goAnnouncements">查看全部</button>
           </div>
           <div v-if="stats?.recent_announcements?.length" class="space-y-3">
             <div
@@ -216,6 +216,6 @@ onMounted(loadStats);
 @reference 'tailwindcss';
 
 .admin-card {
-  @apply rounded-md border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900;
+  @apply rounded-md border border-slate-200 bg-[var(--color-surface)] p-5 dark:border-slate-800 dark:bg-slate-900;
 }
 </style>

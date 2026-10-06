@@ -51,7 +51,9 @@ fastapi_of_letcoing/
 │   ├── code_controller.py  # 代码执行控制器
 │   └── auth_controller.py  # 认证控制器
 ├── main.py                 # 应用入口
-└── requirements.txt        # 依赖管理
+├── pyproject.toml          # 依赖声明
+├── uv.lock                 # 依赖锁定
+└── .python-version         # Python 版本
 ```
 
 ### 架构层次

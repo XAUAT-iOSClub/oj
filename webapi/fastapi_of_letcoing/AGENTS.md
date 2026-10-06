@@ -17,8 +17,8 @@ This is a Flask web API service that provides code execution capabilities by int
 
 See `README.md`, `HARDENING.md` and `JUDGE_ARCHITECTURE.md` for current architecture.
 
-- Install: `pip install -r requirements-dev.txt`.
-- Migration: `python manage.py migrate`, then `python manage.py seed`; errors must fail the deployment.
+- Install: `uv sync`（按 `uv.lock` 安装，含 dev 依赖）；新增或升级依赖用 `uv add` / `uv lock --upgrade`。
+- Migration: `uv run python manage.py migrate`, then `uv run python manage.py seed`; errors must fail the deployment.
 - Development API: `python main.py` (localhost:6173).
 - Production API: `gunicorn --config gunicorn.conf.py 'app_factory:create_app()'`.
 - Dedicated Worker: `python manage.py worker`; never start inside API requests/imports.

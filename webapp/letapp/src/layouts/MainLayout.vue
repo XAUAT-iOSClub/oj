@@ -1,90 +1,114 @@
 <template>
-  <div
-    class="min-h-screen bg-[#F6F8FC] text-[#1E293B] transition-colors duration-300 dark:bg-[#0F172A] dark:text-[#E5E7EB]"
-    :style="{ '--header-h': '4rem' }"
-  >
-    <header
-      class="fixed inset-x-0 top-0 z-50 h-[var(--header-h,4rem)] border-b border-[#E2E8F0] bg-white transition-colors dark:border-[#1E293B] dark:bg-[#0F172A]"
-    >
-      <div
-        class="mx-auto flex h-full max-w-[1440px] items-center gap-4 px-4 sm:px-6 lg:px-8"
-      >
-        <a href="https://www.xauat.site/" target="_blank" rel="noopener" class="flex shrink-0 items-center gap-2.5">
+  <div class="app-shell" :style="{ '--header-h': '4rem' }">
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <header class="site-header">
+      <div class="app-container header-inner">
+        <a
+          href="https://www.xauat.site/"
+          target="_blank"
+          rel="noopener"
+          class="brand"
+          aria-label="Let Coding 官网"
+        >
           <img
             src="/assets/logo.png"
-            alt="Let Coding Logo"
-            class="h-9 w-9 rounded-md object-cover"
+            alt=""
+            width="36"
+            height="36"
+            class="brand-logo"
           />
-          <span class="text-lg font-semibold tracking-tight">Let Coding</span>
+          <span class="brand-name">Let Coding</span>
         </a>
 
-        <nav
-          class="hidden shrink items-center gap-1 md:flex"
-        >
+        <nav class="primary-nav" aria-label="主导航">
           <router-link
             v-for="item in navItems"
             :key="item.to"
             :to="item.to"
             class="nav-link"
-            :class="{ 'nav-link-active': isActive(item.to) }"
-            @click="closeMenu"
+            :class="{ 'is-active': isActive(item.to) }"
+            :aria-current="isActive(item.to) ? 'page' : undefined"
+            @click="dismissMenu"
           >
-            <Icon :icon="item.icon" class="h-5 w-5 shrink-0" />
-            <span>{{ item.label }}</span>
+            {{ item.label }}
           </router-link>
         </nav>
 
-        <div class="flex flex-1 items-center justify-end gap-2">
-          <div class="relative hidden xl:flex">
-            <Icon icon="material-symbols:search-rounded" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
-            <input
-              v-model="globalSearchQuery"
-              type="text"
-              placeholder="搜索题目…"
-              class="h-10 w-48 rounded-md border border-[#E2E8F0] bg-white pl-9 pr-3 text-sm text-[#1E293B] outline-none transition focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/25 dark:border-[#1E293B] dark:bg-[#0F172A] dark:text-[#E5E7EB] dark:placeholder-[#64748B]"
-              @keydown.enter="goSearch"
+        <div class="header-actions">
+          <form class="header-search" role="search" @submit.prevent="goSearch">
+            <label class="sr-only" for="global-search">搜索题目</label>
+            <Icon
+              icon="material-symbols:search-rounded"
+              class="header-search-icon"
+              aria-hidden="true"
             />
-          </div>
+            <input
+              id="global-search"
+              v-model="globalSearchQuery"
+              class="header-search-input"
+              type="search"
+              autocomplete="off"
+              placeholder="搜索题目"
+            />
+          </form>
+
           <button
-            class="ui-icon-btn xl:hidden"
-            aria-label="搜索"
+            type="button"
+            class="ui-icon-btn compact-only"
+            aria-label="搜索题目"
             @click="router.push('/problems')"
           >
-            <Icon icon="material-symbols:search-rounded" class="h-5 w-5" />
+            <Icon
+              icon="material-symbols:search-rounded"
+              class="h-5 w-5"
+              aria-hidden="true"
+            />
           </button>
+
           <button
+            type="button"
             class="ui-icon-btn"
             :aria-label="isDark ? '切换到浅色模式' : '切换到深色模式'"
+            :aria-pressed="isDark"
             @click="mainToggleTheme"
           >
             <Icon
-              v-if="!isDark"
-              icon="material-symbols:light-mode"
-              class="h-5 w-5 text-[#F59E0B]"
-            />
-            <Icon
-              v-else
-              icon="material-symbols:dark-mode"
-              class="h-5 w-5 text-[#60A5FA]"
+              :icon="
+                isDark
+                  ? 'material-symbols:dark-mode'
+                  : 'material-symbols:light-mode'
+              "
+              class="h-5 w-5"
+              aria-hidden="true"
             />
           </button>
 
           <button
             v-if="!authStore.isAuthenticated"
-            class="ui-btn ui-btn-primary ui-btn-sm"
+            type="button"
+            class="ui-btn ui-btn-primary ui-btn-md"
             @click="startClubLogin"
           >
             登录
           </button>
-          <div v-else class="relative">
+
+          <div v-else class="user-menu-root">
             <button
-              class="ui-btn ui-btn-secondary ui-btn-sm"
+              ref="userMenuButtonRef"
+              type="button"
+              class="ui-btn ui-btn-secondary ui-btn-md user-menu-trigger"
+              aria-haspopup="menu"
               :aria-expanded="userMenuVisible"
-              aria-label="个人中心"
-              @click.stop="userMenuVisible = !userMenuVisible"
+              aria-controls="user-menu"
+              @click.stop="toggleUserMenu"
             >
-              <Icon icon="material-symbols:person-rounded" class="h-4 w-4" />
-              <span class="max-w-[8rem] truncate">{{ authStore.displayName }}</span>
+              <Icon
+                icon="material-symbols:person-rounded"
+                class="h-4 w-4"
+                aria-hidden="true"
+              />
+              <span class="user-menu-name">{{ authStore.displayName }}</span>
               <Icon
                 :icon="
                   userMenuVisible
@@ -92,39 +116,59 @@
                     : 'material-symbols:keyboard-arrow-down'
                 "
                 class="h-4 w-4"
+                aria-hidden="true"
               />
             </button>
 
             <transition name="dropdown-fade">
-              <div v-if="userMenuVisible" class="user-dropdown">
+              <div
+                v-if="userMenuVisible"
+                id="user-menu"
+                ref="userMenuRef"
+                class="ui-overlay user-menu"
+                role="menu"
+                aria-label="个人中心"
+                @keydown="onUserMenuKeydown"
+              >
                 <button
-                  class="user-dropdown-item"
+                  type="button"
+                  role="menuitem"
+                  tabindex="-1"
+                  class="user-menu-item"
                   @click="goUserPage('/profile')"
                 >
-                  <Icon icon="material-symbols:person-rounded" class="h-4 w-4" />
+                  <Icon icon="material-symbols:person-rounded" class="h-4 w-4" aria-hidden="true" />
                   <span>个人中心</span>
                 </button>
-                <div class="user-dropdown-divider"></div>
                 <button
-                  class="user-dropdown-item"
+                  type="button"
+                  role="menuitem"
+                  tabindex="-1"
+                  class="user-menu-item"
                   @click="goUserPage('/submissions')"
                 >
-                  <Icon icon="material-symbols:history-rounded" class="h-4 w-4" />
+                  <Icon icon="material-symbols:history-rounded" class="h-4 w-4" aria-hidden="true" />
                   <span>题目提交记录</span>
                 </button>
                 <button
-                  class="user-dropdown-item"
+                  type="button"
+                  role="menuitem"
+                  tabindex="-1"
+                  class="user-menu-item"
                   @click="goUserPage('/favorites')"
                 >
-                  <Icon icon="material-symbols:star-rounded" class="h-4 w-4" />
+                  <Icon icon="material-symbols:star-rounded" class="h-4 w-4" aria-hidden="true" />
                   <span>收藏题目</span>
                 </button>
-                <div class="user-dropdown-divider"></div>
+                <hr class="ui-divider my-1" />
                 <button
-                  class="user-dropdown-item user-dropdown-logout"
+                  type="button"
+                  role="menuitem"
+                  tabindex="-1"
+                  class="user-menu-item user-menu-danger"
                   @click="handleLogout"
                 >
-                  <Icon icon="material-symbols:logout" class="h-4 w-4" />
+                  <Icon icon="material-symbols:logout" class="h-4 w-4" aria-hidden="true" />
                   <span>退出登录</span>
                 </button>
               </div>
@@ -132,10 +176,14 @@
           </div>
 
           <button
-            class="ui-icon-btn md:hidden"
+            ref="menuButtonRef"
+            type="button"
+            class="ui-icon-btn nav-toggle"
             aria-label="打开导航菜单"
+            aria-haspopup="dialog"
             :aria-expanded="menuVisible"
-            @click.stop="menuVisible = !menuVisible"
+            aria-controls="mobile-nav"
+            @click.stop="toggleMobileMenu"
           >
             <Icon
               :icon="
@@ -144,6 +192,7 @@
                   : 'material-symbols:menu-rounded'
               "
               class="h-6 w-6"
+              aria-hidden="true"
             />
           </button>
         </div>
@@ -153,50 +202,58 @@
     <transition name="drawer-backdrop">
       <div
         v-if="menuVisible"
-        class="fixed inset-0 z-40 bg-black/40 md:hidden"
-        aria-label="关闭导航菜单"
-        @click="closeMenu"
+        class="drawer-backdrop"
+        @click="dismissMenu"
       ></div>
     </transition>
+
     <transition name="drawer-slide">
       <aside
         v-if="menuVisible"
-        class="mobile-drawer md:hidden"
+        id="mobile-nav"
+        ref="drawerRef"
+        class="mobile-drawer"
+        role="dialog"
+        aria-modal="true"
         aria-label="导航菜单"
+        @keydown="onDrawerKeydown"
       >
         <div class="drawer-heading">
-          <div class="flex items-center gap-3">
-            <img
-              src="/assets/logo.png"
-              alt="Let Coding Logo"
-              class="h-10 w-10 rounded-md object-cover"
-            />
+          <div class="drawer-brand">
+            <img src="/assets/logo.png" alt="" width="40" height="40" class="brand-logo" />
             <div>
-              <div class="font-bold">Let Coding</div>
-              <div class="text-[10px] text-[#94A3B8]">在线评测</div>
+              <div class="drawer-brand-name">Let Coding</div>
+              <div class="drawer-brand-sub">在线评测</div>
             </div>
           </div>
-          <button class="ui-icon-btn" aria-label="关闭导航菜单" @click="closeMenu">
-            <Icon icon="material-symbols:close-rounded" />
+          <button
+            ref="drawerCloseRef"
+            type="button"
+            class="ui-icon-btn"
+            aria-label="关闭导航菜单"
+            @click="dismissMenu"
+          >
+            <Icon icon="material-symbols:close-rounded" class="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <nav class="drawer-nav">
-          <button
+
+        <nav class="drawer-nav" aria-label="移动端导航">
+          <router-link
             v-for="item in navItems"
             :key="`${item.to}-menu`"
-            type="button"
+            :to="item.to"
             class="drawer-link"
-            :class="{ 'drawer-link-active': isActive(item.to) }"
-            @click="navigateFromMenu(item.to)"
+            :class="{ 'is-active': isActive(item.to) }"
+            :aria-current="isActive(item.to) ? 'page' : undefined"
+            @click="dismissMenu"
           >
-            <Icon :icon="item.icon" class="h-5 w-5 shrink-0" />
-            <span>{{ item.label }}</span>
-          </button>
+            {{ item.label }}
+          </router-link>
         </nav>
       </aside>
     </transition>
 
-    <main class="pt-16">
+    <main id="main-content" class="app-main" tabindex="-1">
       <router-view v-slot="{ Component, route }">
         <transition name="page-shift" mode="out-in">
           <component :is="Component" :key="route.path" />
@@ -207,24 +264,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { storeToRefs } from "pinia";
-import { markRaw } from "vue";
 import { useThemeStore } from "../stores/theme";
 import { useAuthStore } from "../stores/auth";
 
-const navItems = markRaw([
-  { label: "首页", to: "/", icon: "material-symbols:home-rounded" },
-  { label: "题库", to: "/problems", icon: "material-symbols:library-books-rounded" },
-  { label: "学习", to: "/learn", icon: "material-symbols:school-rounded" },
-  { label: "在线编辑器", to: "/playground", icon: "material-symbols:code-rounded" },
-  { label: "比赛", to: "/contests", icon: "material-symbols:trophy-rounded" },
-  { label: "排行榜", to: "/rankings", icon: "material-symbols:leaderboard-rounded" },
-  { label: "讨论", to: "/discussion", icon: "material-symbols:forum" },
-  { label: "公告", to: "/announcements", icon: "material-symbols:campaign" },
-]);
+const navItems = [
+  { label: "首页", to: "/" },
+  { label: "题库", to: "/problems" },
+  { label: "学习", to: "/learn" },
+  { label: "在线编辑器", to: "/playground" },
+  { label: "比赛", to: "/contests" },
+  { label: "排行榜", to: "/rankings" },
+  { label: "讨论", to: "/discussion" },
+  { label: "公告", to: "/announcements" },
+];
 
 const router = useRouter();
 const themeStore = useThemeStore();
@@ -234,43 +290,162 @@ const { toggleTheme } = themeStore;
 
 const menuVisible = ref(false);
 const userMenuVisible = ref(false);
-const globalSearchQuery = ref('');
+const globalSearchQuery = ref("");
+
+const drawerRef = ref<HTMLElement | null>(null);
+const drawerCloseRef = ref<HTMLButtonElement | null>(null);
+const menuButtonRef = ref<HTMLButtonElement | null>(null);
+const userMenuRef = ref<HTMLElement | null>(null);
+const userMenuButtonRef = ref<HTMLButtonElement | null>(null);
 
 const goSearch = () => {
   const q = globalSearchQuery.value.trim();
   if (!q) return;
-  router.push({ path: '/problems', query: { q } });
-  globalSearchQuery.value = '';
+  void router.push({ path: "/problems", query: { q } });
+  globalSearchQuery.value = "";
 };
 
 const currentPath = computed(() => router.currentRoute.value.path);
 const isActive = (to: string) =>
   to === "/" ? currentPath.value === "/" : currentPath.value.startsWith(to);
 
-const closeMenu = () => {
+/* ---------- 移动端抽屉 ---------- */
+const menuTriggerWasFocused = ref(false);
+
+const openMenu = () => {
+  menuTriggerWasFocused.value = true;
+  menuVisible.value = true;
+};
+
+const closeMenu = (restoreFocus = false) => {
+  if (!menuVisible.value) return;
   menuVisible.value = false;
   document.body.style.overflow = "";
-};
-
-const toggleMenuLock = () => {
-  document.body.style.overflow = menuVisible.value ? "hidden" : "";
-};
-
-const handleEscape = (event: KeyboardEvent) => {
-  if (event.key === "Escape") {
-    closeMenu();
-    userMenuVisible.value = false;
+  if (restoreFocus && menuTriggerWasFocused.value) {
+    void nextTick(() => menuButtonRef.value?.focus());
   }
+};
+
+// 模板点击处理器：关闭抽屉并把焦点还给触发按钮
+const dismissMenu = () => closeMenu(true);
+
+const toggleMobileMenu = () => {
+  if (menuVisible.value) closeMenu(true);
+  else openMenu();
+};
+
+const restoreDrawerFocus = () =>
+  drawerCloseRef.value?.focus({ preventScroll: true });
+
+if (typeof window !== "undefined") {
+  watch(menuVisible, (open) => {
+    document.body.style.overflow = open ? "hidden" : "";
+    if (open) void nextTick(restoreDrawerFocus);
+  });
+}
+
+const focusablesIn = (root: HTMLElement | null) =>
+  Array.from(
+    root?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ) ?? [],
+  );
+
+const onDrawerKeydown = (event: KeyboardEvent) => {
+  if (event.key !== "Tab") return;
+  const items = focusablesIn(drawerRef.value);
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (!first || !last) return;
+  const active = document.activeElement;
+  if (event.shiftKey && active === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault();
+    first.focus();
+  }
+};
+
+/* ---------- 用户菜单 ---------- */
+const userMenuItems = () =>
+  Array.from(
+    userMenuRef.value?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [],
+  );
+
+const openUserMenu = async () => {
+  userMenuVisible.value = true;
+  await nextTick();
+  userMenuItems()[0]?.focus({ preventScroll: true });
+};
+
+const closeUserMenu = (restoreFocus = false) => {
+  if (!userMenuVisible.value) return;
+  userMenuVisible.value = false;
+  if (restoreFocus) {
+    void nextTick(() => userMenuButtonRef.value?.focus({ preventScroll: true }));
+  }
+};
+
+const toggleUserMenu = () => {
+  if (userMenuVisible.value) closeUserMenu(true);
+  else void openUserMenu();
+};
+
+const onUserMenuKeydown = (event: KeyboardEvent) => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeUserMenu(true);
+    return;
+  }
+  if (event.key === "Tab") {
+    // 菜单采用 roving focus，Tab 离开即收起菜单
+    userMenuVisible.value = false;
+    return;
+  }
+  if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+  const items = userMenuItems();
+  if (!items.length) return;
+  event.preventDefault();
+  const index = items.indexOf(document.activeElement as HTMLButtonElement);
+  const nextIndex =
+    event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? items.length - 1
+        : event.key === "ArrowDown"
+          ? (index + 1 + items.length) % items.length
+          : (index - 1 + items.length) % items.length;
+  items[nextIndex]?.focus();
+};
+
+/* ---------- 全局 ---------- */
+const handleEscape = (event: KeyboardEvent) => {
+  if (event.key !== "Escape") return;
+  closeUserMenu(true);
+  closeMenu(true);
+};
+
+const handleDocumentPointerDown = (event: PointerEvent) => {
+  if (!userMenuVisible.value) return;
+  const target = event.target as Node | null;
+  if (!target) return;
+  if (
+    userMenuRef.value?.contains(target) ||
+    userMenuButtonRef.value?.contains(target)
+  ) {
+    return;
+  }
+  closeUserMenu(false);
 };
 
 const mainToggleTheme = () => {
   toggleTheme();
-  closeMenu();
 };
 
 const startClubLogin = () => {
   closeMenu();
-  authStore.startOAuthLogin(
+  void authStore.startOAuthLogin(
     "iOSClub",
     router.currentRoute.value.fullPath,
     true,
@@ -279,83 +454,178 @@ const startClubLogin = () => {
 
 const handleLogout = async () => {
   closeMenu();
-  userMenuVisible.value = false;
+  closeUserMenu(false);
   await authStore.logout();
 };
 
 const goUserPage = async (to: string) => {
-  userMenuVisible.value = false;
+  closeUserMenu(false);
   await router.push(to);
 };
 
-const navigateFromMenu = async (to: string) => {
-  closeMenu();
-  await router.push(to);
-};
-
-const handleWindowClick = (event: MouseEvent) => {
-  const target = event.target as HTMLElement | null;
-  if (
-    !target?.closest(".ui-icon-btn") &&
-    !target?.closest(".user-dropdown") &&
-    !target?.closest(".ui-btn")
-  ) {
-    userMenuVisible.value = false;
-  }
+let desktopQuery: MediaQueryList | null = null;
+const handleDesktopChange = (event: MediaQueryListEvent) => {
+  if (event.matches) closeMenu();
 };
 
 onMounted(() => {
-  window.addEventListener("click", handleWindowClick);
-  window.addEventListener("resize", closeMenu);
+  document.addEventListener("pointerdown", handleDocumentPointerDown, true);
   window.addEventListener("keydown", handleEscape);
+  desktopQuery = window.matchMedia("(min-width: 1024px)");
+  desktopQuery.addEventListener("change", handleDesktopChange);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("click", handleWindowClick);
-  window.removeEventListener("resize", closeMenu);
+  document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
   window.removeEventListener("keydown", handleEscape);
+  desktopQuery?.removeEventListener("change", handleDesktopChange);
   document.body.style.overflow = "";
 });
-
-watch(menuVisible, toggleMenuLock);
 </script>
 
 <style scoped>
-@reference 'tailwindcss';
+@reference "tailwindcss";
 
+.app-shell {
+  min-height: 100vh;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  transition: background-color 0.25s ease;
+}
+
+.skip-link {
+  @apply fixed left-4 top-4 z-100 -translate-y-24 px-4 py-2 text-sm font-semibold transition-transform focus-visible:translate-y-0;
+  border-radius: var(--radius-card);
+  background: var(--color-accent-solid);
+  color: var(--color-accent-foreground);
+}
+
+/* ---------- 顶栏：固定 64px ---------- */
+.site-header {
+  @apply fixed inset-x-0 top-0 z-50 h-[var(--header-h,4rem)] border-b;
+  border-color: var(--color-border);
+  background: var(--color-surface);
+}
+.header-inner {
+  @apply flex h-full items-center gap-3;
+}
+
+.brand {
+  @apply flex shrink-0 items-center gap-2.5 py-2 pr-2 transition-opacity hover:opacity-80;
+  border-radius: var(--radius-card);
+}
+.brand-logo {
+  @apply h-9 w-9 object-cover;
+  border-radius: var(--radius-card);
+}
+.brand-name {
+  @apply text-[17px] font-semibold tracking-[-0.015em];
+  color: var(--color-foreground);
+}
+
+.primary-nav {
+  @apply ml-2 hidden shrink items-center gap-0.5 lg:flex;
+}
 .nav-link {
-  @apply relative flex h-16 items-center gap-1.5 px-4 text-sm font-semibold text-[#475569] transition-colors dark:text-[#94A3B8];
+  @apply relative inline-flex h-11 items-center whitespace-nowrap px-3 text-sm font-medium transition-colors duration-150;
+  border-radius: var(--radius-card);
+  color: var(--color-muted-foreground);
 }
 .nav-link:hover {
-  @apply text-[#2563EB] dark:text-[#60A5FA];
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
-.nav-link-active {
-  @apply text-[#2563EB] dark:text-[#60A5FA];
+/* 当前路由：字重 + 短底线 + 轻度背景，三重信号而非仅颜色 */
+.nav-link.is-active {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  font-weight: 600;
 }
-.nav-link-active::after {
+.nav-link.is-active::after {
   content: "";
-  @apply absolute bottom-0 left-1/2 h-0.5 w-10 -translate-x-1/2 rounded-full bg-[#2563EB] dark:bg-[#60A5FA];
+  @apply absolute bottom-1.5 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full;
+  background: var(--color-accent);
 }
 
-.user-dropdown {
-  @apply absolute right-0 top-[calc(100%+0.5rem)] z-60 grid min-w-[13rem] gap-1 rounded-md border border-[#E2E8F0] bg-white p-1 shadow-[0_4px_12px_rgb(15_23_42_/_0.08)] dark:border-[#1E293B] dark:bg-[#111827];
+.header-actions {
+  @apply ml-auto flex items-center gap-2;
 }
-.user-dropdown-item {
-  @apply flex w-full items-center gap-2.5 rounded-md px-3.5 py-2.5 text-left text-sm font-medium text-[#334155] transition-colors dark:text-[#E5E7EB];
+
+.header-search {
+  @apply relative hidden xl:block;
 }
-.user-dropdown-item:hover {
-  @apply bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA];
+.header-search-icon {
+  @apply pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2;
+  color: var(--color-muted-foreground);
 }
-.user-dropdown-divider {
-  @apply my-1 h-px bg-[#E2E8F0] dark:bg-[#1E293B];
+.header-search-input {
+  @apply h-11 w-52 border pl-9 pr-3 text-sm outline-none transition-colors;
+  border-radius: var(--radius-card);
+  border-color: var(--color-input);
+  background: var(--color-surface);
+  color: var(--color-foreground);
 }
-.user-dropdown-logout:hover {
-  @apply bg-[#FEF2F2] text-[#DC2626] dark:bg-[#450A0A] dark:text-[#FCA5A5];
+.header-search-input::placeholder {
+  color: var(--color-muted-foreground);
+}
+.header-search-input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.header-search-input:hover {
+  border-color: var(--color-foreground);
+}
+.header-search-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.compact-only {
+  @apply xl:hidden;
+}
+.nav-toggle {
+  @apply lg:hidden;
+}
+
+.user-menu-root {
+  @apply relative;
+}
+.user-menu-trigger {
+  @apply px-3;
+}
+.user-menu-name {
+  @apply max-w-[8rem] truncate;
+}
+
+.user-menu {
+  @apply absolute right-0 top-[calc(100%+0.5rem)] z-60 grid min-w-[13rem] gap-0.5;
+}
+.user-menu-item {
+  @apply flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-medium transition-colors;
+  border-radius: var(--radius-card);
+  color: var(--color-foreground);
+}
+.user-menu-item:hover {
+  background: var(--color-muted);
+}
+.user-menu-item:focus-visible {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-foreground);
+  outline-offset: -2px;
+}
+.user-menu-danger {
+  color: var(--color-danger-text);
+}
+.user-menu-danger:hover,
+.user-menu-danger:focus-visible {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-soft-foreground);
 }
 
 .dropdown-fade-enter-active,
 .dropdown-fade-leave-active {
-  transition: all 0.18s ease;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
 }
 .dropdown-fade-enter-from,
 .dropdown-fade-leave-to {
@@ -363,23 +633,47 @@ watch(menuVisible, toggleMenuLock);
   transform: translateY(-4px);
 }
 
+/* ---------- 移动抽屉 ---------- */
+.drawer-backdrop {
+  @apply fixed inset-0 z-40 bg-black/40 lg:hidden;
+}
 .mobile-drawer {
-  @apply fixed right-0 top-0 z-50 flex h-full w-[20rem] max-w-[88vw] flex-col border-l border-[#E2E8F0] bg-white shadow-[0_0_24px_rgb(15_23_42_/_0.08)] dark:border-[#1E293B] dark:bg-[#111827];
+  @apply fixed right-0 top-0 z-50 flex h-full w-[20rem] max-w-[88vw] flex-col border-l lg:hidden;
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-overlay);
 }
 .drawer-heading {
-  @apply flex h-16 items-center justify-between border-b border-[#E2E8F0] px-4 dark:border-[#1E293B];
+  @apply flex h-16 shrink-0 items-center justify-between border-b px-3;
+  border-color: var(--color-border);
+}
+.drawer-brand {
+  @apply flex items-center gap-3;
+}
+.drawer-brand-name {
+  @apply text-sm font-semibold;
+}
+.drawer-brand-sub {
+  @apply text-[11px];
+  color: var(--color-muted-foreground);
 }
 .drawer-nav {
-  @apply grid gap-1 p-3;
+  @apply grid content-start gap-0.5 overflow-y-auto p-3;
 }
 .drawer-link {
-  @apply flex w-full items-center gap-3 rounded-md px-4 py-3 text-left text-sm font-medium text-[#334155] transition-colors dark:text-[#E5E7EB];
+  @apply flex min-h-12 w-full items-center px-3 text-sm font-medium transition-colors;
+  border-radius: var(--radius-card);
+  color: var(--color-muted-foreground);
 }
 .drawer-link:hover {
-  @apply bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA];
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
-.drawer-link-active {
-  @apply bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA];
+.drawer-link.is-active {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--color-accent);
 }
 
 .drawer-slide-enter-active,
@@ -399,18 +693,37 @@ watch(menuVisible, toggleMenuLock);
   opacity: 0;
 }
 
-.page-shift-enter-active,
-.page-shift-leave-active {
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
+.app-main {
+  @apply pt-16 outline-none;
 }
-.page-shift-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
+
+/* 窄屏：顶栏四个 44px 控件 + 品牌文字会超出视口，仅保留图标 */
+@media (max-width: 480px) {
+  .brand-name {
+    display: none;
+  }
 }
-.page-shift-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell,
+  .nav-link,
+  .user-menu-item,
+  .drawer-link {
+    transition-duration: 0.01ms !important;
+  }
+  .dropdown-fade-enter-active,
+  .dropdown-fade-leave-active,
+  .drawer-slide-enter-active,
+  .drawer-slide-leave-active,
+  .drawer-backdrop-enter-active,
+  .drawer-backdrop-leave-active {
+    transition-duration: 0.01ms;
+  }
+  .dropdown-fade-enter-from,
+  .dropdown-fade-leave-to,
+  .drawer-slide-enter-from,
+  .drawer-slide-leave-to {
+    transform: none;
+  }
 }
 </style>

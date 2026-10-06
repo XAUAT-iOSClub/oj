@@ -64,8 +64,8 @@ onMounted(loadFavorites);
 </script>
 
 <template>
-  <div class="favorites-page flex min-h-[calc(100vh-var(--header-h,5rem))] flex-col bg-[#F6F8FC] dark:bg-[#0F172A] text-[#1E293B] dark:text-[#E5E7EB] ">
-    <div class="favorites-hero border-b border-[#E2E8F0] bg-white dark:border-[#1E293B] dark:bg-[#0F172A]">
+  <div class="favorites-page flex min-h-[calc(100vh-var(--header-h,5rem))] flex-col bg-[var(--color-background)] text-[var(--color-foreground)] ">
+    <div class="favorites-hero border-b border-[var(--color-border)] bg-[var(--color-surface)] dark:border-[var(--color-border)] dark:bg-[var(--color-background)]">
       <div class="mx-auto flex w-full max-w-6xl flex-wrap items-end justify-between gap-4 px-4 py-8 sm:px-6 lg:px-8">
         <div>
           <h1 class="text-2xl font-bold tracking-tight">收藏题目</h1>
@@ -80,7 +80,7 @@ onMounted(loadFavorites);
     </div>
 
     <div class="favorites-content mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-      <div v-if="loadError" class="flex flex-col items-center justify-center rounded-md border border-slate-200 bg-white py-8 text-center dark:border-slate-800 dark:bg-slate-900">
+      <div v-if="loadError" class="flex flex-col items-center justify-center rounded-md border border-slate-200 bg-[var(--color-surface)] py-8 text-center dark:border-slate-800 dark:bg-slate-900">
         <Icon icon="material-symbols:cloud-off-rounded" class="mb-3 h-12 w-12 text-rose-400" />
         <p class="font-semibold">收藏列表加载失败</p>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ loadError }}</p>
@@ -90,10 +90,10 @@ onMounted(loadFavorites);
       </div>
 
       <div v-else-if="loading" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div v-for="i in 6" :key="i" class="h-32 animate-pulse rounded-md bg-white dark:bg-slate-900"></div>
+        <div v-for="i in 6" :key="i" class="h-32 animate-pulse rounded-md bg-[var(--color-surface)] dark:bg-slate-900"></div>
       </div>
 
-      <div v-else-if="favorites.length === 0" class="flex flex-col items-center justify-center rounded-md border border-slate-200 bg-white py-8 text-center dark:border-slate-800 dark:bg-slate-900">
+      <div v-else-if="favorites.length === 0" class="flex flex-col items-center justify-center rounded-md border border-slate-200 bg-[var(--color-surface)] py-8 text-center dark:border-slate-800 dark:bg-slate-900">
         <Icon icon="material-symbols:star-outline-rounded" class="mb-3 h-14 w-14 text-slate-300 dark:text-slate-600" />
         <p class="font-semibold">暂无收藏题目</p>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">在题目页点击星标，就能把题目收进这里。</p>
@@ -106,7 +106,7 @@ onMounted(loadFavorites);
         <div
           v-for="item in favorites"
           :key="item.problem_id"
-           class="favorite-card group relative flex flex-col rounded-md border border-slate-200 bg-white p-4 transition-colors hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-800"
+           class="favorite-card group relative flex flex-col rounded-md border border-slate-200 bg-[var(--color-surface)] p-4 transition-colors hover:border-amber-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-amber-800"
         >
           <button
             class="absolute right-4 top-4 z-10 rounded-md p-2 text-amber-500 transition-colors hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-amber-950/50"

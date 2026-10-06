@@ -19,12 +19,15 @@ jobs:
           python-version: '3.13'
       - run: sudo apt-get update && sudo apt-get install -y redis-server postgresql openjdk-17-jdk prometheus
       - run: promtool check rules deploy/alerts.yaml && promtool test rules deploy/alerts.test.yaml
-      - run: pip install -r requirements-dev.txt
-      - run: pip install pip-audit && pip-audit -r requirements.txt
+      - run: pip install uv==0.10.7
+      - run: uv sync --frozen
+      # 审计对象是锁定的生产依赖集，dev 依赖不参与。
+      - run: uv export --frozen --no-dev --no-emit-project --no-hashes -o /tmp/production-requirements.txt
+      - run: pip install pip-audit && pip-audit -r /tmp/production-requirements.txt
       - run: echo "PG_BINDIR=$(pg_config --bindir)" >> "$GITHUB_ENV"
-      - run: python -m pytest -q --junitxml=backend-results.xml
+      - run: uv run --frozen python -m pytest -q --junitxml=backend-results.xml
       - run: docker build -f Dockerfile.sandbox -t letcoding-sandbox:local .
-      - run: python -m pytest tests/sandbox_integration.py -q --junitxml=sandbox-results.xml
+      - run: uv run --frozen python -m pytest tests/sandbox_integration.py -q --junitxml=sandbox-results.xml
       - run: docker build -t letcoding-api:local .
       - run: docker build -f Dockerfile.worker -t letcoding-worker:local .
       - name: Preserve backend acceptance evidence

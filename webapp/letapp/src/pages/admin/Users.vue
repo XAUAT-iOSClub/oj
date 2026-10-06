@@ -202,7 +202,7 @@ onMounted(loadUsers);
       <p class="font-bold text-slate-700 dark:text-slate-200">用户列表加载失败</p>
       <p class="text-sm text-slate-500 dark:text-slate-400">{{ loadError }}</p>
       <button
-        class="mt-1 rounded-full bg-[#2563EB] px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-[#1D4ED8]"
+        class="mt-1 rounded-full bg-[var(--color-accent-solid)] px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-[var(--color-accent-solid-hover)]"
         @click="loadUsers"
       >
         重新加载
@@ -213,7 +213,7 @@ onMounted(loadUsers);
       <div v-for="i in 5" :key="i" class="h-12 rounded-md bg-slate-100 dark:bg-slate-800"></div>
     </div>
 
-     <section v-else class="overflow-hidden rounded-md border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+     <section v-else class="overflow-hidden rounded-md border border-slate-200 bg-[var(--color-surface)] dark:border-slate-800 dark:bg-slate-900">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
           <thead v-once class="bg-slate-50 dark:bg-slate-950">
@@ -234,7 +234,7 @@ onMounted(loadUsers);
               <td class="table-cell font-bold">{{ user.id }}</td>
               <td class="table-cell">
                 <div class="flex items-center gap-3">
-                 <div class="grid h-9 w-9 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+                 <div class="grid h-9 w-9 place-items-center rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
                     <Icon icon="material-symbols:person" class="h-5 w-5" />
                   </div>
                   <span class="font-bold">{{ user.username || `用户#${user.id}` }}</span>
@@ -243,7 +243,7 @@ onMounted(loadUsers);
               <td class="table-cell text-slate-600 dark:text-slate-300">{{ user.email || '—' }}</td>
               <td class="table-cell text-slate-600 dark:text-slate-300">{{ user.provider || 'password' }}</td>
               <td class="table-cell">
-                <span class="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-xs font-bold text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+                <span class="rounded-full bg-[var(--color-accent-soft)] px-2.5 py-1 text-xs font-bold text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
                   {{ getRoleDisplayName(user.role) }}
                 </span>
               </td>
@@ -257,7 +257,7 @@ onMounted(loadUsers);
               <td v-if="canMutate" class="table-cell">
                 <div class="flex items-center justify-end gap-2" :class="{ 'opacity-50': mutatingId === user.id }">
                   <select
-                    class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs dark:border-slate-800 dark:bg-slate-950"
+                    class="rounded-md border border-slate-200 bg-[var(--color-surface)] px-2 py-1 text-xs dark:border-slate-800 dark:bg-slate-950"
                     :value="user.is_active ? 'active' : 'inactive'"
                     :disabled="mutatingId === user.id"
                     @change="handleStatusChange(user, ($event.target as HTMLSelectElement).value === 'active')"
@@ -301,11 +301,11 @@ onMounted(loadUsers);
 @reference 'tailwindcss';
 
  .admin-card {
-   @apply rounded-md border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900;
+   @apply rounded-md border border-slate-200 bg-[var(--color-surface)] p-5 dark:border-slate-800 dark:bg-slate-900;
 }
 
 .form-control {
-   @apply w-full rounded-md border border-slate-200 bg-white px-4 py-2.5 text-slate-950 outline-none transition-colors focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/25 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-[#2563EB]/25;
+   @apply w-full rounded-md border border-slate-200 bg-[var(--color-surface)] px-4 py-2.5 text-slate-950 outline-none transition-colors focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-ring)]/25 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-[var(--color-ring)]/25;
 }
 
 .table-head {
@@ -325,6 +325,6 @@ onMounted(loadUsers);
 }
 
 .page-button-active {
-  @apply bg-[#2563EB] text-slate-950 hover:bg-[#1D4ED8] dark:bg-[#2563EB] dark:text-slate-950 dark:hover:bg-[#1D4ED8];
+  @apply bg-[var(--color-accent-solid)] text-slate-950 hover:bg-[var(--color-accent-solid-hover)] dark:bg-[var(--color-accent-solid)] dark:text-slate-950 dark:hover:bg-[var(--color-accent-solid-hover)];
 }
 </style>

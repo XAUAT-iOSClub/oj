@@ -1,3 +1,6 @@
 # 只运行 API；判题 Worker 需要专用 Linux Docker 主机。
 [start]
 cmd = "python -m deploy.start_api"
+
+# Python 依赖由 uv 管理；nixpacks 依据 uv.lock 自动执行 `uv sync --no-dev --frozen`，
+# 需固定版本时用平台环境变量 NIXPACKS_UV_VERSION（须能读取 0.10.7 生成的锁文件）。

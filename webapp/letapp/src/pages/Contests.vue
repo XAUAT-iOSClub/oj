@@ -93,11 +93,11 @@ onMounted(loadData);
 </script>
 
 <template>
-  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[#F6F8FC] dark:bg-[#0F172A]">
+  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[var(--color-background)]">
     <div class="app-container py-6">
       <div class="contest-header mb-6 flex items-start justify-between gap-4">
         <div class="contest-header__main min-w-0">
-          <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">比赛</h1>
+          <h1 class="text-2xl font-bold text-[var(--color-foreground)]">比赛</h1>
           <p class="ui-section-sub mt-1">参与编程竞赛，挑战自我</p>
           <div class="mt-4 flex flex-wrap gap-2">
             <button v-for="tab in (['ongoing','upcoming','past'] as const)" :key="tab"
@@ -133,8 +133,8 @@ onMounted(loadData);
 
       <div v-else-if="error" class="ui-empty">
         <Icon icon="material-symbols:error-outline-rounded" class="mb-2 h-12 w-12 text-rose-500" />
-        <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">加载失败</p>
-        <p class="text-sm text-[#64748B] dark:text-[#94A3B8]">{{ error }}</p>
+        <p class="font-bold text-[var(--color-foreground)]">加载失败</p>
+        <p class="text-sm text-[var(--color-muted-foreground)]">{{ error }}</p>
         <button class="ui-btn ui-btn-secondary ui-btn-sm mt-2" @click="loadData">重试</button>
       </div>
 
@@ -144,13 +144,13 @@ onMounted(loadData);
             <span class="ui-badge" :class="statusBadgeClass(c.status)">
               {{ statusLabel(c.status) }}
             </span>
-            <span class="text-xs text-[#94A3B8]">{{ c.contest_type }}</span>
+            <span class="text-xs text-[var(--color-muted-foreground)]">{{ c.contest_type }}</span>
           </div>
-          <h3 class="mb-2 font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ c.title }}</h3>
-          <p class="mb-1 text-sm text-[#64748B] dark:text-[#94A3B8]">
+          <h3 class="mb-2 font-bold text-[var(--color-foreground)]">{{ c.title }}</h3>
+          <p class="mb-1 text-sm text-[var(--color-muted-foreground)]">
             {{ formatTimeRange(c.start_time, c.end_time) }}
           </p>
-          <p class="mb-3 text-xs text-[#94A3B8]">{{ c.participants_count }} 人参与</p>
+          <p class="mb-3 text-xs text-[var(--color-muted-foreground)]">{{ c.participants_count }} 人参与</p>
           <button
             class="w-full ui-btn"
             :class="isContestOpen(c) ? 'ui-btn-primary' : 'ui-btn-disabled'"
@@ -165,9 +165,9 @@ onMounted(loadData);
       </div>
 
        <div v-if="!isLoading && !error && filteredContests.length === 0" class="contest-empty mt-6">
-         <Icon icon="material-symbols:event-busy" class="h-7 w-7 text-[#94A3B8]" />
-         <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">暂无比赛</p>
-         <p class="text-sm text-[#64748B] dark:text-[#94A3B8]">目前没有符合当前分类的比赛。</p>
+         <Icon icon="material-symbols:event-busy" class="h-7 w-7 text-[var(--color-muted-foreground)]" />
+         <p class="font-bold text-[var(--color-foreground)]">暂无比赛</p>
+         <p class="text-sm text-[var(--color-muted-foreground)]">目前没有符合当前分类的比赛。</p>
        </div>
     </div>
   </div>
@@ -180,10 +180,10 @@ onMounted(loadData);
   gap: 10px;
   min-height: 72px;
   padding: 16px 18px;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
-:global(html.dark) .contest-empty { border-color: #1e293b; }
+:global(html.dark) .contest-empty { border-color: var(--color-border); }
 
 .contest-header__actions {
   /* 让按钮贴齐容器右侧内容边缘（容器自带内边距，约 24–32px） */
@@ -200,14 +200,14 @@ onMounted(loadData);
   padding: 0 18px;
   border: none;
   border-radius: 8px; /* 不再使用胶囊圆角 */
-  background: #2563eb; /* 品牌蓝实心主按钮 */
+  background: var(--color-accent-solid); /* 品牌蓝实心主按钮 */
   color: #ffffff;
   font-size: 14px;
   font-weight: 600; /* 半粗，550–600 */
   white-space: nowrap;
   cursor: pointer;
   /* 极轻阴影，从浅色背景中自然突出，不似悬浮广告 */
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.18);
+  box-shadow: 0 1px 2px rgb(11 124 138 / 0.18);
   transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -218,15 +218,15 @@ onMounted(loadData);
 }
 
 .contest-manage-btn:hover:not(:disabled) {
-  background: #1d4ed8; /* Hover 轻微加深 */
+  background: var(--color-accent-solid-hover); /* Hover 轻微加深 */
   transform: translateY(-1px); /* 上移 1px，无缩放 */
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22); /* 少量阴影反馈 */
+  box-shadow: 0 4px 10px rgb(11 124 138 / 0.22); /* 少量阴影反馈 */
 }
 
 .contest-manage-btn:active:not(:disabled) {
   transform: translateY(0); /* 取消上移，下压感 */
-  background: #1e40af; /* 按下更深 */
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.15); /* 降低阴影 */
+  background: var(--color-accent-solid-active); /* 按下更深 */
+  box-shadow: 0 1px 2px rgb(11 124 138 / 0.15); /* 降低阴影 */
 }
 
 .contest-manage-btn:disabled {
@@ -237,18 +237,18 @@ onMounted(loadData);
 /* 暗色模式：与站点主操作按钮保持一致 */
 :deep(.dark) .contest-manage-btn,
 .dark .contest-manage-btn {
-  background: #3b82f6;
-  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.25);
+  background: var(--color-accent-solid);
+  box-shadow: 0 1px 2px rgb(14 165 183 / 0.25);
 }
 
 :deep(.dark) .contest-manage-btn:hover:not(:disabled),
 .dark .contest-manage-btn:hover:not(:disabled) {
-  background: #2563eb;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+  background: var(--color-accent-solid-hover);
+  box-shadow: 0 4px 10px rgb(14 165 183 / 0.3);
 }
 
 :deep(.dark) .contest-manage-btn:active:not(:disabled),
 .dark .contest-manage-btn:active:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--color-accent-solid-active);
 }
 </style>

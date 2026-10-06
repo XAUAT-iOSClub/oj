@@ -6,14 +6,17 @@ import { getAuthStorage, updateUserTheme } from '../services/api';
 type ThemePreference = 'light' | 'dark' | 'system';
 const THEME_STORAGE_KEY = 'appThemePreference';
 
+// 无已保存偏好时默认浅色；已明确选择浅色/深色的用户不受系统主题影响。
+const DEFAULT_THEME_PREFERENCE: ThemePreference = 'light';
+
 const readThemePreference = (): ThemePreference => {
   try {
     const preference = localStorage.getItem(THEME_STORAGE_KEY);
     return preference === 'light' || preference === 'dark' || preference === 'system'
       ? preference
-      : 'system';
+      : DEFAULT_THEME_PREFERENCE;
   } catch {
-    return 'system';
+    return DEFAULT_THEME_PREFERENCE;
   }
 };
 
@@ -50,6 +53,10 @@ export const useThemeStore = defineStore('theme', () => {
 
   const updateThemeClass = (dark: boolean) => {
     document.documentElement.classList.toggle('dark', dark);
+    // 让移动端浏览器地址栏与页面底色保持一致
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', dark ? '#080b10' : '#f6f7f9');
   };
 
   const isDark = computed({

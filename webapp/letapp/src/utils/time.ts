@@ -57,3 +57,19 @@ export function isWithinTimeRange(start?: string | null, end?: string | null, no
   if (e != null && nowMs > e) return false;
   return true;
 }
+
+// 一周内的相对时间标签（今天 / 昨天 / N 天前），超过一周退回具体月日。
+// 学习资料的目录列表与"最近浏览"共用，避免两处各写一份且慢慢不一致。
+export function formatRelativeTime(
+  value: unknown,
+  options?: Intl.DateTimeFormatOptions,
+): string {
+  const d = toDate(value);
+  if (!d) return '';
+  const diff = Date.now() - d.getTime();
+  const DAY = 86_400_000;
+  if (diff < DAY) return '今天';
+  if (diff < 2 * DAY) return '昨天';
+  if (diff < 7 * DAY) return `${Math.floor(diff / DAY)} 天前`;
+  return formatDate(value, options ?? { month: 'short', day: 'numeric' });
+}

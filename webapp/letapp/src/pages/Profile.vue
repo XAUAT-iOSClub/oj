@@ -124,13 +124,13 @@ onMounted(loadStats);
 </script>
 
 <template>
-  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[#F6F8FC] dark:bg-[#0F172A]">
+  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[var(--color-background)]">
     <div class="app-container py-6">
       <!-- 用户信息卡 200-240px -->
       <div class="ui-card mb-6 flex flex-col gap-6 p-6 sm:flex-row sm:items-center" style="min-height:200px">
         <!-- 头像区 -->
         <div class="relative shrink-0">
-          <div class="grid h-24 w-24 place-items-center rounded-full bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <div class="grid h-24 w-24 place-items-center rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
             <img
               v-if="authStore.userInfo?.avatar_url"
               :src="authStore.userInfo.avatar_url"
@@ -140,7 +140,7 @@ onMounted(loadStats);
             <Icon v-else icon="material-symbols:person-rounded" class="h-12 w-12" />
           </div>
           <label
-            class="absolute bottom-0 right-0 grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-[#2563EB] text-white shadow-sm transition-colors hover:bg-[#1D4ED8]"
+            class="absolute bottom-0 right-0 grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-[var(--color-accent-solid)] text-white shadow-sm transition-colors hover:bg-[var(--color-accent-solid-hover)]"
             title="更换头像"
           >
             <Icon icon="material-symbols:camera-alt-rounded" class="h-4 w-4" />
@@ -151,26 +151,26 @@ onMounted(loadStats);
         <!-- 资料区 -->
         <div class="min-w-0 flex-1">
           <template v-if="!isEditing">
-            <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">
+            <h1 class="text-2xl font-bold text-[var(--color-foreground)]">
               {{ authStore.userInfo?.name || authStore.displayName }}
             </h1>
-            <p class="mt-1 text-sm text-[#64748B] dark:text-[#94A3B8]">@{{ authStore.userInfo?.username }}</p>
-            <p v-if="authStore.userInfo?.email" class="mt-1 text-sm text-[#64748B] dark:text-[#94A3B8]">
+            <p class="mt-1 text-sm text-[var(--color-muted-foreground)]">@{{ authStore.userInfo?.username }}</p>
+            <p v-if="authStore.userInfo?.email" class="mt-1 text-sm text-[var(--color-muted-foreground)]">
               {{ authStore.userInfo.email }}
             </p>
           </template>
           <template v-else>
             <div class="space-y-3">
               <div>
-                <label class="mb-1 block text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">昵称</label>
+                <label class="mb-1 block text-xs font-bold text-[var(--color-muted-foreground)]">昵称</label>
                 <input v-model="editForm.name" type="text" class="ui-input" placeholder="你的昵称" />
               </div>
               <div>
-                <label class="mb-1 block text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">邮箱</label>
+                <label class="mb-1 block text-xs font-bold text-[var(--color-muted-foreground)]">邮箱</label>
                 <input v-model="editForm.email" type="email" class="ui-input" placeholder="你的邮箱" />
               </div>
               <div>
-                <label class="mb-1 block text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">个人简介</label>
+                <label class="mb-1 block text-xs font-bold text-[var(--color-muted-foreground)]">个人简介</label>
                 <textarea v-model="editForm.bio" class="ui-input min-h-[80px] resize-y" placeholder="介绍一下自己"></textarea>
               </div>
             </div>
@@ -209,38 +209,38 @@ onMounted(loadStats);
       <!-- 数据概览 4 卡 -->
       <div class="ui-grid ui-grid-4 mb-6">
         <div class="ui-card flex items-center gap-3 p-5">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
             <Icon icon="material-symbols:check-circle-rounded" class="h-5 w-5" />
           </span>
           <div>
-            <p class="text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">已解决</p>
+            <p class="text-xs font-bold text-[var(--color-muted-foreground)]">已解决</p>
             <p class="text-2xl font-bold leading-tight">{{ statsLoading ? '—' : solvedCount }}</p>
           </div>
         </div>
         <div class="ui-card flex items-center gap-3 p-5">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
             <Icon icon="material-symbols:history-rounded" class="h-5 w-5" />
           </span>
           <div>
-            <p class="text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">提交次数</p>
+            <p class="text-xs font-bold text-[var(--color-muted-foreground)]">提交次数</p>
             <p class="text-2xl font-bold leading-tight">{{ statsLoading ? '—' : submissionTotal }}</p>
           </div>
         </div>
         <div class="ui-card flex items-center gap-3 p-5">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
             <Icon icon="material-symbols:star-rounded" class="h-5 w-5" />
           </span>
           <div>
-            <p class="text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">收藏题目</p>
+            <p class="text-xs font-bold text-[var(--color-muted-foreground)]">收藏题目</p>
             <p class="text-2xl font-bold leading-tight">{{ statsLoading ? '—' : favoriteCount }}</p>
           </div>
         </div>
         <div class="ui-card flex items-center gap-3 p-5">
-          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
             <Icon icon="material-symbols:calendar-today-rounded" class="h-5 w-5" />
           </span>
           <div>
-            <p class="text-xs font-bold text-[#64748B] dark:text-[#94A3B8]">注册时间</p>
+            <p class="text-xs font-bold text-[var(--color-muted-foreground)]">注册时间</p>
             <p class="text-sm font-bold leading-tight">{{ formatDate(authStore.userInfo?.created_at) }}</p>
           </div>
         </div>
@@ -249,30 +249,30 @@ onMounted(loadStats);
       <!-- 快捷入口 -->
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <button class="ui-card ui-card-hover flex items-center gap-4 p-5 text-left" @click="goSubmissions">
-          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
             <Icon icon="material-symbols:history-rounded" class="h-6 w-6" />
           </span>
           <div>
-            <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">提交记录</p>
-            <p class="text-xs text-[#64748B] dark:text-[#94A3B8]">查看所有判题记录</p>
+            <p class="font-bold text-[var(--color-foreground)]">提交记录</p>
+            <p class="text-xs text-[var(--color-muted-foreground)]">查看所有判题记录</p>
           </div>
         </button>
         <button class="ui-card ui-card-hover flex items-center gap-4 p-5 text-left" @click="goFavorites">
-          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
             <Icon icon="material-symbols:star-rounded" class="h-6 w-6" />
           </span>
           <div>
-            <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">收藏题目</p>
-            <p class="text-xs text-[#64748B] dark:text-[#94A3B8]">管理你的题单</p>
+            <p class="font-bold text-[var(--color-foreground)]">收藏题目</p>
+            <p class="text-xs text-[var(--color-muted-foreground)]">管理你的题单</p>
           </div>
         </button>
         <button class="ui-card ui-card-hover flex items-center gap-4 p-5 text-left" @click="router.push('/problems')">
-          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
             <Icon icon="material-symbols:library-books-rounded" class="h-6 w-6" />
           </span>
           <div>
-            <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">去刷题</p>
-            <p class="text-xs text-[#64748B] dark:text-[#94A3B8]">继续练习提升实力</p>
+            <p class="font-bold text-[var(--color-foreground)]">去刷题</p>
+            <p class="text-xs text-[var(--color-muted-foreground)]">继续练习提升实力</p>
           </div>
         </button>
       </div>

@@ -577,7 +577,7 @@ onMounted(loadContests);
           <div>
             <label class="mb-1 block text-sm font-bold">封榜时间（可选）</label>
             <input v-model="contestForm.freeze_time" type="datetime-local" step="60" class="ui-input w-full" />
-            <p class="mt-1 text-xs text-[#94A3B8]">封榜后继续判题，参赛者不再看到新的 AC，公开榜固定为封榜前快照。</p>
+            <p class="mt-1 text-xs text-[var(--color-muted-foreground)]">封榜后继续判题，参赛者不再看到新的 AC，公开榜固定为封榜前快照。</p>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -599,7 +599,7 @@ onMounted(loadContests);
               class="ui-input w-full"
               placeholder="ACM 模式：每次未通过提交计入的罚时，默认 20"
             />
-            <p class="mt-1 text-xs text-[#94A3B8]">ACM 模式生效：本题罚时 = 首次通过用时(分钟) + 未通过次数 × 罚时。</p>
+            <p class="mt-1 text-xs text-[var(--color-muted-foreground)]">ACM 模式生效：本题罚时 = 首次通过用时(分钟) + 未通过次数 × 罚时。</p>
           </div>
         </div>
         <div class="mt-6 flex justify-end gap-3">
@@ -624,7 +624,7 @@ onMounted(loadContests);
         v-for="c in contests"
         :key="c.id"
         class="ui-card cursor-pointer p-4 transition-colors"
-        :class="selectedContestId === c.id ? 'ring-2 ring-[#2563EB]' : ''"
+        :class="selectedContestId === c.id ? 'ring-2 ring-[var(--color-ring)]' : ''"
         @click="selectContest(c.id)"
       >
         <div class="flex items-center justify-between">
@@ -637,9 +637,9 @@ onMounted(loadContests);
               <span class="ui-badge" :class="c.lifecycle_state === 'DRAFT' ? 'ui-badge-slate' : 'ui-badge-blue'">
                 {{ c.lifecycle_state === 'DRAFT' ? '草稿' : c.is_frozen ? '已封榜' : '已发布' }}
               </span>
-              <span class="text-xs text-[#94A3B8]">{{ c.contest_type }}</span>
+              <span class="text-xs text-[var(--color-muted-foreground)]">{{ c.contest_type }}</span>
             </div>
-            <p class="mt-1 text-sm text-[#64748B]">{{ c.participants_count || 0 }} 人参与</p>
+            <p class="mt-1 text-sm text-[var(--color-muted-foreground)]">{{ c.participants_count || 0 }} 人参与</p>
           </div>
           <div class="flex items-center gap-2">
             <button
@@ -656,7 +656,7 @@ onMounted(loadContests);
               class="ui-btn ui-btn-ghost ui-btn-sm text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40"
               @click.stop="deleteContest(c.id, c.title)"
             >删除</button>
-            <span class="text-[#94A3B8]">→</span>
+            <span class="text-[var(--color-muted-foreground)]">→</span>
           </div>
         </div>
       </div>
@@ -679,17 +679,17 @@ onMounted(loadContests);
       <div v-else-if="problems.length === 0" class="ui-empty">
         <Icon icon="material-symbols:description" class="mb-2 h-12 w-12 text-slate-400" />
         <p class="font-bold">暂无题目</p>
-        <p class="text-sm text-[#64748B]">点击"添加题目"开始出题</p>
+        <p class="text-sm text-[var(--color-muted-foreground)]">点击"添加题目"开始出题</p>
       </div>
 
       <div v-else class="space-y-2">
         <div v-for="p in problems" :key="p.id" class="ui-card flex items-center gap-4 p-4">
-          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-sm font-bold text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--color-accent-soft)] text-sm font-bold text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
             {{ p.problem_index }}
           </div>
           <div class="min-w-0 flex-1">
             <div class="font-bold">{{ p.title }}</div>
-            <div class="mt-1 flex items-center gap-3 text-xs text-[#94A3B8]">
+            <div class="mt-1 flex items-center gap-3 text-xs text-[var(--color-muted-foreground)]">
               <span :class="difficultyClass(p.difficulty)" class="rounded px-1.5 py-0.5">{{ p.difficulty }}</span>
                <span class="inline-flex items-center gap-1"><Icon icon="material-symbols:schedule" class="h-3.5 w-3.5" />{{ p.time_limit }}ms</span>
                <span class="inline-flex items-center gap-1"><Icon icon="material-symbols:memory" class="h-3.5 w-3.5" />{{ p.memory_limit }}MB</span>
@@ -971,7 +971,7 @@ onMounted(loadContests);
           <div class="problem-preview-section">
             <div class="problem-preview-header">
               <div class="problem-preview-header-left">
-                <Icon icon="material-symbols:visibility" class="h-4 w-4 text-[#2563EB]" />
+                <Icon icon="material-symbols:visibility" class="h-4 w-4 text-[var(--color-accent-text)]" />
                 <span class="problem-preview-title">题目预览</span>
               </div>
               <div class="problem-preview-live">
@@ -1056,7 +1056,7 @@ onMounted(loadContests);
                 </div>
               </template>
               <div v-else class="problem-preview-empty">
-                <Icon icon="material-symbols:article-outline" class="h-12 w-12 text-[#CBD5E1] dark:text-[#475569]" />
+                <Icon icon="material-symbols:article-outline" class="h-12 w-12 text-[var(--color-foreground)] dark:text-[var(--color-muted-foreground)]" />
                 <p class="problem-preview-empty-text">在左侧输入题目内容后</p>
                 <p class="problem-preview-empty-text">此处将实时显示渲染效果</p>
               </div>
@@ -1140,17 +1140,17 @@ onMounted(loadContests);
 .admin-header-title {
   font-size: 1.5rem;
   font-weight: 900;
-  color: #0f172a;
+  color: var(--color-foreground);
 }
 :global(.dark) .admin-header-title {
-  color: #f1f5f9;
+  color: var(--color-foreground);
 }
 .admin-header-desc {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-muted-foreground);
 }
 :global(.dark) .admin-header-desc {
-  color: #94a3b8;
+  color: var(--color-muted-foreground);
 }
 .admin-btn-primary {
   display: inline-flex;
@@ -1162,25 +1162,25 @@ onMounted(loadContests);
   font-size: 0.875rem;
   font-weight: 600;
   color: #fff;
-  background: #2563eb;
+  background: var(--color-accent-solid);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 1px 2px rgb(11 124 138 / 0.2);
 }
 .admin-btn-primary:hover {
-  background: #1d4ed8;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+  background: var(--color-accent-solid-hover);
+  box-shadow: 0 2px 6px rgb(11 124 138 / 0.3);
   transform: translateY(-1px);
 }
 .admin-btn-primary:active {
-  background: #1e40af;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+  background: var(--color-accent-solid-active);
+  box-shadow: 0 1px 2px rgb(11 124 138 / 0.2);
   transform: translateY(0);
 }
 .admin-btn-primary:disabled {
-  background: #93b4e0;
+  background: var(--color-accent-soft);
   box-shadow: none;
   transform: none;
   cursor: not-allowed;
@@ -1201,20 +1201,20 @@ onMounted(loadContests);
   font-size: 14px;
   font-weight: 600;
   color: #fff;
-  background: #2563EB;
+  background: var(--color-accent-solid);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 1px 3px rgb(11 124 138 / 0.2);
 }
 .add-problem-btn:hover {
-  background: #1D4ED8;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  background: var(--color-accent-solid-hover);
+  box-shadow: 0 4px 12px rgb(11 124 138 / 0.3);
   transform: translateY(-1px);
 }
 .add-problem-btn:active {
-  background: #1E40AF;
+  background: var(--color-accent-solid-active);
   transform: translateY(0);
 }
 
@@ -1241,14 +1241,14 @@ onMounted(loadContests);
   max-width: 1240px;
   height: calc(100vh - 48px);
   max-height: 92vh;
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   overflow: hidden;
 }
 :global(.dark) .problem-modal {
-  background: #0F141B;
-  border: 1px solid #27313D;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 /* 顶部标题栏 */
@@ -1258,11 +1258,11 @@ onMounted(loadContests);
   justify-content: space-between;
   min-height: 76px;
   padding: 12px 28px;
-  border-bottom: 1px solid #E5EAF0;
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 :global(.dark) .problem-modal-header {
-  border-bottom-color: #27313D;
+  border-bottom-color: var(--color-border);
 }
 .problem-modal-header-left {
   display: flex;
@@ -1277,24 +1277,24 @@ onMounted(loadContests);
   padding: 0 10px 0 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-muted-foreground);
   background: transparent;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .problem-back-btn:hover {
-  background: #F1F5F9;
-  color: #0F172A;
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-back-btn {
-  color: #94A3B8;
-  border-color: #27313D;
+  color: var(--color-muted-foreground);
+  border-color: var(--color-border);
 }
 :global(.dark) .problem-back-btn:hover {
-  background: #1A222C;
-  color: #E5E7EB;
+  background: var(--color-surface-muted);
+  color: var(--color-foreground);
 }
 .problem-modal-titles {
   display: flex;
@@ -1304,19 +1304,19 @@ onMounted(loadContests);
 .problem-modal-title {
   font-size: 24px;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-foreground);
   margin: 0;
   line-height: 1.2;
 }
 :global(.dark) .problem-modal-title {
-  color: #E5E7EB;
+  color: var(--color-foreground);
 }
 .problem-modal-subtitle {
   font-size: 13px;
   color: #667085;
 }
 :global(.dark) .problem-modal-subtitle {
-  color: #98A2B3;
+  color: var(--color-muted-foreground);
 }
 .problem-modal-close {
   display: flex;
@@ -1327,17 +1327,17 @@ onMounted(loadContests);
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #64748B;
+  color: var(--color-muted-foreground);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .problem-modal-close:hover {
-  background: #F1F5F9;
-  color: #1E293B;
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-modal-close:hover {
-  background: #1A222C;
-  color: #E5E7EB;
+  background: var(--color-surface-muted);
+  color: var(--color-foreground);
 }
 
 /* 内容区域 */
@@ -1366,7 +1366,7 @@ onMounted(loadContests);
   background: transparent;
 }
 .problem-form-section::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: var(--color-muted);
   border-radius: 3px;
 }
 :global(.dark) .problem-form-section::-webkit-scrollbar-thumb {
@@ -1375,15 +1375,15 @@ onMounted(loadContests);
 
 /* 统一编辑 Surface */
 .problem-editor-surface {
-  background: #FFFFFF;
-  border: 1px solid #E5EAF0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 4px 28px;
   overflow-x: hidden;
 }
 :global(.dark) .problem-editor-surface {
-  background: #151B23;
-  border-color: #27313D;
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 
 /* Section */
@@ -1403,15 +1403,15 @@ onMounted(loadContests);
 .problem-section-title {
   font-size: 18px;
   font-weight: 650;
-  color: #344054;
+  color: var(--color-foreground);
   margin: 0;
 }
 :global(.dark) .problem-section-title {
-  color: #D0D5DD;
+  color: var(--color-foreground);
 }
 .problem-section-desc {
   font-size: 13px;
-  color: #98A2B3;
+  color: var(--color-muted-foreground);
   margin: 6px 0 0;
 }
 .problem-section-body {
@@ -1450,14 +1450,14 @@ onMounted(loadContests);
   font-size: 13px;
   font-weight: 600;
   line-height: 18px;
-  color: #344054;
+  color: var(--color-foreground);
   text-align: left;
 }
 :global(.dark) .problem-label {
-  color: #D0D5DD;
+  color: var(--color-foreground);
 }
 .problem-required {
-  color: #EF4444;
+  color: var(--color-danger-text);
   font-weight: 500;
 }
 
@@ -1468,31 +1468,31 @@ onMounted(loadContests);
   padding: 0 14px;
   font-size: 14px;
   line-height: 44px;
-  color: #1E293B;
-  background: #FFFFFF;
-  border: 1px solid #D9E0E8;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   outline: none;
   transition: all 0.15s ease;
 }
 .problem-input::placeholder {
-  color: #94A3B8;
+  color: var(--color-muted-foreground);
 }
 .problem-input:focus {
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(11 124 138 / 0.10);
 }
 :global(.dark) .problem-input {
-  color: #E5E7EB;
-  background: #10151C;
-  border-color: #27313D;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 :global(.dark) .problem-input::placeholder {
-  color: #64748B;
+  color: var(--color-muted-foreground);
 }
 :global(.dark) .problem-input:focus {
-  border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(14 165 183 / 0.15);
 }
 
 /* 带单位的输入框 */
@@ -1515,15 +1515,15 @@ onMounted(loadContests);
   padding: 0 12px;
   font-size: 13px;
   font-weight: 500;
-  color: #64748B;
-  background: #F8FAFC;
-  border: 1px solid #D9E0E8;
+  color: var(--color-muted-foreground);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
   border-radius: 0 8px 8px 0;
 }
 :global(.dark) .problem-input-unit {
-  color: #94A3B8;
-  background: #1A222C;
-  border-color: #27313D;
+  color: var(--color-muted-foreground);
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
 }
 
 /* 文本域 */
@@ -1532,49 +1532,49 @@ onMounted(loadContests);
   padding: 12px 14px;
   font-size: 14px;
   line-height: 1.6;
-  color: #1E293B;
-  background: #FFFFFF;
-  border: 1px solid #D9E0E8;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   outline: none;
   resize: vertical;
   transition: all 0.15s ease;
 }
 .problem-textarea::placeholder {
-  color: #94A3B8;
+  color: var(--color-muted-foreground);
 }
 .problem-textarea:focus {
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(11 124 138 / 0.10);
 }
 :global(.dark) .problem-textarea {
-  color: #E5E7EB;
-  background: #10151C;
-  border-color: #27313D;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 :global(.dark) .problem-textarea::placeholder {
-  color: #64748B;
+  color: var(--color-muted-foreground);
 }
 :global(.dark) .problem-textarea:focus {
-  border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(14 165 183 / 0.15);
 }
 
 /* Markdown 编辑器 */
 .problem-md-editor {
-  border: 1px solid #D9E0E8;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
-  background: #FFFFFF;
+  background: var(--color-surface);
   transition: all 0.15s ease;
 }
 .problem-md-editor:focus-within {
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(11 124 138 / 0.10);
 }
 :global(.dark) .problem-md-editor {
-  background: #10151C;
-  border-color: #27313D;
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 /* === 对齐相关：工具栏/底栏与编辑区左边缘对齐 === */
 .problem-md-toolbar {
@@ -1583,12 +1583,12 @@ onMounted(loadContests);
   gap: 2px;
   height: 40px;
   padding: 0 14px;
-  background: #F8FAFC;
-  border-bottom: 1px solid #E5EAF0;
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
 }
 :global(.dark) .problem-md-toolbar {
-  background: #1A222C;
-  border-bottom-color: #27313D;
+  background: var(--color-surface-muted);
+  border-bottom-color: var(--color-border);
 }
 .problem-md-btn {
   display: flex;
@@ -1599,20 +1599,20 @@ onMounted(loadContests);
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #475569;
+  color: var(--color-muted-foreground);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .problem-md-btn:hover {
-  background: #E2E8F0;
-  color: #0F172A;
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-md-btn {
-  color: #94A3B8;
+  color: var(--color-muted-foreground);
 }
 :global(.dark) .problem-md-btn:hover {
   background: #27313D;
-  color: #E5E7EB;
+  color: var(--color-foreground);
 }
 .problem-desc-textarea {
   border: none;
@@ -1629,29 +1629,29 @@ onMounted(loadContests);
   align-items: center;
   justify-content: space-between;
   padding: 8px 14px;
-  background: #F8FAFC;
-  border-top: 1px solid #E5EAF0;
+  background: var(--color-surface-muted);
+  border-top: 1px solid var(--color-border);
 }
 :global(.dark) .problem-desc-footer {
-  background: #1A222C;
-  border-top-color: #27313D;
+  background: var(--color-surface-muted);
+  border-top-color: var(--color-border);
 }
 .problem-hint {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #98A2B3;
+  color: var(--color-muted-foreground);
 }
 
 /* 样例卡片 */
 .problem-sample-card {
-  border: 1px solid #E5EAF0;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   overflow: hidden;
 }
 :global(.dark) .problem-sample-card {
-  border-color: #27313D;
+  border-color: var(--color-border);
 }
 .problem-sample-head {
   display: flex;
@@ -1659,12 +1659,12 @@ onMounted(loadContests);
   justify-content: space-between;
   height: 40px;
   padding: 0 12px;
-  background: #F8FAFC;
-  border-bottom: 1px solid #E5EAF0;
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
 }
 :global(.dark) .problem-sample-head {
-  background: #1A222C;
-  border-bottom-color: #27313D;
+  background: var(--color-surface-muted);
+  border-bottom-color: var(--color-border);
 }
 .problem-sample-title {
   display: flex;
@@ -1672,10 +1672,10 @@ onMounted(loadContests);
   gap: 4px;
   font-size: 13px;
   font-weight: 600;
-  color: #344054;
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-sample-title {
-  color: #D0D5DD;
+  color: var(--color-foreground);
 }
 .problem-sample-drag {
   display: flex;
@@ -1686,13 +1686,13 @@ onMounted(loadContests);
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #94A3B8;
+  color: var(--color-muted-foreground);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .problem-sample-drag:hover:not(:disabled) {
-  background: #E2E8F0;
-  color: #0F172A;
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
 .problem-sample-drag:disabled {
   opacity: 0.35;
@@ -1700,7 +1700,7 @@ onMounted(loadContests);
 }
 :global(.dark) .problem-sample-drag:hover:not(:disabled) {
   background: #27313D;
-  color: #E5E7EB;
+  color: var(--color-foreground);
 }
 .problem-sample-copy {
   display: inline-flex;
@@ -1709,7 +1709,7 @@ onMounted(loadContests);
   height: 26px;
   padding: 0 8px;
   font-size: 12px;
-  color: #2563EB;
+  color: var(--color-accent-text);
   background: transparent;
   border: none;
   border-radius: 6px;
@@ -1717,7 +1717,7 @@ onMounted(loadContests);
   transition: all 0.15s ease;
 }
 .problem-sample-copy:hover {
-  background: rgba(37, 99, 235, 0.10);
+  background: rgb(11 124 138 / 0.10);
 }
 .problem-sample-del {
   display: inline-flex;
@@ -1726,7 +1726,7 @@ onMounted(loadContests);
   height: 26px;
   padding: 0 8px;
   font-size: 12px;
-  color: #EF4444;
+  color: var(--color-danger-text);
   background: transparent;
   border: none;
   border-radius: 6px;
@@ -1734,8 +1734,8 @@ onMounted(loadContests);
   transition: all 0.15s ease;
 }
 .problem-sample-del:hover {
-  background: #FEE2E2;
-  color: #DC2626;
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
 }
 .problem-sample-body {
   display: grid;
@@ -1754,15 +1754,15 @@ onMounted(loadContests);
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #344054;
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-sample-label {
-  color: #D0D5DD;
+  color: var(--color-foreground);
 }
 .problem-sample-sub {
   font-size: 11px;
   font-weight: 500;
-  color: #98A2B3;
+  color: var(--color-muted-foreground);
   font-family: 'JetBrains Mono', monospace;
 }
 .problem-io-textarea {
@@ -1770,9 +1770,9 @@ onMounted(loadContests);
   padding: 12px 14px;
   font-size: 14px;
   line-height: 1.7;
-  color: #1E293B;
-  background: #FAFBFC;
-  border: 1px solid #D9E0E8;
+  color: var(--color-foreground);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   outline: none;
   resize: vertical;
@@ -1780,21 +1780,21 @@ onMounted(loadContests);
   transition: all 0.15s ease;
 }
 .problem-io-textarea::placeholder {
-  color: #94A3B8;
+  color: var(--color-muted-foreground);
 }
 .problem-io-textarea:focus {
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(11 124 138 / 0.10);
 }
 :global(.dark) .problem-io-textarea {
-  color: #E5E7EB;
-  background: #0D1117;
-  border-color: #27313D;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 .problem-sample-count {
   align-self: flex-end;
   font-size: 12px;
-  color: #98A2B3;
+  color: var(--color-muted-foreground);
 }
 .problem-add-sample {
   display: inline-flex;
@@ -1804,8 +1804,8 @@ onMounted(loadContests);
   padding: 0 14px;
   font-size: 13px;
   font-weight: 600;
-  color: #2563EB;
-  background: #FFFFFF;
+  color: var(--color-accent-text);
+  background: var(--color-surface);
   border: 1px dashed #D9E2EC;
   border-radius: 8px;
   cursor: pointer;
@@ -1813,11 +1813,11 @@ onMounted(loadContests);
 }
 .problem-add-sample:hover {
   background: #F8FAFF;
-  border-color: #2563EB;
+  border-color: var(--color-accent);
 }
 :global(.dark) .problem-add-sample {
-  background: #151B23;
-  border-color: #27313D;
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 .problem-sample-empty {
   display: flex;
@@ -1825,14 +1825,14 @@ onMounted(loadContests);
   gap: 8px;
   padding: 14px 16px;
   font-size: 13px;
-  color: #98A2B3;
-  background: #F8FAFC;
-  border: 1px dashed #E2E8F0;
+  color: var(--color-muted-foreground);
+  background: var(--color-surface-muted);
+  border: 1px dashed var(--color-border);
   border-radius: 10px;
 }
 :global(.dark) .problem-sample-empty {
-  background: #10151C;
-  border-color: #27313D;
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 
 /* 代码编辑器 */
@@ -1842,14 +1842,14 @@ onMounted(loadContests);
   justify-content: space-between;
   height: 48px;
   padding: 0 12px;
-  background: #F1F5F9;
-  border: 1px solid #D9E0E8;
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
   border-bottom: none;
   border-radius: 8px 8px 0 0;
 }
 :global(.dark) .problem-code-header {
-  background: #1A222C;
-  border-color: #27313D;
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
 }
 .problem-code-title {
   display: flex;
@@ -1857,16 +1857,16 @@ onMounted(loadContests);
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-code-title {
-  color: #E5E7EB;
+  color: var(--color-foreground);
 }
 .problem-code-badge {
   font-size: 11px;
   font-weight: 600;
-  color: #2563EB;
-  background: rgba(37, 99, 235, 0.10);
+  color: var(--color-accent-text);
+  background: rgb(11 124 138 / 0.10);
   padding: 2px 8px;
   border-radius: 9999px;
 }
@@ -1879,17 +1879,17 @@ onMounted(loadContests);
   height: 30px;
   padding: 0 8px;
   font-size: 13px;
-  color: #334155;
-  background: #FFFFFF;
-  border: 1px solid #D9E0E8;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   outline: none;
   cursor: pointer;
 }
 :global(.dark) .problem-code-lang {
-  color: #E5E7EB;
-  background: #0D1117;
-  border-color: #27313D;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 .problem-code-btn {
   display: flex;
@@ -1900,39 +1900,39 @@ onMounted(loadContests);
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #475569;
+  color: var(--color-muted-foreground);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .problem-code-btn:hover {
-  background: #E2E8F0;
-  color: #0F172A;
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-code-btn {
-  color: #94A3B8;
+  color: var(--color-muted-foreground);
 }
 :global(.dark) .problem-code-btn:hover {
   background: #27313D;
-  color: #E5E7EB;
+  color: var(--color-foreground);
 }
 .problem-code-editor {
   display: flex;
-  border: 1px solid #D9E0E8;
+  border: 1px solid var(--color-border);
   border-radius: 0 0 8px 8px;
   overflow: hidden;
-  background: #FAFBFC;
+  background: var(--color-background);
 }
 :global(.dark) .problem-code-editor {
-  background: #0D1117;
-  border-color: #27313D;
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 .problem-code-gutter {
   flex-shrink: 0;
   width: 48px;
   padding: 14px 0;
   overflow: hidden;
-  background: #F1F5F9;
-  border-right: 1px solid #E5EAF0;
+  background: var(--color-muted);
+  border-right: 1px solid var(--color-border);
   user-select: none;
 }
 :global(.dark) .problem-code-gutter {
@@ -1945,7 +1945,7 @@ onMounted(loadContests);
   text-align: right;
   padding-right: 12px;
   font-size: 13px;
-  color: #98A2B3;
+  color: var(--color-muted-foreground);
   font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
 }
 .problem-code-textarea {
@@ -1955,8 +1955,8 @@ onMounted(loadContests);
   padding: 14px 16px;
   font-size: 14px;
   line-height: 1.75;
-  color: #1E293B;
-  background: #FAFBFC;
+  color: var(--color-foreground);
+  background: var(--color-background);
   border: none;
   outline: none;
   resize: none;
@@ -1966,8 +1966,8 @@ onMounted(loadContests);
   tab-size: 4;
 }
 :global(.dark) .problem-code-textarea {
-  color: #E5E7EB;
-  background: #0D1117;
+  color: var(--color-foreground);
+  background: var(--color-surface);
 }
 .problem-code-textarea:focus {
   box-shadow: none;
@@ -1991,7 +1991,7 @@ onMounted(loadContests);
   margin-top: 4px;
   font-size: 12px;
   line-height: 16px;
-  color: #EF4444;
+  color: var(--color-danger-text);
 }
 
 /* 右侧预览区 */
@@ -2001,14 +2001,14 @@ onMounted(loadContests);
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  border: 1px solid #E5EAF0;
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   overflow: hidden;
-  background: #FFFFFF;
+  background: var(--color-surface);
 }
 :global(.dark) .problem-preview-section {
-  border-color: #27313D;
-  background: #0F141B;
+  border-color: var(--color-border);
+  background: var(--color-surface);
 }
 .problem-preview-header {
   display: flex;
@@ -2016,13 +2016,13 @@ onMounted(loadContests);
   justify-content: space-between;
   height: 52px;
   padding: 0 16px;
-  background: #F8FAFC;
-  border-bottom: 1px solid #E5EAF0;
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 :global(.dark) .problem-preview-header {
-  background: #151B23;
-  border-bottom-color: #27313D;
+  background: var(--color-surface);
+  border-bottom-color: var(--color-border);
 }
 .problem-preview-header-left {
   display: flex;
@@ -2032,17 +2032,17 @@ onMounted(loadContests);
 .problem-preview-title {
   font-size: 15px;
   font-weight: 600;
-  color: #334155;
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-preview-title {
-  color: #E5E7EB;
+  color: var(--color-foreground);
 }
 .problem-preview-live {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: #98A2B3;
+  color: var(--color-muted-foreground);
 }
 .problem-live-dot {
   width: 7px;
@@ -2055,13 +2055,13 @@ onMounted(loadContests);
 /* 完成度 */
 .problem-completion {
   padding: 16px;
-  background: #F8FAFC;
-  border-bottom: 1px solid #E5EAF0;
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 :global(.dark) .problem-completion {
-  background: #10151C;
-  border-bottom-color: #27313D;
+  background: var(--color-surface);
+  border-bottom-color: var(--color-border);
 }
 .problem-completion-head {
   display: flex;
@@ -2072,15 +2072,15 @@ onMounted(loadContests);
 .problem-completion-label {
   font-size: 13px;
   font-weight: 600;
-  color: #344054;
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-completion-label {
-  color: #D0D5DD;
+  color: var(--color-foreground);
 }
 .problem-completion-percent {
   font-size: 13px;
   font-weight: 700;
-  color: #2563EB;
+  color: var(--color-accent-text);
 }
 .problem-completion-bar {
   height: 6px;
@@ -2093,7 +2093,7 @@ onMounted(loadContests);
 }
 .problem-completion-fill {
   height: 100%;
-  background: #2563EB;
+  background: var(--color-accent-solid);
   border-radius: 9999px;
   transition: width 0.3s ease;
 }
@@ -2108,10 +2108,10 @@ onMounted(loadContests);
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #98A2B3;
+  color: var(--color-muted-foreground);
 }
 .problem-completion-item.is-done {
-  color: #16A34A;
+  color: var(--color-signal-text);
 }
 
 .problem-preview-content {
@@ -2127,7 +2127,7 @@ onMounted(loadContests);
   background: transparent;
 }
 .problem-preview-content::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: var(--color-muted);
   border-radius: 3px;
 }
 :global(.dark) .problem-preview-content::-webkit-scrollbar-thumb {
@@ -2136,14 +2136,14 @@ onMounted(loadContests);
 
 /* 预览卡片 */
 .problem-preview-card {
-  background: #fff;
-  border: 1px solid #E5EAF0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 20px;
 }
 :global(.dark) .problem-preview-card {
-  background: #0F141B;
-  border-color: #27313D;
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 .problem-preview-title-area {
   display: flex;
@@ -2151,18 +2151,18 @@ onMounted(loadContests);
   gap: 10px;
   margin-bottom: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #E5EAF0;
+  border-bottom: 1px solid var(--color-border);
 }
 :global(.dark) .problem-preview-title-area {
-  border-bottom-color: #27313D;
+  border-bottom-color: var(--color-border);
 }
 .problem-preview-index {
   flex-shrink: 0;
   font-size: 13px;
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
-  color: #2563EB;
-  background: rgba(37, 99, 235, 0.10);
+  color: var(--color-accent-text);
+  background: rgb(11 124 138 / 0.10);
   padding: 2px 8px;
   border-radius: 6px;
   margin-top: 4px;
@@ -2171,12 +2171,12 @@ onMounted(loadContests);
   flex: 1;
   font-size: 20px;
   font-weight: 700;
-  color: #0F172A;
+  color: var(--color-foreground);
   margin: 0;
   line-height: 1.4;
 }
 :global(.dark) .problem-preview-problem-title {
-  color: #E5E7EB;
+  color: var(--color-foreground);
 }
 .problem-preview-difficulty {
   flex-shrink: 0;
@@ -2191,19 +2191,19 @@ onMounted(loadContests);
 .problem-preview-block-title {
   font-size: 14px;
   font-weight: 650;
-  color: #0F172A;
+  color: var(--color-foreground);
   margin-bottom: 8px;
 }
 :global(.dark) .problem-preview-block-title {
-  color: #E5E7EB;
+  color: var(--color-foreground);
 }
 .problem-preview-description {
   font-size: 15px;
   line-height: 1.8;
-  color: #334155;
+  color: var(--color-foreground);
 }
 :global(.dark) .problem-preview-description {
-  color: #CBD5E1;
+  color: var(--color-foreground);
 }
 .problem-preview-tags {
   display: flex;
@@ -2217,23 +2217,23 @@ onMounted(loadContests);
   padding: 0 10px;
   font-size: 12px;
   font-weight: 500;
-  color: #475569;
-  background: #F1F5F9;
+  color: var(--color-muted-foreground);
+  background: var(--color-muted);
   border-radius: 6px;
 }
 :global(.dark) .problem-preview-tag {
-  color: #D0D5DD;
-  background: #1A222C;
+  color: var(--color-foreground);
+  background: var(--color-surface-muted);
 }
 .problem-preview-example {
-  background: #F8FAFC;
-  border: 1px solid #E5EAF0;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 14px;
 }
 :global(.dark) .problem-preview-example {
-  background: #10151C;
-  border-color: #27313D;
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 .problem-preview-ex-label {
   font-size: 12px;
@@ -2249,36 +2249,36 @@ onMounted(loadContests);
   padding: 10px 12px;
   font-size: 14px;
   line-height: 1.7;
-  color: #1E293B;
+  color: var(--color-foreground);
   font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
-  background: #FFFFFF;
-  border: 1px solid #E5EAF0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   white-space: pre-wrap;
   word-break: break-all;
 }
 :global(.dark) .problem-preview-ex-code {
-  color: #E5E7EB;
-  background: #0D1117;
-  border-color: #27313D;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 .problem-preview-code {
   margin: 0;
   padding: 14px;
   font-size: 14px;
   line-height: 1.7;
-  color: #1E293B;
+  color: var(--color-foreground);
   font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
-  background: #FAFBFC;
-  border: 1px solid #E5EAF0;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   white-space: pre-wrap;
   word-break: break-all;
 }
 :global(.dark) .problem-preview-code {
-  color: #E5E7EB;
-  background: #0D1117;
-  border-color: #27313D;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 
 /* 预览空状态 */
@@ -2293,7 +2293,7 @@ onMounted(loadContests);
 .problem-preview-empty-text {
   margin: 4px 0;
   font-size: 14px;
-  color: #94A3B8;
+  color: var(--color-muted-foreground);
 }
 
 /* 底部操作栏：左下状态、右下按钮组，统一底部对齐 */
@@ -2303,13 +2303,13 @@ onMounted(loadContests);
   justify-content: space-between;
   height: 80px;
   padding: 0 28px 18px;
-  border-top: 1px solid #E5EAF0;
+  border-top: 1px solid var(--color-border);
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px);
 }
 :global(.dark) .problem-modal-footer {
-  border-top-color: #27313D;
+  border-top-color: var(--color-border);
   background: rgba(11, 15, 20, 0.88);
 }
 .problem-modal-footer-hint {
@@ -2317,13 +2317,13 @@ onMounted(loadContests);
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #64748B;
+  color: var(--color-muted-foreground);
 }
 .problem-hint-dot {
   width: 8px;
   height: 8px;
   border-radius: 9999px;
-  background: #F59E0B;
+  background: var(--color-warning);
 }
 .problem-modal-footer-actions {
   display: flex;
@@ -2348,57 +2348,57 @@ onMounted(loadContests);
 }
 .problem-btn-cancel {
   min-width: 80px;
-  background: #FFFFFF;
-  color: #475569;
-  border: 1px solid #D9E0E8;
+  background: var(--color-surface);
+  color: var(--color-muted-foreground);
+  border: 1px solid var(--color-border);
 }
 .problem-btn-cancel:hover {
-  background: #F8FAFC;
-  border-color: #CBD5E1;
+  background: var(--color-surface-muted);
+  border-color: var(--color-border-strong);
 }
 :global(.dark) .problem-btn-cancel {
-  background: #0F172A;
-  color: #94A3B8;
-  border-color: #27313D;
+  background: var(--color-background);
+  color: var(--color-muted-foreground);
+  border-color: var(--color-border);
 }
 :global(.dark) .problem-btn-cancel:hover {
-  background: #1A222C;
+  background: var(--color-surface-muted);
 }
 .problem-btn-secondary {
   min-width: 96px;
-  background: #FFFFFF;
-  color: #2563EB;
-  border: 1px solid #D9E0E8;
+  background: var(--color-surface);
+  color: var(--color-accent-text);
+  border: 1px solid var(--color-border);
 }
 .problem-btn-secondary:hover {
-  background: #EFF6FF;
-  border-color: #2563EB;
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
 }
 :global(.dark) .problem-btn-secondary {
-  background: #151B23;
-  color: #60A5FA;
-  border-color: #27313D;
+  background: var(--color-surface);
+  color: var(--color-accent-text);
+  border-color: var(--color-border);
 }
 :global(.dark) .problem-btn-secondary:hover {
-  background: #1A222C;
+  background: var(--color-surface-muted);
 }
 .problem-btn-primary {
   min-width: 132px;
-  background: #2563EB;
+  background: var(--color-accent-solid);
   color: #fff;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 1px 2px rgb(11 124 138 / 0.2);
 }
 .problem-btn-primary:hover {
-  background: #1D4ED8;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  background: var(--color-accent-solid-hover);
+  box-shadow: 0 2px 8px rgb(11 124 138 / 0.3);
   transform: translateY(-1px);
 }
 .problem-btn-primary:active {
-  background: #1E40AF;
+  background: var(--color-accent-solid-active);
   transform: translateY(0);
 }
 .problem-btn-primary:disabled {
-  background: #93B4E0;
+  background: var(--color-accent-soft);
   box-shadow: none;
   transform: none;
   cursor: not-allowed;
@@ -2422,13 +2422,13 @@ onMounted(loadContests);
   width: 100%;
   max-width: 1100px;
   height: calc(100vh - 48px);
-  background: #FFFFFF;
+  background: var(--color-surface);
   border-radius: 12px;
   overflow: hidden;
 }
 :global(.dark) .problem-fullscreen {
-  background: #0D1117;
-  border: 1px solid #27313D;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 .problem-fullscreen-header {
   display: flex;
@@ -2436,12 +2436,12 @@ onMounted(loadContests);
   justify-content: space-between;
   height: 52px;
   padding: 0 16px;
-  background: #F1F5F9;
-  border-bottom: 1px solid #E5EAF0;
+  background: var(--color-muted);
+  border-bottom: 1px solid var(--color-border);
 }
 :global(.dark) .problem-fullscreen-header {
-  background: #151B23;
-  border-bottom-color: #27313D;
+  background: var(--color-surface);
+  border-bottom-color: var(--color-border);
 }
 .problem-code-editor-full {
   flex: 1;

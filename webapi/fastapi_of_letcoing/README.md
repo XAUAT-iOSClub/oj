@@ -7,22 +7,21 @@ Flask + Flask-RESTX API，PostgreSQL 保存业务事实，Redis 负责限流、�
 ## 开发与验证
 
 ```sh
-python3 -m venv .venv
-.venv/bin/pip install -r requirements-dev.txt
+uv sync                       # 按 uv.lock 建 .venv，含 dev 依赖
 # 配置数据库、Redis、独立密钥等环境变量；开发时 APP_ENV=development 才加载 .env。
-.venv/bin/python manage.py migrate
-.venv/bin/python manage.py seed
-.venv/bin/python main.py
+uv run python manage.py migrate
+uv run python manage.py seed
+uv run python main.py
 # Worker 单独启动；默认需要 Docker 沙箱镜像。
-.venv/bin/python manage.py worker
-.venv/bin/python -m pytest -q
+uv run python manage.py worker
+uv run python -m pytest -q
 ```
 
 开发 API 默认监听 `127.0.0.1:6173`。测试使用隔离的临时 Redis/PostgreSQL，需要本机安装 redis-server、PostgreSQL 工具、g++ 和 JDK；可用 `PG_BINDIR` 指定 PostgreSQL 的 bin 目录。开发测试中的本地执行不提供生产安全保证。
 
 ## 部署与接口
 
-详细部署顺序、配置、14 项改造对应关系、迁移兼容和验收限制见 [HARDENING.md](HARDENING.md)。沙箱结构见 [JUDGE_ARCHITECTURE.md](JUDGE_ARCHITECTURE.md)。配置模板为 [.env.example](.env.example)，依赖版本以 requirements.txt 为准。
+详细部署顺序、配置、14 项改造对应关系、迁移兼容和验收限制见 [HARDENING.md](HARDENING.md)。沙箱结构见 [JUDGE_ARCHITECTURE.md](JUDGE_ARCHITECTURE.md)。配置模板为 [.env.example](.env.example)，依赖以 [pyproject.toml](pyproject.toml) 声明、[uv.lock](uv.lock) 锁定，安装与启动统一走 uv。
 
 - 生产入口：`python -m deploy.start_api`；启动包装器预检并显式迁移后运行 Gunicorn。独立迁移任务模式设置 `DB_MIGRATION_MODE=check`。
 - Swagger：`/swagger/`；路由及语言支持以控制器和 `JUDGE0_LANGUAGES` 为准。

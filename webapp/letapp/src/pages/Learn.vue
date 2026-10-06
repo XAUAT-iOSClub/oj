@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { sortNodesFoldersFirst } from '../utils/treeSort';
+import { fileIcon, fileTypeLabel } from '../utils/learnFile';
+import { formatRelativeTime } from '../utils/time';
 import type { RecentItem } from '../components/RecentPanel.vue';
 import { useAuthStore } from '../stores/auth';
 import { clearLearnHistory, listLearnHistory, recordLearnHistory } from '../services/api';
@@ -33,6 +35,8 @@ interface MarkdownData {
   title: string;
   path: string;
   mtime: number;
+  /** 源文件自带 `# 标题` 时为 true —— 正文会渲染这个标题，页面不再补一个。 */
+  hasOwnHeading: boolean;
 }
 
 interface HeadingItem {
@@ -57,17 +61,18 @@ const currentFile = ref<MarkdownData | null>(null);
 const isLoadingTree = ref(false);
 const isLoadingDoc = ref(false);
 const error = ref('');
+/** 正文大纲由 MarkdownComponent 抛出，避免在页面里重复解析一遍标题。 */
 const mdHeadings = ref<HeadingItem[]>([]);
-const mdContainer = ref<HTMLElement | null>(null);
+const mdActiveHeading = ref('');
 
 /** 当前在中间区域浏览的文件夹路径（'' = 根目录） */
 const browsePath = ref('');
 const middleSearch = ref('');
-const expandedGroups = ref<Set<string>>(new Set());
 const recentList = ref<RecentItem[]>([]);
 const mobileSidebarOpen = ref(false);
+const mobileMenuButton = ref<HTMLButtonElement | null>(null);
 
-/** ====== 路径工具：学习资料以同源静态文件方式提供（public/learn） ====== */
+/** ====== 路径工具：学习资料以同源静态文件方式提供（public/learn-dist） ====== */
 function encodePath(p: string): string {
   return p.split('/').map((s) => encodeURIComponent(s)).join('/');
 }
@@ -80,13 +85,6 @@ function cleanName(name: string): string {
 }
 function cleanPath(path: string): string {
   return path.split('/').filter(Boolean).map(cleanName).join(' / ');
-}
-
-/** 提取 Markdown 标题（首个 # 标题） */
-function extractTitle(content: string, fallback: string): string {
-  const m = content.match(/^#\s+(.+)$/m);
-  if (m && m[1]) return m[1].trim();
-  return fallback.split('/').pop()?.replace(/\.md$/, '') || fallback;
 }
 
 /** ====== 树查找 / 面包屑 ====== */
@@ -138,36 +136,51 @@ async function loadTree() {
 }
 
 /** ====== 加载 Markdown 文件（静态文件） ====== */
+function fallbackTitle(filePath: string): string {
+  return cleanName(filePath.split('/').pop() || filePath);
+}
+
 async function fetchMarkdown(filePath: string): Promise<MarkdownData> {
   const res = await fetch(`${learnBase}/${encodePath(filePath)}`, { cache: 'no-cache' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
+  // 标题与"是否自带标题"取自同一个匹配结果，两者不可能不一致。
+  const headingMatch = text.match(/^#\s+(.+)$/m);
+  const headingText = headingMatch?.[1]?.trim();
   return {
     content: text,
-    title: extractTitle(text, filePath),
+    title: headingText || fallbackTitle(filePath),
     path: filePath,
     mtime: 0,
+    hasOwnHeading: Boolean(headingText),
   };
 }
 
+/** 同一时刻只认最后一次加载，避免连点两个文件时后到的旧响应覆盖新内容。 */
+let loadVersion = 0;
+
 async function loadFile(filePath: string) {
+  const version = ++loadVersion;
   isLoadingDoc.value = true;
   error.value = '';
   try {
-    currentFile.value = await fetchMarkdown(filePath);
+    const data = await fetchMarkdown(filePath);
+    if (version !== loadVersion) return;
+    currentFile.value = data;
     router.replace({ query: { path: filePath } });
-    pushRecent(currentFile.value);
+    pushRecent(data);
   } catch (e: any) {
-    error.value = `文件加载失败: ${e.message}`;
+    if (version !== loadVersion) return;
+    error.value = `文件加载失败：${e.message}`;
   } finally {
-    isLoadingDoc.value = false;
+    if (version === loadVersion) isLoadingDoc.value = false;
   }
 }
 
 /** 打开中间区域的资料 */
 function openFile(filePath: string) {
   loadFile(filePath);
-  mobileSidebarOpen.value = false;
+  closeMobileSidebar(false);
 }
 
 /** ====== 重新扫描（重新拉取 manifest） ====== */
@@ -186,21 +199,14 @@ async function rescanTree() {
 function navigateToFolder(path: string) {
   browsePath.value = path;
   middleSearch.value = '';
-  mobileSidebarOpen.value = false;
-  // 默认展开当前目录下所有文件夹分组
-  const node = getNodeByPath(path);
-  if (node?.children) {
-    const next = new Set(expandedGroups.value);
-    for (const c of node.children) {
-      if (c.type === 'folder') next.add(c.path);
-    }
-    expandedGroups.value = next;
-  }
+  closeMobileSidebar(false);
 }
 
 /** 关闭详情回到浏览 */
 function backToBrowse() {
   currentFile.value = null;
+  mdHeadings.value = [];
+  mdActiveHeading.value = '';
   router.replace({ query: {} });
 }
 
@@ -217,50 +223,13 @@ function handleSidebarHeading(id: string) {
 function handleSidebarBrowse(path: string) {
   navigateToFolder(path);
 }
-function handleMdNavigate(filePath: string) {
-  isLoadingDoc.value = true;
-  error.value = '';
-  fetchMarkdown(filePath)
-    .then((data) => {
-      currentFile.value = data;
-      router.replace({ query: { path: filePath } });
-      pushRecent(data);
-    })
-    .catch((e: any) => { error.value = `加载资料失败：${e.message}`; })
-    .finally(() => { isLoadingDoc.value = false; });
+
+/** MarkdownComponent 抛出的正文大纲与当前小节 */
+function handleHeadings(headings: HeadingItem[]) {
+  mdHeadings.value = headings;
 }
-
-/** ====== 解析 Markdown 标题 ====== */
-function parseHeadings(markdown: string) {
-  const headings: HeadingItem[] = [];
-  const lines = markdown.split('\n');
-  for (const raw of lines) {
-    const match = raw.match(/^(#{1,3})\s+(.+)/);
-    if (match) {
-      const level = match[1]?.length ?? 1;
-      const text = (match[2] || '').replace(/[*_`~\[\]]/g, '').trim();
-      const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-      headings.push({ level, text, id });
-    }
-  }
-  return headings;
-}
-
-watch(() => currentFile.value?.content, (content) => {
-  if (content) {
-    mdHeadings.value = parseHeadings(content);
-    nextTick(() => addHeadingIds());
-  }
-}, { immediate: true });
-
-function addHeadingIds() {
-  if (!mdContainer.value) return;
-  const headings = mdContainer.value.querySelectorAll('h1, h2, h3');
-  headings.forEach((el) => {
-    const text = el.textContent?.trim() || '';
-    const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-    el.id = id;
-  });
+function handleActiveHeading(id: string) {
+  mdActiveHeading.value = id;
 }
 
 /** ====== 导出 Markdown ====== */
@@ -282,6 +251,8 @@ function countFiles(node: TreeNode | null): number {
   if (!node.children) return 0;
   return node.children.reduce((sum, c) => sum + countFiles(c), 0);
 }
+const totalFileCount = computed(() => countFiles(treeData.value));
+
 /** ====== 中间区域内容 ====== */
 const currentBrowseNode = computed(() => getNodeByPath(browsePath.value));
 const breadcrumb = computed(() => buildBreadcrumb(browsePath.value));
@@ -295,72 +266,37 @@ const sortedChildren = computed(() => {
 const folderChildren = computed(() => sortedChildren.value.filter((c) => c.type === 'folder'));
 const fileChildren = computed(() => sortedChildren.value.filter((c) => c.type === 'file'));
 
+function matchesSearch(node: TreeNode, q: string): boolean {
+  return cleanName(node.name).toLowerCase().includes(q);
+}
+
 const filteredFolders = computed(() => {
   const q = middleSearch.value.trim().toLowerCase();
   if (!q) return folderChildren.value;
-  return folderChildren.value.filter((c) => cleanName(c.name).toLowerCase().includes(q));
+  return folderChildren.value.filter((c) => matchesSearch(c, q));
 });
 const filteredFiles = computed(() => {
   const q = middleSearch.value.trim().toLowerCase();
   if (!q) return fileChildren.value;
-  return fileChildren.value.filter((c) => cleanName(c.name).toLowerCase().includes(q));
+  return fileChildren.value.filter((c) => matchesSearch(c, q));
 });
 
-const currentFolderFileCount = computed(() => countFiles(currentBrowseNode.value));
+const isEmptyBrowse = computed(
+  () => !filteredFolders.value.length && !filteredFiles.value.length,
+);
 
-function childrenOf(node: TreeNode): TreeNode[] {
-  if (!node.children) return [];
-  return sortNodesFoldersFirst(node.children);
-}
-function folderFiles(node: TreeNode): TreeNode[] {
-  return childrenOf(node).filter((c) => c.type === 'file');
-}
-function folderSubFolders(node: TreeNode): TreeNode[] {
-  return childrenOf(node).filter((c) => c.type === 'folder');
-}
-function isGroupExpanded(path: string): boolean {
-  return expandedGroups.value.has(path);
-}
-function toggleGroup(path: string) {
-  const next = new Set(expandedGroups.value);
-  if (next.has(path)) next.delete(path); else next.add(path);
-  expandedGroups.value = next;
+/** 行尾次要信息：修改时间 + 类型，缺时间时只留类型。 */
+function entryMeta(node: TreeNode): string {
+  const parts: string[] = [];
+  if (node.mtime) parts.push(formatRelativeTime(node.mtime * 1000));
+  parts.push(fileTypeLabel(node.name));
+  return parts.join(' · ');
 }
 
-/** ====== 文件图标 / 类型标签 ====== */
-function iconFor(name: string): string {
-  const ext = name.split('.').pop()?.toLowerCase() || '';
-  if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp'].includes(ext)) return 'material-symbols:image';
-  if (ext === 'pdf') return 'material-symbols:picture-as-pdf';
-  if (['js', 'ts', 'py', 'c', 'cpp', 'h', 'java', 'go', 'rs', 'json', 'html', 'css'].includes(ext)) return 'material-symbols:code';
-  return 'material-symbols:description';
-}
-function colorFor(name: string): string {
-  const ext = name.split('.').pop()?.toLowerCase() || '';
-  if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp'].includes(ext)) return '#10b981';
-  if (ext === 'pdf') return '#ef4444';
-  if (['js', 'ts', 'py', 'c', 'cpp', 'h', 'java', 'go', 'rs', 'json', 'html', 'css'].includes(ext)) return '#8b5cf6';
-  return '#2563eb';
-}
-function typeLabel(name: string): string {
-  const ext = name.split('.').pop()?.toLowerCase() || '';
-  if (ext === 'md') return 'Markdown';
-  if (ext === 'pdf') return 'PDF';
-  if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp'].includes(ext)) return '图片';
-  if (['js', 'ts', 'py', 'c', 'cpp', 'h', 'java', 'go', 'rs', 'json', 'html', 'css'].includes(ext)) return '代码';
-  return '文档';
-}
-import { formatDate } from '../utils/time';
-
-function timeAgo(ts: number): string {
-  if (!ts) return '未知时间';
-  const diff = Date.now() - ts * 1000;
-  const day = 86400000;
-  if (diff < day) return '今天';
-  if (diff < 2 * day) return '昨天';
-  if (diff < 7 * day) return `${Math.floor(diff / day)} 天前`;
-  return formatDate(ts * 1000, { month: 'short', day: 'numeric' });
-}
+/** ====== 详情页：标题去重 ====== */
+// 源文件自带 `# 标题` 时，MarkdownComponent 会把它渲染成正文标题，
+// 此时页面不再重复输出一遍 h1；只有回退到文件名时才由页面补标题。
+const docHasOwnTitle = computed(() => currentFile.value?.hasOwnHeading === true);
 
 /** ====== 最近浏览（登录用户数据库） ====== */
 async function loadRecent() {
@@ -378,7 +314,7 @@ async function loadRecent() {
         mtime: Math.floor(visitedAt / 1000),
         visitedAt,
       };
-    });
+    }).slice(0, 6);
   } catch {
     // 历史记录加载失败不影响资料浏览。
   }
@@ -458,45 +394,30 @@ function toggleRecent() {
   saveCollapsed();
 }
 
-loadCollapsed();
-syncCollapsed();
-
 function onResize() {
   windowWidth.value = window.innerWidth;
-  if (windowWidth.value >= 768) mobileSidebarOpen.value = false;
+  if (windowWidth.value >= 1024) closeMobileSidebar(false);
   syncCollapsed();
 }
 function toggleMobileSidebar() {
-  mobileSidebarOpen.value = !mobileSidebarOpen.value;
+  if (mobileSidebarOpen.value) closeMobileSidebar(true);
+  else mobileSidebarOpen.value = true;
+}
+/** 关闭移动端目录抽屉；restoreFocus 时把焦点还给触发按钮。 */
+function closeMobileSidebar(restoreFocus = false) {
+  if (!mobileSidebarOpen.value) return;
+  mobileSidebarOpen.value = false;
+  if (restoreFocus) mobileMenuButton.value?.focus({ preventScroll: true });
 }
 
-/** ====== 滚动时高亮标题 ====== */
-let scrollHandler: (() => void) | null = null;
-function teardownScrollListener() {
-  const container = document.querySelector('.learn-detail-main');
-  if (container && scrollHandler) container.removeEventListener('scroll', scrollHandler);
-  scrollHandler = null;
+/** 抽屉打开时按 Esc 关闭并把焦点送回触发按钮。 */
+function onDrawerKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') closeMobileSidebar(true);
 }
-function setupScrollListener() {
-  teardownScrollListener();
-  const container = document.querySelector('.learn-detail-main');
-  if (!container) return;
-  scrollHandler = () => {
-    const headings = mdContainer.value?.querySelectorAll('h1, h2, h3');
-    if (!headings || headings.length === 0) return;
-    let activeId = '';
-    headings.forEach((el) => {
-      const rect = el.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      if (rect.top <= containerRect.top + 100) activeId = el.id;
-    });
-    headings.forEach((el) => el.classList.toggle('heading-active', el.id === activeId));
-  };
-  container.addEventListener('scroll', scrollHandler, { passive: true });
-}
-watch(currentFile, (f) => {
-  if (f) nextTick(setupScrollListener);
-  else teardownScrollListener();
+watch(mobileSidebarOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : '';
+  if (open) window.addEventListener('keydown', onDrawerKeydown);
+  else window.removeEventListener('keydown', onDrawerKeydown);
 });
 
 onMounted(async () => {
@@ -508,13 +429,12 @@ onMounted(async () => {
   const queryPath = route.query.path as string;
   if (queryPath) await loadFile(queryPath);
   else navigateToFolder('');
-  nextTick(() => setupScrollListener());
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', onResize);
-  const container = document.querySelector('.learn-detail-main');
-  if (container && scrollHandler) container.removeEventListener('scroll', scrollHandler);
+  window.removeEventListener('keydown', onDrawerKeydown);
+  document.body.style.overflow = '';
 });
 </script>
 
@@ -522,10 +442,10 @@ onUnmounted(() => {
   <div class="learn-shell">
 
     <!-- 移动端遮罩 -->
-    <div v-if="mobileSidebarOpen" class="sidebar-overlay" @click="mobileSidebarOpen = false" />
+    <div v-if="mobileSidebarOpen" class="sidebar-overlay" @click="closeMobileSidebar(true)" />
 
     <!-- ===== 主体三栏 ===== -->
-    <div class="learn-body">
+    <div class="learn-body app-container-with-sidebar">
 
       <!-- 左侧资源目录 -->
       <aside
@@ -533,17 +453,16 @@ onUnmounted(() => {
         class="learn-sidebar-col"
         :class="{ 'is-open': mobileSidebarOpen }"
       >
-        <Suspense>
-          <LearnSidebar
-            :tree="treeData.children || []"
-            :current-path="currentLocation"
-            :headings="mdHeadings"
-            @select="handleSidebarSelect"
-            @heading="handleSidebarHeading"
-            @browse="handleSidebarBrowse"
-            @rescan="rescanTree"
-          />
-        </Suspense>
+        <LearnSidebar
+          :tree="treeData.children || []"
+          :current-path="currentLocation"
+          :headings="mdHeadings"
+          :active-heading="mdActiveHeading"
+          @select="handleSidebarSelect"
+          @heading="handleSidebarHeading"
+          @browse="handleSidebarBrowse"
+          @rescan="rescanTree"
+        />
       </aside>
 
       <!-- 中间主内容 -->
@@ -551,188 +470,196 @@ onUnmounted(() => {
 
         <!-- 加载中 -->
         <div v-if="isLoadingTree" class="learn-state">
-          <Icon icon="svg-spinners:90-ring-with-bg" class="h-10 w-10 text-[#2563EB]" />
-          <p class="mt-3 text-sm text-[#64748B]">正在扫描学习资料目录...</p>
+          <Icon icon="svg-spinners:90-ring-with-bg" class="h-8 w-8 text-[var(--color-accent-text)]" aria-hidden="true" />
+          <p>正在扫描学习资料目录…</p>
         </div>
 
         <!-- 错误 -->
         <div v-else-if="error && !treeData" class="learn-state">
-          <Icon icon="material-symbols:error-outline" class="h-10 w-10 text-[#EF4444]" />
-          <p class="mt-2 text-sm text-[#EF4444]">{{ error }}</p>
-          <button class="ui-btn ui-btn-primary mt-3" @click="loadTree">重试</button>
+          <Icon icon="material-symbols:error-outline" class="h-8 w-8 text-[var(--color-danger-text)]" aria-hidden="true" />
+          <p class="is-error">{{ error }}</p>
+          <button class="ui-btn ui-btn-secondary ui-btn-sm mt-3" @click="loadTree">重试</button>
         </div>
 
         <!-- ===== 浏览模式 ===== -->
         <template v-else-if="treeData && !currentFile">
 
-          <!-- 继续学习 -->
-          <div v-if="continueItem" class="continue-banner" @click="openFile(continueItem.path)">
-            <div class="continue-icon">
-              <Icon icon="material-symbols:play-circle" class="h-6 w-6" />
+          <header class="page-header">
+            <div class="page-header-text">
+              <h1 class="page-title">学习资源</h1>
+              <p class="page-subtitle">
+                按主题整理的学习笔记与资料，共 {{ totalFileCount }} 篇
+              </p>
             </div>
-            <div class="continue-body">
+            <button
+              class="ui-btn ui-btn-secondary ui-btn-sm page-header-action"
+              @click="router.push('/playground')"
+            >
+              <Icon icon="material-symbols:code" class="h-4 w-4" aria-hidden="true" />
+              去编辑器练习
+            </button>
+          </header>
+
+          <!-- 继续学习 -->
+          <button
+            v-if="continueItem"
+            type="button"
+            class="continue-banner"
+            @click="openFile(continueItem.path)"
+          >
+            <Icon icon="material-symbols:play-circle-outline" class="continue-icon" aria-hidden="true" />
+            <span class="continue-body">
               <span class="continue-label">继续学习</span>
               <span class="continue-title">{{ continueItem.title }}</span>
               <span class="continue-meta">{{ continueItem.dir }}</span>
-            </div>
-            <Icon icon="material-symbols:chevron-right" class="continue-arrow" />
-          </div>
+            </span>
+            <Icon icon="material-symbols:chevron-right" class="continue-arrow" aria-hidden="true" />
+          </button>
 
-          <!-- 面包屑 -->
-          <nav class="learn-breadcrumb">
-            <button class="crumb-root" @click="navigateToFolder('')">学习资源</button>
-            <template v-for="(c, i) in breadcrumb" :key="c.path">
-              <Icon icon="material-symbols:chevron-right" class="crumb-sep" />
+          <!-- 工具条：面包屑 + 当前目录搜索 -->
+          <div class="browse-toolbar">
+            <button
+              ref="mobileMenuButton"
+              type="button"
+              class="header-menu-btn"
+              aria-label="打开资料目录"
+              @click="toggleMobileSidebar"
+            >
+              <Icon icon="material-symbols:menu" class="h-5 w-5" aria-hidden="true" />
+            </button>
+
+            <nav v-if="breadcrumb.length" class="learn-breadcrumb" aria-label="目录层级">
               <button
-                :class="['crumb', i === breadcrumb.length - 1 && 'crumb-current']"
-                @click="navigateToFolder(c.path)"
-              >{{ c.name }}</button>
-            </template>
-          </nav>
+                type="button"
+                class="crumb"
+                @click="navigateToFolder('')"
+              >学习资源</button>
+              <template v-for="(c, i) in breadcrumb" :key="c.path">
+                <Icon icon="material-symbols:chevron-right" class="crumb-sep" aria-hidden="true" />
+                <button
+                  type="button"
+                  class="crumb"
+                  :class="{ 'crumb-current': i === breadcrumb.length - 1 }"
+                  :aria-current="i === breadcrumb.length - 1 ? 'page' : undefined"
+                  @click="navigateToFolder(c.path)"
+                >{{ c.name }}</button>
+              </template>
+            </nav>
 
-          <!-- 工具栏 -->
-          <div class="main-toolbar">
-            <div class="toolbar-left">
-              <button v-if="windowWidth < 768" class="header-menu-btn" aria-label="打开资料目录" @click="toggleMobileSidebar">
-                <Icon icon="material-symbols:menu" class="h-5 w-5" />
-              </button>
-              <Icon icon="material-symbols:folder" class="toolbar-folder-icon" />
-              <h2 class="toolbar-title">目录结构</h2>
-              <span class="toolbar-count">{{ currentFolderFileCount }} 个文件</span>
-            </div>
             <div class="toolbar-search">
-              <Icon icon="material-symbols:search" class="toolbar-search-icon" />
+              <Icon icon="material-symbols:search-rounded" class="toolbar-search-icon" aria-hidden="true" />
+              <label class="sr-only" for="learn-dir-search">搜索当前目录中的资料</label>
               <input
+                id="learn-dir-search"
                 v-model="middleSearch"
-                type="text"
-                placeholder="搜索当前目录中的资料"
+                type="search"
+                placeholder="搜索当前目录"
                 class="toolbar-search-input"
               />
             </div>
-            <button class="ui-btn ui-btn-ghost ui-btn-sm toolbar-action" @click="router.push('/playground')">
-              <Icon icon="material-symbols:code" class="h-4 w-4" />
-              去编辑器练习
+          </div>
+
+          <!-- 目录内容：只列当前目录 -->
+          <div v-if="!isEmptyBrowse" class="entry-list">
+            <button
+              v-for="folder in filteredFolders"
+              :key="folder.path"
+              type="button"
+              class="entry-row"
+              @click="navigateToFolder(folder.path)"
+            >
+              <Icon icon="material-symbols:folder-outline" class="entry-icon" aria-hidden="true" />
+              <span class="entry-name" :title="cleanName(folder.name)">{{ cleanName(folder.name) }}</span>
+              <span class="entry-meta">{{ countFiles(folder) }} 篇</span>
+              <Icon icon="material-symbols:chevron-right" class="entry-arrow" aria-hidden="true" />
+            </button>
+
+            <button
+              v-for="f in filteredFiles"
+              :key="f.path"
+              type="button"
+              class="entry-row"
+              @click="openFile(f.path)"
+            >
+              <Icon :icon="fileIcon(f.name)" class="entry-icon" aria-hidden="true" />
+              <span class="entry-name" :title="cleanName(f.name)">{{ cleanName(f.name) }}</span>
+              <span class="entry-meta">{{ entryMeta(f) }}</span>
+              <Icon icon="material-symbols:chevron-right" class="entry-arrow" aria-hidden="true" />
             </button>
           </div>
 
-          <!-- 目录内容 -->
-          <div class="dir-content">
-            <!-- 文件夹分组 -->
-            <div v-for="folder in filteredFolders" :key="folder.path" class="dir-group">
-              <div class="dir-group-header" @click="navigateToFolder(folder.path)">
-                <button
-                  class="dir-group-toggle"
-                  :class="{ 'is-open': isGroupExpanded(folder.path) }"
-                  @click.stop="toggleGroup(folder.path)"
-                >
-                  <Icon icon="material-symbols:chevron-right" class="dir-group-chevron" />
-                </button>
-                <Icon icon="material-symbols:folder" class="dir-group-icon" />
-                <span class="dir-group-name">{{ cleanName(folder.name) }}</span>
-                <span class="dir-group-count">{{ countFiles(folder) }}</span>
-                <Icon icon="material-symbols:chevron-right" class="dir-group-enter" />
-              </div>
-
-              <transition name="group-expand">
-                <div v-if="isGroupExpanded(folder.path)" class="dir-group-body">
-                  <button
-                    v-for="f in folderFiles(folder)"
-                    :key="f.path"
-                    class="file-row"
-                    @click="openFile(f.path)"
-                  >
-                    <Icon :icon="iconFor(f.name)" class="file-icon" :style="{ color: colorFor(f.name) }" />
-                    <span class="file-name" :title="cleanName(f.name)">{{ cleanName(f.name) }}</span>
-                    <span class="file-meta">{{ timeAgo(f.mtime || 0) }} · {{ typeLabel(f.name) }}</span>
-                    <Icon icon="material-symbols:chevron-right" class="file-enter" />
-                  </button>
-                  <button
-                    v-for="sub in folderSubFolders(folder)"
-                    :key="sub.path"
-                    class="file-row file-row-folder"
-                    @click="navigateToFolder(sub.path)"
-                  >
-                    <Icon icon="material-symbols:folder" class="file-icon" style="color: #f59e0b" />
-                    <span class="file-name" :title="cleanName(sub.name)">{{ cleanName(sub.name) }}</span>
-                    <span class="file-meta">{{ countFiles(sub) }} 篇</span>
-                    <Icon icon="material-symbols:chevron-right" class="file-enter" />
-                  </button>
-                </div>
-              </transition>
-            </div>
-
-            <!-- 零散文件 -->
-            <div v-if="filteredFiles.length" class="dir-files">
-              <button
-                v-for="f in filteredFiles"
-                :key="f.path"
-                class="file-row"
-                @click="openFile(f.path)"
-              >
-                <Icon :icon="iconFor(f.name)" class="file-icon" :style="{ color: colorFor(f.name) }" />
-                <span class="file-name" :title="cleanName(f.name)">{{ cleanName(f.name) }}</span>
-                <span class="file-meta">{{ timeAgo(f.mtime || 0) }} · {{ typeLabel(f.name) }}</span>
-                <Icon icon="material-symbols:chevron-right" class="file-enter" />
-              </button>
-            </div>
-
-            <!-- 空状态 -->
-            <div v-if="!filteredFolders.length && !filteredFiles.length" class="dir-empty">
-              <Icon icon="material-symbols:folder-open" class="dir-empty-icon" />
-              <p>该目录下暂无资料</p>
-            </div>
+          <!-- 空状态 -->
+          <div v-else class="ui-empty">
+            <Icon icon="material-symbols:folder-off" class="h-7 w-7" aria-hidden="true" />
+            <p>{{ middleSearch ? '当前目录没有匹配的资料' : '该目录下暂无资料' }}</p>
           </div>
         </template>
 
         <!-- ===== 详情模式 ===== -->
         <template v-else-if="currentFile">
           <div class="learn-detail-main">
-            <!-- 面包屑 -->
-            <nav class="learn-breadcrumb">
-              <button class="crumb-root" @click="backToBrowse">学习资源</button>
-              <template v-for="c in fileBreadcrumb" :key="c.path">
-                <Icon icon="material-symbols:chevron-right" class="crumb-sep" />
-                <button class="crumb" @click="navigateToFolder(c.path)">{{ c.name }}</button>
-              </template>
-              <Icon icon="material-symbols:chevron-right" class="crumb-sep" />
-              <span class="crumb crumb-current">{{ currentFile.title }}</span>
-            </nav>
-
-            <!-- 工具栏 -->
-            <div class="main-toolbar">
-              <button class="learn-back-btn" @click="backToBrowse">
-                <Icon icon="material-symbols:arrow-back-rounded" class="h-4 w-4" />
-                返回目录
+            <!-- 工具条：面包屑 + 操作 -->
+            <div class="detail-toolbar">
+              <button
+                ref="mobileMenuButton"
+                type="button"
+                class="header-menu-btn"
+                aria-label="打开资料目录"
+                @click="toggleMobileSidebar"
+              >
+                <Icon icon="material-symbols:menu" class="h-5 w-5" aria-hidden="true" />
               </button>
-              <div class="toolbar-right">
-                <span class="detail-path">{{ currentFile.path }}</span>
-                <button class="toolbar-icon-btn" title="导出 Markdown" @click="downloadCurrentMarkdown">
-                  <Icon icon="material-symbols:download-rounded" class="h-4 w-4" />
+
+              <nav class="learn-breadcrumb" aria-label="目录层级">
+                <button type="button" class="crumb" @click="backToBrowse">学习资源</button>
+                <template v-for="c in fileBreadcrumb" :key="c.path">
+                  <Icon icon="material-symbols:chevron-right" class="crumb-sep" aria-hidden="true" />
+                  <button type="button" class="crumb" @click="navigateToFolder(c.path)">{{ c.name }}</button>
+                </template>
+                <Icon icon="material-symbols:chevron-right" class="crumb-sep" aria-hidden="true" />
+                <span class="crumb crumb-current" aria-current="page">{{ currentFile.title }}</span>
+              </nav>
+
+              <div class="detail-actions">
+                <button
+                  type="button"
+                  class="toolbar-icon-btn"
+                  aria-label="导出 Markdown"
+                  title="导出 Markdown"
+                  @click="downloadCurrentMarkdown"
+                >
+                  <Icon icon="material-symbols:download-rounded" class="h-[18px] w-[18px]" aria-hidden="true" />
                 </button>
-                <button class="toolbar-icon-btn" title="去编辑器练习" @click="router.push('/playground')">
-                  <Icon icon="material-symbols:code" class="h-4 w-4" />
+                <button
+                  type="button"
+                  class="toolbar-icon-btn"
+                  aria-label="去编辑器练习"
+                  title="去编辑器练习"
+                  @click="router.push('/playground')"
+                >
+                  <Icon icon="material-symbols:code" class="h-[18px] w-[18px]" aria-hidden="true" />
                 </button>
               </div>
             </div>
 
             <!-- 加载中 -->
             <div v-if="isLoadingDoc" class="learn-state">
-              <Icon icon="svg-spinners:90-ring-with-bg" class="h-8 w-8 text-[#2563EB]" />
-              <p class="mt-2 text-sm text-[#64748B]">加载文档中...</p>
+              <Icon icon="svg-spinners:90-ring-with-bg" class="h-8 w-8 text-[var(--color-accent-text)]" aria-hidden="true" />
+              <p>加载文档中…</p>
             </div>
 
             <!-- Markdown 内容 -->
-            <article v-else ref="mdContainer" class="learn-doc-container">
-              <h1 class="learn-doc-title">{{ currentFile.title }}</h1>
-              <div class="learn-doc-meta">{{ currentFile.path }}</div>
-              <Suspense>
-                <MarkdownComponent
-                  :source="currentFile.content"
-                  :show-nav="false"
-                  :base-dir="currentFile.path.split('/').slice(0, -1).join('/')"
-                  @navigate="handleMdNavigate"
-                />
-              </Suspense>
+            <article v-else class="learn-doc-container">
+              <h1 v-if="!docHasOwnTitle" class="learn-doc-title">{{ currentFile.title }}</h1>
+              <MarkdownComponent
+                :source="currentFile.content"
+                :show-nav="false"
+                :show-heading-links="false"
+                :base-dir="currentFile.path.split('/').slice(0, -1).join('/')"
+                @navigate="loadFile"
+                @headings="handleHeadings"
+                @active-heading="handleActiveHeading"
+              />
             </article>
           </div>
         </template>
@@ -747,22 +674,32 @@ onUnmounted(() => {
         <div class="recent-topbar">
           <span class="recent-title">最近浏览</span>
           <button
-            class="recent-collapse-btn"
+            v-if="recentList.length && !recentCollapsed"
+            type="button"
+            class="topbar-icon-btn"
+            title="清空浏览记录"
+            aria-label="清空浏览记录"
+            @click="clearRecent"
+          >
+            <Icon icon="material-symbols:delete-outline" class="h-[18px] w-[18px]" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            class="topbar-icon-btn"
             :title="recentCollapsed ? '展开最近浏览' : '收起最近浏览'"
+            :aria-label="recentCollapsed ? '展开最近浏览' : '收起最近浏览'"
+            :aria-expanded="!recentCollapsed"
             @click="toggleRecent"
           >
             <Icon
               :icon="recentCollapsed ? 'material-symbols:chevron-left' : 'material-symbols:chevron-right'"
               class="h-[18px] w-[18px]"
+              aria-hidden="true"
             />
           </button>
         </div>
         <div v-show="!recentCollapsed" class="recent-scroll">
-          <RecentPanel
-            :items="recentList"
-            @open="openFile"
-            @clear="clearRecent"
-          />
+          <RecentPanel :items="recentList" @open="openFile" />
         </div>
       </aside>
     </div>
@@ -771,170 +708,115 @@ onUnmounted(() => {
 
 <style scoped>
 .learn-shell {
-  min-height: 100vh;
-  background: #f6f8fc;
-}
-:global(html.dark) .learn-shell { background: #0f172a; }
-
-/* ===== 页面标题区 ===== */
-.learn-header {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 24px 24px 20px;
-  min-height: 92px;
-  background: #f6f8fc;
-  border-bottom: 1px solid #e2e8f0;
-}
-:global(html.dark) .learn-header { background: #0f172a; border-bottom-color: #1e293b; }
-.learn-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.learn-title {
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: #1e293b;
-  margin: 0;
-}
-:global(html.dark) .learn-title { color: #e5e7eb; }
-.learn-subtitle {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: #94a3b8;
-}
-.header-menu-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #fff;
-  color: #475569;
-  cursor: pointer;
-}
-:global(html.dark) .header-menu-btn { background: #1e293b; border-color: #334155; color: #cbd5e1; }
-
-.learn-stats {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  white-space: nowrap;
-}
-.learn-stats-num {
-  font-size: 22px;
-  font-weight: 700;
-  color: #2563eb;
-  line-height: 1;
-}
-:global(html.dark) .learn-stats-num { color: #60a5fa; }
-.learn-stats-unit {
-  font-size: 13px;
-  color: #64748b;
-}
-.learn-stats-divider {
-  font-size: 13px;
-  color: #cbd5e1;
-  margin: 0 2px;
+  min-height: calc(100vh - var(--header-h, 4rem));
+  background: var(--color-background);
 }
 
-/* ===== 主体（全宽自适应三栏） ===== */
+/* ===== 主体：三栏，整页滚动，侧栏走 sticky 轨道 ===== */
 .learn-body {
-  display: flex;
   align-items: flex-start;
-  gap: 0;
-  padding: 0 24px 40px;
+  padding-top: 24px;
+  padding-bottom: 40px;
 }
+
 .learn-sidebar-col {
-  width: 280px;
-  min-width: 280px;
-  flex-shrink: 0;
   position: sticky;
-  top: 0;
-  align-self: stretch;
-  height: 100vh;
-  overflow-y: auto;
+  top: calc(var(--header-h, 4rem) + 24px);
+  width: 260px;
+  height: calc(100dvh - var(--header-h, 4rem) - 48px);
+  flex-shrink: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
+
 .learn-main-col {
   flex: 1;
   min-width: 0;
-  padding: 0 24px;
+  padding-bottom: 24px;
 }
+
 .learn-recent-col {
-  width: 320px;
-  flex-shrink: 0;
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: calc(var(--header-h, 4rem) + 24px);
   display: flex;
+  width: 260px;
+  height: calc(100dvh - var(--header-h, 4rem) - 48px);
+  flex-shrink: 0;
   flex-direction: column;
   overflow: hidden;
-  border-left: 1px solid #e2e8f0;
-  transition: width 0.25s ease;
+  border-left: 1px solid var(--color-border);
+  transition: width 0.2s ease;
 }
-:global(html.dark) .learn-recent-col { border-left-color: #1e293b; }
 .learn-recent-col.is-collapsed {
   width: 44px;
 }
+
 .recent-topbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 14px 12px 12px 16px;
   flex-shrink: 0;
-  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px 6px 14px;
 }
-:global(html.dark) .recent-topbar { border-bottom-color: #1e293b; }
-.recent-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #475569;
-  white-space: nowrap;
-  overflow: hidden;
-}
-:global(html.dark) .recent-title { color: #94a3b8; }
 .learn-recent-col.is-collapsed .recent-topbar {
   justify-content: center;
-  padding: 14px 0 12px;
+  padding: 0 0 6px;
+}
+.recent-title {
+  flex: 1;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-muted-foreground);
+  white-space: nowrap;
 }
 .learn-recent-col.is-collapsed .recent-title {
   display: none;
 }
-.recent-collapse-btn {
-  display: flex;
+.topbar-icon-btn {
+  display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border: none;
-  background: transparent;
-  color: #64748b;
   border-radius: 6px;
+  background: none;
+  color: var(--color-muted-foreground);
   cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
-.recent-collapse-btn:hover {
-  background: #e2e8f0;
-  color: #334155;
+.topbar-icon-btn:hover {
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
-:global(html.dark) .recent-collapse-btn { color: #94a3b8; }
-:global(html.dark) .recent-collapse-btn:hover { background: #334155; color: #e5e7eb; }
 .recent-scroll {
-  width: 320px;
+  width: 100%;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 12px 14px 20px 16px;
+  padding: 0 10px 16px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+.recent-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.recent-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.recent-scroll::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 5px;
+  background-color: var(--color-border);
+  background-clip: content-box;
+}
+.recent-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-muted-foreground);
+  background-clip: content-box;
 }
 
 /* ===== 状态 ===== */
@@ -944,412 +826,373 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 64px 0;
+  color: var(--color-muted-foreground);
+}
+.learn-state p {
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.learn-state p.is-error {
+  color: var(--color-danger-text);
+}
+
+/* ===== 页头 ===== */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-foreground);
+}
+.page-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+}
+.page-header-action {
+  flex-shrink: 0;
 }
 
 /* ===== 继续学习 ===== */
 .continue-banner {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 12px;
+  margin-bottom: 20px;
   padding: 14px 16px;
-  margin-bottom: 18px;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  border-radius: 12px;
+  border: none;
+  border-radius: var(--radius-card);
+  background: var(--color-accent-soft);
+  font-family: inherit;
+  text-align: left;
   cursor: pointer;
-  transition: box-shadow 0.15s, transform 0.15s;
+  transition: background-color 0.15s ease;
 }
 .continue-banner:hover {
-  background: #e8f1ff;
+  background: var(--color-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
 }
-:global(html.dark) .continue-banner { background: #172554; border-color: #1e3a8a; }
-.continue-icon { color: #2563eb; display: flex; }
-:global(html.dark) .continue-icon { color: #60a5fa; }
+.continue-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--color-accent-text);
+}
 .continue-body {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
   flex: 1;
   min-width: 0;
+  flex-direction: column;
+  gap: 1px;
 }
 .continue-label {
   font-size: 11px;
   font-weight: 600;
-  color: #2563eb;
   letter-spacing: 0.04em;
+  color: var(--color-accent-text);
 }
-:global(html.dark) .continue-label { color: #60a5fa; }
 .continue-title {
+  overflow: hidden;
   font-size: 15px;
   font-weight: 600;
-  color: #1e293b;
-  overflow: hidden;
+  color: var(--color-foreground);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-:global(html.dark) .continue-title { color: #e5e7eb; }
 .continue-meta {
-  font-size: 12px;
-  color: #94a3b8;
   overflow: hidden;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.continue-arrow { color: #2563eb; width: 20px; height: 20px; flex-shrink: 0; }
-:global(html.dark) .continue-arrow { color: #60a5fa; }
+.continue-arrow {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--color-accent-text);
+}
+
+/* ===== 工具条 ===== */
+.browse-toolbar,
+.detail-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.detail-toolbar {
+  margin-bottom: 24px;
+}
+.header-menu-btn {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+}
+.header-menu-btn:hover {
+  color: var(--color-foreground);
+}
 
 /* ===== 面包屑 ===== */
 .learn-breadcrumb {
   display: flex;
-  align-items: center;
+  min-width: 0;
+  flex: 1;
   flex-wrap: wrap;
+  align-items: center;
   gap: 2px;
-  margin-bottom: 12px;
   font-size: 13px;
 }
-.crumb-root, .crumb {
+.crumb {
+  padding: 3px 6px;
   border: none;
+  border-radius: 6px;
   background: none;
-  cursor: pointer;
-  color: #94a3b8;
-  font-size: 13px;
-  padding: 2px 4px;
-  border-radius: 5px;
-  transition: color 0.13s, background 0.13s;
+  color: var(--color-muted-foreground);
   font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
-.crumb-root:hover, .crumb:hover { color: #2563eb; background: #eff6ff; }
-.crumb-current {
-  color: #1e293b;
+.crumb:hover {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+}
+.crumb-current,
+.crumb-current:hover {
+  max-width: 32ch;
+  overflow: hidden;
+  background: none;
+  color: var(--color-foreground);
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: default;
 }
-.crumb-current:hover { background: none; color: #1e293b; }
-:global(html.dark) .crumb-current { color: #e5e7eb; }
 .crumb-sep {
   width: 16px;
   height: 16px;
-  color: #cbd5e1;
   flex-shrink: 0;
+  color: var(--color-border-strong);
 }
-:global(html.dark) .crumb-sep { color: #475569; }
 
-/* ===== 工具栏 ===== */
-.main-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 14px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #e2e8f0;
-}
-:global(html.dark) .main-toolbar { border-bottom-color: #1e293b; }
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.toolbar-folder-icon { width: 20px; height: 20px; color: #2563eb; }
-:global(html.dark) .toolbar-folder-icon { color: #60a5fa; }
-.toolbar-title {
-  font-size: 19px;
-  font-weight: 650;
-  color: #1e293b;
-  margin: 0;
-}
-:global(html.dark) .toolbar-title { color: #e5e7eb; }
-.toolbar-count {
-  font-size: 12px;
-  color: #94a3b8;
-  background: #f1f5f9;
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-:global(html.dark) .toolbar-count { background: #1e293b; color: #94a3b8; }
+/* ===== 搜索 ===== */
 .toolbar-search {
   position: relative;
-  flex: 1;
-  max-width: 380px;
+  width: 220px;
+  flex-shrink: 0;
   margin-left: auto;
 }
 .toolbar-search-icon {
-  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-  color: #94a3b8; width: 16px; height: 16px;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  margin-top: -7.5px;
+  color: var(--color-muted-foreground);
+  pointer-events: none;
 }
 .toolbar-search-input {
   width: 100%;
-  height: 38px;
-  padding: 0 12px 0 36px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 13px;
+  height: 32px;
+  padding: 0 12px 0 30px;
+  border: none;
+  border-radius: 7px;
   outline: none;
-  background: #fff;
-  color: #1e293b;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--color-surface-muted);
+  color: var(--color-foreground);
+  font-size: 13px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.toolbar-search-input::placeholder {
+  color: var(--color-muted-foreground);
+}
+.toolbar-search-input::-webkit-search-cancel-button {
+  appearance: none;
 }
 .toolbar-search-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
-.toolbar-search-input::placeholder { color: #94a3b8; }
-:global(html.dark) .toolbar-search-input { background: #1e293b; border-color: #334155; color: #e2e8f0; }
-.toolbar-action { flex-shrink: 0; }
-.toolbar-right {
+
+/* ===== 详情操作 ===== */
+.detail-actions {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   margin-left: auto;
 }
-.detail-path {
-  font-size: 12px;
-  color: #94a3b8;
-  max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .toolbar-icon-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: none;
-  background: #f1f5f9;
-  color: #64748b;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.toolbar-icon-btn:hover { background: #e2e8f0; color: #2563eb; }
-:global(html.dark) .toolbar-icon-btn { background: #1e293b; color: #94a3b8; }
-:global(html.dark) .toolbar-icon-btn:hover { background: #334155; color: #60a5fa; }
-
-/* ===== 目录内容 ===== */
-.dir-content { padding-top: 4px; }
-.dir-group { margin-bottom: 4px; }
-.dir-group-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 50px;
-  padding: 0 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.13s;
-}
-.dir-group-header:hover { background: #f1f5f9; }
-:global(html.dark) .dir-group-header:hover { background: #1e293b; }
-.dir-group-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: none;
+  border-radius: var(--radius-card);
   background: none;
+  color: var(--color-muted-foreground);
   cursor: pointer;
-  color: #94a3b8;
-  flex-shrink: 0;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
-.dir-group-chevron {
-  width: 18px;
-  height: 18px;
-  transition: transform 0.16s ease;
+.toolbar-icon-btn:hover {
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
-.dir-group-toggle.is-open .dir-group-chevron { transform: rotate(90deg); }
-.dir-group-icon { width: 20px; height: 20px; color: #f59e0b; flex-shrink: 0; }
-.dir-group-name {
-  flex: 1;
-  font-size: 15px;
-  font-weight: 600;
-  color: #334155;
-}
-:global(html.dark) .dir-group-name { color: #cbd5e1; }
-.dir-group-count {
-  font-size: 12px;
-  color: #94a3b8;
-  background: #f1f5f9;
-  padding: 2px 9px;
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-:global(html.dark) .dir-group-count { background: #1e293b; color: #94a3b8; }
-.dir-group-enter {
-  width: 18px;
-  height: 18px;
-  color: #cbd5e1;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.13s;
-}
-.dir-group-header:hover .dir-group-enter { opacity: 1; }
 
-.dir-group-body {
-  padding: 2px 0 6px 30px;
-  border-left: 1px solid #eef2f7;
-  margin-left: 18px;
-}
-:global(html.dark) .dir-group-body { border-left-color: #1e293b; }
-
-.dir-files { margin-top: 4px; }
-
-/* 文件行 */
-.file-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-height: 44px;
-  padding: 6px 10px;
-  border: none;
-  background: none;
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-  transition: background 0.13s;
-}
-.file-row:hover { background: #f1f5f9; }
-:global(html.dark) .file-row:hover { background: #1e293b; }
-.file-row:focus-visible,
-.dir-group-header:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: -2px;
-}
-.file-icon { width: 18px; height: 18px; flex-shrink: 0; }
-.file-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-  color: #334155;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-:global(html.dark) .file-name { color: #cbd5e1; }
-.file-row:hover .file-name { color: #1e293b; }
-:global(html.dark) .file-row:hover .file-name { color: #f1f5f9; }
-.file-meta {
-  font-size: 12px;
-  color: #94a3b8;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.file-enter {
-  width: 16px;
-  height: 16px;
-  color: #2563eb;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.13s;
-}
-.file-row:hover .file-enter { opacity: 1; }
-:global(html.dark) .file-enter { color: #60a5fa; }
-
-/* 空状态 */
-.dir-empty {
+/* ===== 目录列表：发丝线分隔，不再嵌套卡片 ===== */
+.entry-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 48px 0;
-  color: #94a3b8;
 }
-.dir-empty-icon { width: 36px; height: 36px; color: #cbd5e1; margin-bottom: 8px; }
-:global(html.dark) .dir-empty-icon { color: #475569; }
-.dir-empty p { margin: 0; font-size: 13px; }
-
-/* ===== 详情页 ===== */
-.learn-detail-main {
-  padding: 4px 0 40px;
-}
-.learn-doc-container { max-width: 1080px; margin: 0 auto; }
-.learn-doc-title {
-  font-size: 28px;
-  font-weight: 800;
-  color: #1e293b;
-  margin: 0 0 8px;
-}
-:global(html.dark) .learn-doc-title { color: #e5e7eb; }
-.learn-doc-meta {
-  font-size: 12px;
-  color: #94a3b8;
-  margin-bottom: 24px;
-}
-.learn-back-btn {
+.entry-row {
   display: flex;
+  width: 100%;
+  min-height: 52px;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 12px;
+  padding: 10px 8px;
   border: none;
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 6px;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  font-family: inherit;
+  text-align: left;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s ease;
 }
-.learn-back-btn:hover { background: #e2e8f0; }
-:global(html.dark) .learn-back-btn { background: #1e293b; color: #cbd5e1; }
-:global(html.dark) .learn-back-btn:hover { background: #334155; }
-
-/* ===== 分组展开动画 ===== */
-.group-expand-enter-active,
-.group-expand-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+.entry-row:hover {
+  background: var(--color-surface-muted);
+}
+.entry-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--color-muted-foreground);
+}
+.entry-name {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
+  font-size: 15px;
+  color: var(--color-foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.group-expand-enter-from,
-.group-expand-leave-to {
+.entry-meta {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+  white-space: nowrap;
+}
+.entry-arrow {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-muted-foreground);
   opacity: 0;
-  transform: translateY(-4px);
+  transition: opacity 0.15s ease;
+}
+.entry-row:hover .entry-arrow,
+.entry-row:focus-visible .entry-arrow {
+  opacity: 1;
+}
+
+/* ===== 详情页：阅读版心 768px ===== */
+.learn-detail-main {
+  padding-bottom: 40px;
+}
+.learn-doc-container {
+  max-width: 768px;
+  margin: 0 auto;
+}
+.learn-doc-title {
+  margin: 0 0 24px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--color-foreground);
 }
 
 /* ===== 移动端遮罩 ===== */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  z-index: 40;
+  /* 高于固定页头（z-50）但低于抽屉，否则点页头区域关不掉抽屉 */
+  z-index: 55;
+  background: rgb(15 23 42 / 0.45);
 }
 
 /* ===== 响应式 ===== */
-@media (max-width: 1023px) {
-  .learn-sidebar-col {
-    width: 240px;
-    min-width: 240px;
-  }
-  .learn-recent-col { width: 300px; }
-  .recent-scroll { width: 300px; }
+@media (max-width: 1279px) {
+  .learn-sidebar-col { width: 240px; }
+  .learn-recent-col { width: 240px; }
   .learn-recent-col.is-collapsed { width: 44px; }
 }
-@media (max-width: 767px) {
-  .learn-body { padding: 0 12px 24px; }
-  .learn-main-col { padding: 0; }
+
+@media (max-width: 1023px) {
+  .header-menu-btn { display: flex; }
   .learn-sidebar-col {
     position: fixed;
     top: 0;
     left: 0;
+    z-index: 60;
     width: 280px;
-    min-width: 280px;
     height: 100vh;
-    z-index: 50;
-    background: #fff;
+    padding: 12px 10px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-overlay);
     transform: translateX(-100%);
-    transition: transform 0.2s ease;
-    box-shadow: 2px 0 12px rgba(15, 23, 42, 0.12);
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  :global(html.dark) .learn-sidebar-col { background: #111827; }
   .learn-sidebar-col.is-open { transform: translateX(0); }
-  .toolbar-search { max-width: none; }
-  .detail-path { display: none; }
-  .main-toolbar { align-items: stretch; flex-wrap: wrap; }
-  .toolbar-left { width: 100%; }
-  .toolbar-search { order: 3; width: 100%; }
-  .toolbar-action { margin-left: auto; }
-  .file-meta { display: none; }
+  .learn-doc-container { max-width: 100%; }
+}
+
+@media (max-width: 767px) {
+  .learn-body { padding-bottom: 24px; }
+  .page-header { flex-direction: column; align-items: stretch; }
+  .page-header-action { align-self: flex-start; }
+  .crumb-current { max-width: 18ch; }
+  /* 菜单按钮与搜索同一行，面包屑（若有）另起一行。 */
+  .browse-toolbar,
+  .detail-toolbar { flex-wrap: wrap; }
+  .toolbar-search { order: 2; flex: 1; width: auto; margin-left: 0; }
+  .learn-breadcrumb { order: 3; flex-basis: 100%; }
+  .detail-actions { order: 3; margin-left: auto; }
+  .entry-meta { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-recent-col,
+  .learn-sidebar-col,
+  .continue-banner,
+  .entry-row,
+  .entry-arrow,
+  .crumb,
+  .toolbar-icon-btn,
+  .topbar-icon-btn,
+  .toolbar-search-input {
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>

@@ -73,45 +73,45 @@ function handleClick() {
 <style scoped>
 .preview-folder {
   margin-bottom: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: white;
+  background: var(--color-surface);
   overflow: hidden;
 }
 :global(html.dark) .preview-folder {
-  border-color: #1e293b;
-  background: #1e293b;
+  border-color: var(--color-border);
+  background: var(--color-surface-muted);
 }
 .preview-folder-header {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 14px 16px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
 }
 :global(html.dark) .preview-folder-header {
-  background: #0f172a;
-  border-bottom-color: #1e293b;
+  background: var(--color-background);
+  border-bottom-color: var(--color-border);
 }
 .preview-folder-icon {
   width: 20px;
   height: 20px;
-  color: #f59e0b;
+  color: var(--color-warning-text);
   flex-shrink: 0;
 }
 .preview-folder-name {
   font-size: 14px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-foreground);
   flex: 1;
 }
 :global(html.dark) .preview-folder-name {
-  color: #e2e8f0;
+  color: var(--color-foreground);
 }
 .preview-folder-count {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--color-muted-foreground);
 }
 .preview-folder-children {
   padding: 8px 16px;
@@ -126,25 +126,25 @@ function handleClick() {
   transition: background 0.12s;
 }
 .preview-file:hover {
-  background: #eff6ff;
+  background: var(--color-accent-soft);
 }
 :global(html.dark) .preview-file:hover {
-  background: #172554;
+  background: var(--color-accent-soft);
 }
 .preview-file-icon {
   width: 16px;
   height: 16px;
-  color: #2563eb;
+  color: var(--color-accent-text);
   flex-shrink: 0;
 }
 :global(html.dark) .preview-file-icon {
-  color: #60a5fa;
+  color: var(--color-accent-text);
 }
 .preview-file-name {
   font-size: 13px;
-  color: #475569;
+  color: var(--color-muted-foreground);
 }
 :global(html.dark) .preview-file-name {
-  color: #cbd5e1;
+  color: var(--color-foreground);
 }
 </style>

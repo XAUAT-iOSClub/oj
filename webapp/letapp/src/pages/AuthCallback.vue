@@ -58,11 +58,11 @@ onMounted(async () => {
 
 <template>
   <div class="flex min-h-screen items-center justify-center bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
-    <div class="flex max-w-lg flex-col items-center gap-4 rounded-lg border border-slate-200 bg-white px-6 py-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="flex max-w-lg flex-col items-center gap-4 rounded-lg border border-slate-200 bg-[var(--color-surface)] px-6 py-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <Icon
         :icon="loginFailed ? 'material-symbols:error-outline-rounded' : 'material-symbols:progress-activity'"
         class="h-8 w-8"
-        :class="loginFailed ? 'text-rose-500' : 'animate-spin text-cyan-500'"
+        :class="loginFailed ? 'text-rose-500' : 'animate-spin text-accent'"
       />
       <span class="text-sm font-bold">{{ statusText }}</span>
       <p v-if="detailText" class="max-w-md text-xs leading-6 text-slate-500 dark:text-slate-400">
