@@ -135,16 +135,34 @@ function handleBrowse(path: string) {
 
     <!-- Tab 切换 -->
     <div class="sidebar-tabs">
-      <div class="sidebar-tabs-inner">
-        <button :class="['tab-btn', activeTab === 'files' && 'tab-active']" @click="activeTab = 'files'">
+      <div class="ui-segmented ui-segmented-fill" role="group" aria-label="侧栏视图">
+        <button
+          type="button"
+          class="ui-segmented-item"
+          :class="{ 'is-active': activeTab === 'files' }"
+          :aria-pressed="activeTab === 'files'"
+          @click="activeTab = 'files'"
+        >
           资料目录
         </button>
-        <button :class="['tab-btn', activeTab === 'headings' && 'tab-active']" @click="activeTab = 'headings'">
+        <button
+          type="button"
+          class="ui-segmented-item"
+          :class="{ 'is-active': activeTab === 'headings' }"
+          :aria-pressed="activeTab === 'headings'"
+          @click="activeTab = 'headings'"
+        >
           本文目录
         </button>
       </div>
-      <button v-if="activeTab === 'files'" class="tab-rescan" title="重新扫描" @click="emit('rescan')">
-        <Icon icon="material-symbols:refresh" class="h-4 w-4" />
+      <button
+        v-if="activeTab === 'files'"
+        type="button"
+        class="tab-rescan"
+        aria-label="重新扫描目录"
+        @click="emit('rescan')"
+      >
+        <Icon icon="material-symbols:refresh" class="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
 
@@ -196,16 +214,16 @@ function handleBrowse(path: string) {
   height: 100vh;
   position: sticky;
   top: 76px;
-  background: #fff;
-  border-right: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   z-index: 20;
   overflow: hidden;
 }
 :global(html.dark) .learn-sidebar {
-  background: #111827;
-  border-right-color: #1e293b;
+  background: var(--color-surface);
+  border-right-color: var(--color-border);
 }
 
 .sidebar-search {
@@ -214,74 +232,62 @@ function handleBrowse(path: string) {
 }
 .search-icon {
   position: absolute; left: 24px; top: 30px; transform: translateY(-50%);
-  color: #94a3b8; width: 16px; height: 16px;
+  color: var(--color-muted-foreground); width: 16px; height: 16px;
 }
 .search-input {
   width: 100%; height: 38px; padding: 0 32px;
-  border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;
-  outline: none; background: #f8fafc; color: #1e293b; transition: border-color 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px;
+  outline: none; background: var(--color-surface-muted); color: var(--color-foreground); transition: border-color 0.2s, box-shadow 0.2s;
 }
 .search-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(14 165 183 / 0.12);
 }
-.search-input::placeholder { color: #94a3b8; }
+.search-input::placeholder { color: var(--color-muted-foreground); }
 :global(html.dark) .search-input {
-  background: #1e293b; border-color: #334155; color: #e2e8f0;
+  background: var(--color-surface-muted); border-color: var(--color-border-strong); color: var(--color-foreground);
 }
 .search-clear {
   position: absolute; right: 24px; top: 30px; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; color: #94a3b8; padding: 2px;
+  background: none; border: none; cursor: pointer; color: var(--color-muted-foreground); padding: 2px;
 }
-.search-clear:hover { color: #64748b; }
+.search-clear:hover { color: var(--color-muted-foreground); }
 
 .sidebar-tabs {
   display: flex; align-items: center; padding: 12px; gap: 8px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
-:global(html.dark) .sidebar-tabs { border-bottom-color: #1e293b; }
-.sidebar-tabs-inner {
-  display: flex; gap: 4px; flex: 1;
-  background: #f1f5f9; padding: 3px; border-radius: 9px;
-}
-:global(html.dark) .sidebar-tabs-inner { background: #0f172a; }
-.tab-btn {
-  flex: 1; height: 34px; border: none; background: none;
-  font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer;
-  border-radius: 7px; transition: all 0.15s;
-}
-.tab-btn:hover { background: #e2e8f0; color: #475569; }
-.tab-active { color: #2563eb; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1); }
-:global(html.dark) .tab-btn:hover { background: #1e293b; }
-:global(html.dark) .tab-active { color: #60a5fa; background: #1e293b; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+:global(html.dark) .sidebar-tabs { border-bottom-color: var(--color-border); }
+/* 分段控件样式来自全局 .ui-segmented */
 .tab-rescan {
-  background: none; border: none; cursor: pointer; color: #64748b;
-  padding: 4px; border-radius: 4px; transition: all 0.2s; margin-left: 4px;
+  display: inline-flex; width: 40px; height: 40px; flex-shrink: 0;
+  align-items: center; justify-content: center;
+  border: none; background: none; cursor: pointer;
+  color: var(--color-muted-foreground); border-radius: 8px; transition: color 0.18s, background-color 0.18s;
 }
-.tab-rescan:hover { color: #2563eb; background: #eff6ff; }
-:global(html.dark) .tab-rescan:hover { color: #60a5fa; background: #172554; }
+.tab-rescan:hover { color: var(--color-accent-text); background: var(--color-accent-soft); }
 
 .tree-content {
   flex: 1; overflow-y: auto; padding: 8px 0;
 }
 .tree-content::-webkit-scrollbar { width: 4px; }
-.tree-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
-:global(html.dark) .tree-content::-webkit-scrollbar-thumb { background: #334155; }
+.tree-content::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: 2px; }
+:global(html.dark) .tree-content::-webkit-scrollbar-thumb { background: var(--color-muted); }
 
 .tree-empty { padding: 32px 16px; text-align: center; }
-.empty-icon { width: 32px; height: 32px; color: #cbd5e1; margin-bottom: 8px; }
-:global(html.dark) .empty-icon { color: #475569; }
-.empty-text { font-size: 12px; color: #94a3b8; margin: 0; }
+.empty-icon { width: 32px; height: 32px; color: var(--color-foreground); margin-bottom: 8px; }
+:global(html.dark) .empty-icon { color: var(--color-muted-foreground); }
+.empty-text { font-size: 12px; color: var(--color-muted-foreground); margin: 0; }
 
 .heading-item {
   display: block; width: 100%; text-align: left; border: none; background: none;
-  cursor: pointer; font-size: 13px; color: #475569; padding: 5px 12px;
+  cursor: pointer; font-size: 13px; color: var(--color-muted-foreground); padding: 5px 12px;
   transition: background 0.12s, color 0.12s; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; font-family: inherit;
 }
-.heading-item:hover { background: #f1f5f9; color: #2563eb; }
-:global(html.dark) .heading-item { color: #cbd5e1; }
-:global(html.dark) .heading-item:hover { background: #1e293b; color: #60a5fa; }
+.heading-item:hover { background: var(--color-muted); color: var(--color-accent-text); }
+:global(html.dark) .heading-item { color: var(--color-foreground); }
+:global(html.dark) .heading-item:hover { background: var(--color-surface-muted); color: var(--color-accent-text); }
 .heading-level-1 { padding-left: 12px; font-weight: 600; }
 .heading-level-2 { padding-left: 24px; }
 .heading-level-3 { padding-left: 36px; font-size: 12px; }

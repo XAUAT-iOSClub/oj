@@ -120,7 +120,7 @@ function handleClick() {
   background: none;
   cursor: pointer;
   font-size: 13px;
-  color: #475569;
+  color: var(--color-muted-foreground);
   padding: 7px 12px;
   transition: background 0.13s, color 0.13s;
   white-space: nowrap;
@@ -132,13 +132,13 @@ function handleClick() {
   width: calc(100% - 12px);
 }
 .fn-node:hover {
-  background: #f1f5f9;
+  background: var(--color-muted);
 }
 :global(html.dark) .fn-node {
-  color: #cbd5e1;
+  color: var(--color-foreground);
 }
 :global(html.dark) .fn-node:hover {
-  background: #1e293b;
+  background: var(--color-surface-muted);
 }
 
 .fn-folder {
@@ -148,22 +148,22 @@ function handleClick() {
   font-weight: 500;
 }
 .fn-on-path {
-  color: #334155;
+  color: var(--color-foreground);
 }
 :global(html.dark) .fn-on-path {
-  color: #e2e8f0;
+  color: var(--color-foreground);
 }
 
 .fn-active {
-  background: #eff6ff !important;
-  color: #2563eb !important;
+  background: var(--color-accent-soft) !important;
+  color: var(--color-accent-text) !important;
   font-weight: 600;
-  box-shadow: inset 3px 0 0 #2563eb;
+  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 :global(html.dark) .fn-active {
-  background: #172554 !important;
-  color: #60a5fa !important;
-  box-shadow: inset 3px 0 0 #60a5fa;
+  background: var(--color-accent-soft) !important;
+  color: var(--color-accent-text) !important;
+  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
 .fn-arrow {
@@ -171,7 +171,7 @@ function handleClick() {
   height: 16px;
   margin-right: 2px;
   flex-shrink: 0;
-  color: #94a3b8;
+  color: var(--color-muted-foreground);
   transition: transform 0.16s ease;
 }
 .fn-arrow-open {
@@ -184,16 +184,16 @@ function handleClick() {
   flex-shrink: 0;
 }
 .fn-icon-folder {
-  color: #f59e0b;
+  color: var(--color-warning-text);
 }
 .fn-icon-file {
-  color: #94a3b8;
+  color: var(--color-muted-foreground);
 }
 .fn-active .fn-icon-file {
-  color: #2563eb;
+  color: var(--color-accent-text);
 }
 :global(html.dark) .fn-active .fn-icon-file {
-  color: #60a5fa;
+  color: var(--color-accent-text);
 }
 
 .fn-name {
@@ -206,17 +206,17 @@ function handleClick() {
 
 .fn-count {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--color-muted-foreground);
   margin-left: 6px;
   flex-shrink: 0;
-  background: #f1f5f9;
+  background: var(--color-muted);
   border-radius: 10px;
   padding: 1px 7px;
   font-weight: 500;
 }
 :global(html.dark) .fn-count {
-  background: #1e293b;
-  color: #94a3b8;
+  background: var(--color-surface-muted);
+  color: var(--color-muted-foreground);
 }
 
 .fn-children {

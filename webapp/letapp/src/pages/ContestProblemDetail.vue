@@ -42,7 +42,7 @@ onMounted(loadData);
 </script>
 
 <template>
-  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[#F6F8FC] dark:bg-[#0F172A]">
+  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[var(--color-background)]">
     <div class="mx-auto max-w-[960px] px-6 py-8">
       <button class="ui-btn ui-btn-secondary ui-btn-sm mb-6" @click="router.push(`/contests/${contestId}`)">
         ← 返回题目列表
@@ -61,15 +61,15 @@ onMounted(loadData);
 
       <template v-else-if="problem">
         <!-- 题目摘要 -->
-        <div class="mb-6 border-b border-[#E2E8F0] pb-4 dark:border-[#1E293B]">
+        <div class="mb-6 border-b border-[var(--color-border)] pb-4 dark:border-[var(--color-border)]">
           <div class="flex items-center gap-3">
-            <span class="text-sm font-bold text-[#2563EB] dark:text-[#60A5FA]">{{ problem.problem_index }}</span>
-            <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ problem.title }}</h1>
+            <span class="text-sm font-bold text-[var(--color-accent-text)]">{{ problem.problem_index }}</span>
+            <h1 class="text-2xl font-bold text-[var(--color-foreground)]">{{ problem.title }}</h1>
           </div>
           <div class="mt-3 flex flex-wrap items-center gap-3">
             <span :class="difficultyClass(problem.difficulty)">{{ problem.difficulty }}</span>
-             <span class="inline-flex items-center gap-1 text-sm text-[#64748B] dark:text-[#94A3B8]"><Icon icon="material-symbols:schedule" class="h-4 w-4" />{{ problem.time_limit }}ms</span>
-             <span class="inline-flex items-center gap-1 text-sm text-[#64748B] dark:text-[#94A3B8]"><Icon icon="material-symbols:memory" class="h-4 w-4" />{{ problem.memory_limit }}MB</span>
+             <span class="inline-flex items-center gap-1 text-sm text-[var(--color-muted-foreground)]"><Icon icon="material-symbols:schedule" class="h-4 w-4" />{{ problem.time_limit }}ms</span>
+             <span class="inline-flex items-center gap-1 text-sm text-[var(--color-muted-foreground)]"><Icon icon="material-symbols:memory" class="h-4 w-4" />{{ problem.memory_limit }}MB</span>
           </div>
         </div>
 
@@ -84,14 +84,14 @@ onMounted(loadData);
 
         <!-- 输入格式 -->
         <div v-if="problem.input_desc" class="mt-6">
-          <h2 class="mb-2 text-lg font-bold text-[#1E293B] dark:text-[#E5E7EB]">输入格式</h2>
-          <div class="rounded-lg bg-[#F8FAFC] p-4 text-sm dark:bg-[#1E293B]">{{ problem.input_desc }}</div>
+          <h2 class="mb-2 text-lg font-bold text-[var(--color-foreground)]">输入格式</h2>
+          <div class="rounded-lg bg-[var(--color-surface-muted)] p-4 text-sm dark:bg-[var(--color-surface-muted)]">{{ problem.input_desc }}</div>
         </div>
 
         <!-- 输出格式 -->
         <div v-if="problem.output_desc" class="mt-6">
-          <h2 class="mb-2 text-lg font-bold text-[#1E293B] dark:text-[#E5E7EB]">输出格式</h2>
-          <div class="rounded-lg bg-[#F8FAFC] p-4 text-sm dark:bg-[#1E293B]">{{ problem.output_desc }}</div>
+          <h2 class="mb-2 text-lg font-bold text-[var(--color-foreground)]">输出格式</h2>
+          <div class="rounded-lg bg-[var(--color-surface-muted)] p-4 text-sm dark:bg-[var(--color-surface-muted)]">{{ problem.output_desc }}</div>
         </div>
 
         <!-- 提交按钮 -->

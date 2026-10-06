@@ -77,7 +77,7 @@ onMounted(loadData);
 </script>
 
 <template>
-  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[#F6F8FC] dark:bg-[#0F172A]">
+  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[var(--color-background)]">
     <div class="app-container py-6">
       <button class="ui-btn ui-btn-secondary ui-btn-sm mb-4" @click="router.push('/contests')">
         ← 返回比赛列表
@@ -100,12 +100,12 @@ onMounted(loadData);
           <div class="flex items-start justify-between">
             <div>
               <div class="flex items-center gap-3">
-                <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ contest.title }}</h1>
+                <h1 class="text-2xl font-bold text-[var(--color-foreground)]">{{ contest.title }}</h1>
                 <span class="ui-badge" :class="contest.status === 'ongoing' ? 'ui-badge-green' : contest.status === 'upcoming' ? 'ui-badge-blue' : 'ui-badge-slate'">
                   {{ contest.status === 'ongoing' ? '进行中' : contest.status === 'upcoming' ? '即将开始' : '已结束' }}
                 </span>
               </div>
-              <p v-if="contest.description" class="mt-2 text-sm text-[#64748B] dark:text-[#94A3B8]">{{ contest.description }}</p>
+              <p v-if="contest.description" class="mt-2 text-sm text-[var(--color-muted-foreground)]">{{ contest.description }}</p>
             </div>
             <button
               class="ui-btn ui-btn-primary ui-btn-sm shrink-0"
@@ -114,7 +114,7 @@ onMounted(loadData);
               <Icon icon="material-symbols:leaderboard-rounded" class="h-4 w-4" />排行榜
             </button>
           </div>
-          <div class="mt-4 flex items-center gap-6 text-sm text-[#64748B] dark:text-[#94A3B8]">
+          <div class="mt-4 flex items-center gap-6 text-sm text-[var(--color-muted-foreground)]">
              <span class="inline-flex items-center gap-1"><Icon icon="material-symbols:emoji-events" class="h-4 w-4" />{{ contest.contest_type }}</span>
              <span class="inline-flex items-center gap-1"><Icon icon="material-symbols:schedule" class="h-4 w-4" />{{ formatTime(contest.start_time) }} ~ {{ formatTime(contest.end_time) }}</span>
              <span class="inline-flex items-center gap-1"><Icon icon="material-symbols:group" class="h-4 w-4" />{{ contest.participants_count }} 人参与</span>
@@ -140,7 +140,7 @@ onMounted(loadData);
 
         <!-- 题目列表（类似题库） -->
         <div class="ui-card overflow-hidden !p-0">
-          <div class="hidden grid-cols-[3rem_minmax(0,1fr)_6rem_6rem_6rem] items-center gap-4 border-b border-[#E2E8F0] px-4 text-xs font-bold text-[#64748B] dark:border-[#1E293B]" style="height:48px">
+          <div class="hidden grid-cols-[3rem_minmax(0,1fr)_6rem_6rem_6rem] items-center gap-4 border-b border-[var(--color-border)] px-4 text-xs font-bold text-[var(--color-muted-foreground)] dark:border-[var(--color-border)]" style="height:48px">
             <span class="text-center">编号</span>
             <span>题目</span>
             <span class="text-center">难度</span>
@@ -157,7 +157,7 @@ onMounted(loadData);
              <button
                v-for="p in problems"
                :key="p.id"
-               class="grid w-full grid-cols-[3rem_minmax(0,1fr)] items-center gap-4 px-4 py-3 text-left transition hover:bg-[#EFF6FF] dark:hover:bg-[#172554] sm:grid-cols-[3rem_minmax(0,1fr)_6rem_6rem_6rem]"
+               class="grid w-full grid-cols-[3rem_minmax(0,1fr)] items-center gap-4 px-4 py-3 text-left transition hover:bg-[var(--color-accent-soft)] sm:grid-cols-[3rem_minmax(0,1fr)_6rem_6rem_6rem]"
                :class="[
                  statusMetaOf(p.id) ? [statusMetaOf(p.id)!.bg, 'contest-row-statused'] : '',
                  isContestOpen ? '' : 'cursor-not-allowed opacity-60 hover:bg-transparent dark:hover:bg-transparent',
@@ -165,9 +165,9 @@ onMounted(loadData);
                :disabled="!isContestOpen"
                @click="openProblem(p.id)"
              >
-              <span class="text-center text-sm font-bold text-[#2563EB] dark:text-[#60A5FA]">{{ p.problem_index }}</span>
+              <span class="text-center text-sm font-bold text-[var(--color-accent-text)]">{{ p.problem_index }}</span>
               <span class="flex min-w-0 items-center gap-2">
-                <span class="min-w-0 truncate font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ p.title }}</span>
+                <span class="min-w-0 truncate font-bold text-[var(--color-foreground)]">{{ p.title }}</span>
                 <span
                   v-if="statusMetaOf(p.id)"
                   class="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold"
@@ -177,8 +177,8 @@ onMounted(loadData);
               <span class="hidden justify-center sm:flex">
                 <span :class="difficultyClass(p.difficulty)">{{ p.difficulty }}</span>
               </span>
-              <span class="hidden text-center text-sm text-[#64748B] dark:text-[#94A3B8] sm:block">{{ p.time_limit }}ms</span>
-              <span class="hidden text-center text-sm text-[#64748B] dark:text-[#94A3B8] sm:block">{{ p.memory_limit }}MB</span>
+              <span class="hidden text-center text-sm text-[var(--color-muted-foreground)] sm:block">{{ p.time_limit }}ms</span>
+              <span class="hidden text-center text-sm text-[var(--color-muted-foreground)] sm:block">{{ p.memory_limit }}MB</span>
             </button>
           </div>
         </div>

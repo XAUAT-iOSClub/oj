@@ -38,7 +38,7 @@ const logout = async () => {
 
 <template>
   <div class="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
-    <header class="sticky top-0 z-50 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+    <header class="sticky top-0 z-50 border-b border-slate-200 bg-[var(--color-surface)] dark:border-slate-800 dark:bg-slate-950">
       <div class="flex h-16 items-center justify-between px-4">
         <div class="flex items-center gap-3">
           <button class="admin-icon-button" aria-label="返回首页" title="返回首页" @click="goHome">
@@ -71,8 +71,8 @@ const logout = async () => {
             :class="[
               sidebarExpanded ? 'justify-start' : 'justify-center',
               activePath === item.route
-                ? 'bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]'
-                : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800',
+                ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]'
+                : 'text-slate-600 hover:bg-[var(--color-surface)] dark:text-slate-300 dark:hover:bg-slate-800',
             ]"
             @click="navigateTo(item.route)"
           >
@@ -125,21 +125,21 @@ const logout = async () => {
   align-items: center;
   min-height: 2.75rem;
   border-radius: 0.375rem;
-  color: #475569;
+  color: var(--color-muted-foreground);
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .sidebar-toggle:hover {
-  background-color: #e2e8f0;
-  color: #475569;
+  background-color: var(--color-muted);
+  color: var(--color-muted-foreground);
 }
 
 .dark .sidebar-toggle {
-  color: #cbd5e1;
+  color: var(--color-foreground);
 }
 
 .dark .sidebar-toggle:hover {
-  background-color: #1e293b;
+  background-color: var(--color-surface-muted);
   color: #ffffff;
 }
 </style>

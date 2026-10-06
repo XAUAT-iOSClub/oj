@@ -67,7 +67,7 @@ const getCategoryColor = (item: { category?: string; title: string }): string =>
   if (cat === '比赛公告') return 'bg-amber-50 dark:bg-amber-950/40';
   if (cat === '更新公告') return 'bg-emerald-50 dark:bg-emerald-950/40';
   if (cat === '活动通知') return 'bg-violet-50 dark:bg-violet-950/40';
-  return 'bg-[#EFF6FF] dark:bg-[#172554]';
+  return 'bg-[var(--color-accent-soft)]';
 };
 const filteredAnnouncements = computed(() => {
   const list = sortedAnnouncements.value;
@@ -162,25 +162,25 @@ watch(
 </script>
 
 <template>
-  <div class="announcements-page min-h-[calc(100vh-var(--header-h,4rem))] bg-[#F6F8FC] pt-12 dark:bg-[#0F172A]">
+  <div class="announcements-page min-h-[calc(100vh-var(--header-h,4rem))] bg-[var(--color-background)] pt-12 dark:bg-[var(--color-background)]">
     <!-- ===== 列表视图 ===== -->
     <template v-if="!isDetailMode">
       <div class="app-container-with-sidebar py-6 pt-4">
         <!-- 左侧分类栏 240px -->
         <aside class="app-sidebar-col">
-           <div class="border-l border-[#E2E8F0] pl-3 dark:border-[#1E293B]">
+           <div class="border-l border-[var(--color-border)] pl-3 dark:border-[var(--color-border)]">
             <button
               v-for="cat in categories"
               :key="cat"
               class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition"
               :class="activeCategory === cat
-                ? 'bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]'
-                : 'text-[#475569] hover:bg-[#F1F5F9] dark:text-[#94A3B8] dark:hover:bg-[#1E293B]'"
+                ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]'
+                : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] dark:text-[var(--color-muted-foreground)] dark:hover:bg-[var(--color-surface-muted)]'"
               @click="activeCategory = cat"
             >
               <span class="cat-ico shrink-0"><Icon :icon="categoryIcons[cat] ?? ''" /></span>
               <span class="min-w-0 flex-1">{{ cat }}</span>
-              <span class="shrink-0 text-xs font-bold text-[#94A3B8]">{{ categoryCounts[cat] || 0 }}</span>
+              <span class="shrink-0 text-xs font-bold text-[var(--color-muted-foreground)]">{{ categoryCounts[cat] || 0 }}</span>
             </button>
           </div>
         </aside>
@@ -190,7 +190,7 @@ watch(
           <!-- 标题区 -->
           <div class="mb-4">
             <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">公告中心</h1>
+              <h1 class="text-2xl font-bold text-[var(--color-foreground)]">公告中心</h1>
               <span class="ui-badge ui-badge-blue">{{ filteredAnnouncements.length }} 条</span>
             </div>
             <p class="ui-section-sub mt-1">平台通知与最新动态</p>
@@ -209,15 +209,15 @@ watch(
           <!-- 错误 -->
           <div v-else-if="listError" class="ui-empty">
             <Icon icon="material-symbols:error-outline-rounded" class="mb-2 h-12 w-12 text-rose-500" />
-            <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">加载失败</p>
-            <p class="text-sm text-[#64748B] dark:text-[#94A3B8]">{{ listError }}</p>
+            <p class="font-bold text-[var(--color-foreground)]">加载失败</p>
+            <p class="text-sm text-[var(--color-muted-foreground)]">{{ listError }}</p>
             <button class="ui-btn ui-btn-secondary ui-btn-sm mt-2" @click="loadAnnouncements">重试</button>
           </div>
 
           <!-- 空态 -->
           <div v-else-if="filteredAnnouncements.length === 0" class="ui-empty">
             <Icon icon="material-symbols:mail-outline-rounded" class="mb-2 h-12 w-12 text-slate-400" />
-            <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">暂无公告</p>
+            <p class="font-bold text-[var(--color-foreground)]">暂无公告</p>
           </div>
 
           <!-- 公告列表（条目 92-112px） -->
@@ -226,7 +226,7 @@ watch(
               v-for="item in filteredAnnouncements"
               :key="item.id"
               type="button"
-               class="announcement-item group flex w-full items-center gap-4 border-b border-[#E2E8F0] bg-white px-2 py-3 text-left transition-colors hover:bg-[#F8FBFF] dark:border-[#1E293B] dark:bg-[#111827] dark:hover:bg-[#172554]"
+               class="announcement-item group flex w-full items-center gap-4 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-3 text-left transition-colors hover:bg-[var(--color-accent-soft)] dark:border-[var(--color-border)] dark:bg-[var(--color-surface)] dark:hover:bg-[var(--color-accent-soft)]"
               @click="openAnnouncement(item)"
             >
               <!-- 左侧图标 48px -->
@@ -235,11 +235,11 @@ watch(
               </span>
               <!-- 中间标题+摘要 -->
               <div class="min-w-0 flex-1">
-                <p class="truncate text-base font-bold text-[#1E293B] transition group-hover:text-[#2563EB] dark:text-[#E5E7EB] dark:group-hover:text-[#60A5FA]">{{ item.title }}</p>
-                <p class="mt-0.5 line-clamp-1 text-xs text-[#64748B] dark:text-[#94A3B8]">{{ item.content }}</p>
+                <p class="truncate text-base font-bold text-[var(--color-foreground)] transition group-hover:text-[var(--color-accent-text)] dark:text-[var(--color-foreground)] dark:group-hover:text-[var(--color-accent-text)]">{{ item.title }}</p>
+                <p class="mt-0.5 line-clamp-1 text-xs text-[var(--color-muted-foreground)]">{{ item.content }}</p>
               </div>
               <!-- 右侧日期 ~120px -->
-              <span class="shrink-0 text-right text-xs text-[#94A3B8]" style="width:120px">
+              <span class="shrink-0 text-right text-xs text-[var(--color-muted-foreground)]" style="width:120px">
                 {{ formatTime(item.updated_at || item.published_at || item.created_at) }}
               </span>
             </button>
@@ -256,7 +256,7 @@ watch(
         </button>
 
         <div class="ui-card overflow-hidden !p-0">
-          <div v-if="isLoadingDoc" class="flex min-h-[320px] items-center justify-center p-8 text-[#64748B] dark:text-[#94A3B8]">
+          <div v-if="isLoadingDoc" class="flex min-h-[320px] items-center justify-center p-8 text-[var(--color-muted-foreground)]">
             正在加载公告内容...
           </div>
           <div v-else-if="detailError" class="flex min-h-[320px] flex-col items-center justify-center gap-4 p-8 text-center">
@@ -267,9 +267,9 @@ watch(
             </button>
           </div>
           <div v-else class="px-10 py-10 sm:px-16">
-            <div class="mb-6 border-b border-[#E2E8F0] pb-4 dark:border-[#1E293B]">
-              <h2 class="text-[30px] font-bold leading-tight text-[#1E293B] dark:text-[#E5E7EB]">{{ selectedContent?.title }}</h2>
-              <p class="mt-2 text-sm font-medium text-[#64748B] dark:text-[#94A3B8]">
+            <div class="mb-6 border-b border-[var(--color-border)] pb-4 dark:border-[var(--color-border)]">
+              <h2 class="text-[30px] font-bold leading-tight text-[var(--color-foreground)]">{{ selectedContent?.title }}</h2>
+              <p class="mt-2 text-sm font-medium text-[var(--color-muted-foreground)]">
                 {{ formatTime(selectedContent?.date) }}
               </p>
             </div>
@@ -288,10 +288,10 @@ watch(
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #2563EB;
+  color: var(--color-accent-text);
 }
 .dark .cat-ico {
-  color: #4F8CFF;
+  color: var(--color-accent-text);
 }
 .cat-ico :deep(svg) {
   width: 20px;
@@ -300,9 +300,9 @@ watch(
 .ann-ico {
   width: 24px;
   height: 24px;
-  color: #2563EB;
+  color: var(--color-accent-text);
 }
 .dark .ann-ico {
-  color: #4F8CFF;
+  color: var(--color-accent-text);
 }
 </style>

@@ -98,10 +98,10 @@ const META: Record<string, JudgeStatusMeta> = {
   },
   Partial: {
     label: '部分通过', short: 'Partial',
-    text: 'text-blue-600 dark:text-blue-400',
-    bg: 'bg-blue-50 dark:bg-blue-950/40',
-    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
-    dot: 'bg-blue-500', solved: false,
+    text: 'text-accent-text',
+    bg: 'bg-accent-soft',
+    badge: 'bg-accent-soft text-accent-soft-foreground',
+    dot: 'bg-accent', solved: false,
   },
   NoTestcases: {
     label: '无测试用例', short: '—',
@@ -119,17 +119,17 @@ const META: Record<string, JudgeStatusMeta> = {
   },
   Pending: {
     label: '等待判题', short: '···',
-    text: 'text-sky-600 dark:text-sky-400',
-    bg: 'bg-sky-50 dark:bg-sky-950/40',
-    badge: 'bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300',
-    dot: 'bg-sky-500', solved: false,
+    text: 'text-accent-text',
+    bg: 'bg-accent-soft',
+    badge: 'bg-accent-soft text-accent-soft-foreground',
+    dot: 'bg-accent', solved: false,
   },
   Judging: {
     label: '判题中', short: '···',
-    text: 'text-sky-600 dark:text-sky-400',
-    bg: 'bg-sky-50 dark:bg-sky-950/40',
-    badge: 'bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300',
-    dot: 'bg-sky-500', solved: false,
+    text: 'text-accent-text',
+    bg: 'bg-accent-soft',
+    badge: 'bg-accent-soft text-accent-soft-foreground',
+    dot: 'bg-accent', solved: false,
   },
 };
 

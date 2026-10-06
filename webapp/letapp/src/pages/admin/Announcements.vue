@@ -167,7 +167,7 @@ const confirmDelete = (item: AnnouncementData) => {
 
 const categoryBadgeClass = (cat?: string) => {
   if (cat === '比赛公告') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300';
-  if (cat === '更新公告') return 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300';
+  if (cat === '更新公告') return 'bg-accent-soft text-accent-soft-foreground';
   if (cat === '活动通知') return 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300';
   return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
 };
@@ -309,7 +309,7 @@ onMounted(loadList);
       <article
         v-for="item in announcements"
         :key="item.id"
-        class="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white px-5 py-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between"
+        class="flex flex-col gap-4 rounded-lg border border-slate-200 bg-[var(--color-surface)] px-5 py-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between"
       >
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-3">
@@ -368,7 +368,7 @@ onMounted(loadList);
 @reference 'tailwindcss';
 
 .editor-pane {
-  @apply flex min-h-[34rem] max-h-[70vh] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900;
+  @apply flex min-h-[34rem] max-h-[70vh] flex-col overflow-hidden rounded-lg border border-slate-200 bg-[var(--color-surface)] dark:border-slate-800 dark:bg-slate-900;
 }
 
 .pane-heading {
@@ -417,17 +417,17 @@ onMounted(loadList);
 .admin-header-title {
   font-size: 1.5rem;
   font-weight: 900;
-  color: #0f172a;
+  color: var(--color-foreground);
 }
 :global(.dark) .admin-header-title {
-  color: #f1f5f9;
+  color: var(--color-foreground);
 }
 .admin-header-desc {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-muted-foreground);
 }
 :global(.dark) .admin-header-desc {
-  color: #94a3b8;
+  color: var(--color-muted-foreground);
 }
 .admin-btn-primary {
   display: inline-flex;
@@ -439,25 +439,25 @@ onMounted(loadList);
   font-size: 0.875rem;
   font-weight: 600;
   color: #fff;
-  background: #2563eb;
+  background: var(--color-accent-solid);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 1px 2px rgb(11 124 138 / 0.2);
 }
 .admin-btn-primary:hover {
-  background: #1d4ed8;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+  background: var(--color-accent-solid-hover);
+  box-shadow: 0 2px 6px rgb(11 124 138 / 0.3);
   transform: translateY(-1px);
 }
 .admin-btn-primary:active {
-  background: #1e40af;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+  background: var(--color-accent-solid-active);
+  box-shadow: 0 1px 2px rgb(11 124 138 / 0.2);
   transform: translateY(0);
 }
 .admin-btn-primary:disabled {
-  background: #93b4e0;
+  background: var(--color-accent-soft);
   box-shadow: none;
   transform: none;
   cursor: not-allowed;
@@ -473,35 +473,35 @@ onMounted(loadList);
   padding: 0.375rem 0.875rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #64748b;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  color: var(--color-muted-foreground);
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .cat-btn:hover {
-  background: #e2e8f0;
-  color: #334155;
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
 .cat-btn-active {
-  color: #2563eb;
-  background: #eff6ff;
-  border-color: #2563eb;
+  color: var(--color-accent-text);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
 }
 :global(.dark) .cat-btn {
-  background: #1e293b;
-  border-color: #334155;
-  color: #94a3b8;
+  background: var(--color-surface-muted);
+  border-color: var(--color-border-strong);
+  color: var(--color-muted-foreground);
 }
 :global(.dark) .cat-btn:hover {
-  background: #334155;
-  color: #cbd5e1;
+  background: var(--color-muted);
+  color: var(--color-foreground);
 }
 :global(.dark) .cat-btn-active {
-  color: #60a5fa;
-  background: #172554;
-  border-color: #2563eb;
+  color: var(--color-accent-text);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
 }
 .cat-btn-icon {
   font-size: 0.875rem;

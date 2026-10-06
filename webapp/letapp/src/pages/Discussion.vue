@@ -51,13 +51,13 @@ const categoryIcons: Record<string, string> = {
 };
 
 const tagColors: Record<string, string> = {
-  '动态规划': 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400',
+  '动态规划': 'bg-accent-soft text-accent-text',
   '算法': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400',
   'C++': 'bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400',
   '学习': 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400',
   '周赛': 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400',
   '讨论': 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-  '图论': 'bg-cyan-50 text-cyan-600 dark:bg-cyan-950/40 dark:text-cyan-400',
+  '图论': 'bg-accent-soft text-accent-text',
   '模板': 'bg-pink-50 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400',
 };
 
@@ -274,18 +274,18 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
 </script>
 
 <template>
-  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[#F6F8FC] dark:bg-[#0F172A]">
+  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[var(--color-background)]">
     <div class="app-container-with-sidebar py-6">
       <!-- 左侧分类 -->
       <aside class="app-sidebar-col">
-         <div class="border-l border-[#E2E8F0] pl-3 dark:border-[#1E293B]">
+         <div class="border-l border-[var(--color-border)] pl-3 dark:border-[var(--color-border)]">
           <button
             v-for="cat in categories"
             :key="cat"
             class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-semibold transition"
             :class="activeCategory === cat
-              ? 'bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]'
-              : 'text-[#475569] hover:bg-[#F1F5F9] dark:text-[#94A3B8] dark:hover:bg-[#1E293B]'"
+              ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]'
+              : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)] dark:text-[var(--color-muted-foreground)] dark:hover:bg-[var(--color-surface-muted)]'"
             @click="activeCategory = cat"
           >
             <span class="cat-ico shrink-0 w-7 text-center"><Icon :icon="categoryIcons[cat] ?? ''" /></span>
@@ -298,7 +298,7 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
       <section class="min-w-0 flex-1">
         <div class="mb-4 flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">讨论区</h1>
+            <h1 class="text-2xl font-bold text-[var(--color-foreground)]">讨论区</h1>
             <p class="ui-section-sub mt-1">交流算法心得，分享学习经验</p>
           </div>
            <button class="ui-btn ui-btn-primary ui-btn-md" @click="openCreate">
@@ -314,7 +314,7 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
         <!-- 错误 -->
         <div v-else-if="error" class="ui-empty">
           <Icon icon="material-symbols:error-outline-rounded" class="mb-2 h-12 w-12 text-rose-500" />
-          <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">加载失败</p>
+          <p class="font-bold text-[var(--color-foreground)]">加载失败</p>
           <button class="ui-btn ui-btn-secondary ui-btn-sm mt-2" @click="loadData">重试</button>
         </div>
 
@@ -323,37 +323,37 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
           <div
             v-for="d in filteredDiscussions"
             :key="d.id"
-             class="flex cursor-pointer items-start gap-4 border-b border-[#E2E8F0] px-2 py-3 transition-colors hover:bg-[#F8FBFF] dark:border-[#1E293B] dark:hover:bg-[#172554]"
+             class="flex cursor-pointer items-start gap-4 border-b border-[var(--color-border)] px-2 py-3 transition-colors hover:bg-[var(--color-accent-soft)] dark:border-[var(--color-border)] dark:hover:bg-[var(--color-accent-soft)]"
             @click="openDetail(d)"
           >
-            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
               <Icon icon="material-symbols:person" class="h-5 w-5" />
             </div>
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2">
                  <span v-if="d.is_pinned" class="ui-badge ui-badge-amber inline-flex items-center gap-1 text-[10px]"><Icon icon="material-symbols:push-pin" class="h-3 w-3" />置顶</span>
-                <h3 class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ d.title }}</h3>
+                <h3 class="font-bold text-[var(--color-foreground)]">{{ d.title }}</h3>
               </div>
               <div v-if="getTags(d.tags).length" class="mt-1.5 flex flex-wrap items-center gap-1.5">
                 <span v-for="tag in visibleTags(d.tags)" :key="tag" class="rounded-md px-2 py-0.5 text-[11px] font-medium" :class="tagColors[tag] || 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'">{{ tag }}</span>
                 <span v-if="extraTagCount(d.tags)" class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">+{{ extraTagCount(d.tags) }}</span>
               </div>
-              <p class="mt-2 text-xs text-[#94A3B8]">{{ d.author_name }} · {{ formatTime(d.created_at) }}</p>
+              <p class="mt-2 text-xs text-[var(--color-muted-foreground)]">{{ d.author_name }} · {{ formatTime(d.created_at) }}</p>
             </div>
-            <div class="shrink-0 flex flex-col items-end gap-1 text-[#64748B] dark:text-[#94A3B8]">
+            <div class="shrink-0 flex flex-col items-end gap-1 text-[var(--color-muted-foreground)]">
               <button
-                class="flex items-center gap-1 text-xs font-bold transition hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
-                :class="d.is_liked ? 'text-[#2563EB] dark:text-[#60A5FA]' : ''"
+                class="flex items-center gap-1 text-xs font-bold transition hover:text-[var(--color-accent-text)]"
+                :class="d.is_liked ? 'text-[var(--color-accent-text)]' : ''"
                 @click.stop="toggleLike(d)"
               >
                  <Icon :icon="d.is_liked ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="h-4 w-4" />
                 {{ d.like_count || 0 }}
               </button>
                <span class="inline-flex items-center gap-1 text-xs font-bold"><Icon icon="material-symbols:chat-bubble-outline" class="h-3.5 w-3.5" />{{ d.reply_count || 0 }}</span>
-               <span class="inline-flex items-center gap-1 text-[10px] text-[#94A3B8]"><Icon icon="material-symbols:visibility" class="h-3.5 w-3.5" />{{ d.view_count || 0 }}</span>
+               <span class="inline-flex items-center gap-1 text-[10px] text-[var(--color-muted-foreground)]"><Icon icon="material-symbols:visibility" class="h-3.5 w-3.5" />{{ d.view_count || 0 }}</span>
               <button
                 v-if="canDeleteDiscussion(d.author_id)"
-                class="text-xs font-bold text-[#EF4444] transition hover:text-[#DC2626]"
+                class="text-xs font-bold text-[var(--color-danger-text)] transition hover:text-[var(--color-danger-text)]"
                 @click.stop="deleteDiscussionById(d.id)"
               >
                  <span class="inline-flex items-center gap-1"><Icon icon="material-symbols:delete-outline" class="h-3.5 w-3.5" />删除</span>
@@ -365,8 +365,8 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
         <!-- 空态 -->
         <div v-if="!isLoading && !error && filteredDiscussions.length === 0" class="ui-empty mt-6">
           <Icon icon="material-symbols:forum-outline" class="mb-2 h-12 w-12 text-slate-400" />
-          <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">暂无讨论</p>
-          <p class="text-sm text-[#64748B] dark:text-[#94A3B8]">发布第一个讨论吧</p>
+          <p class="font-bold text-[var(--color-foreground)]">暂无讨论</p>
+          <p class="text-sm text-[var(--color-muted-foreground)]">发布第一个讨论吧</p>
         </div>
       </section>
     </div>
@@ -377,7 +377,7 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
         <div v-if="showDetail" class="disc-modal-overlay" @click.self="closeDetail">
           <div class="disc-modal">
             <div class="disc-modal-header">
-              <h3 class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">讨论详情</h3>
+              <h3 class="font-bold text-[var(--color-foreground)]">讨论详情</h3>
                <button class="disc-modal-close" aria-label="关闭" @click="closeDetail"><Icon icon="material-symbols:close" /></button>
             </div>
             <div class="disc-modal-body">
@@ -388,8 +388,8 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
                      <span v-if="currentDiscussion.is_pinned" class="ui-badge ui-badge-amber inline-flex items-center gap-1 text-[10px]"><Icon icon="material-symbols:push-pin" class="h-3 w-3" />置顶</span>
                     <span class="ui-badge ui-badge-blue text-[10px]">{{ currentDiscussion.category }}</span>
                   </div>
-                  <h2 class="text-xl font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ currentDiscussion.title }}</h2>
-                  <p class="mt-1 text-xs text-[#94A3B8]">{{ currentDiscussion.author_name }} · {{ formatFullTime(currentDiscussion.created_at) }}</p>
+                  <h2 class="text-xl font-bold text-[var(--color-foreground)]">{{ currentDiscussion.title }}</h2>
+                  <p class="mt-1 text-xs text-[var(--color-muted-foreground)]">{{ currentDiscussion.author_name }} · {{ formatFullTime(currentDiscussion.created_at) }}</p>
                 </div>
 
                 <!-- 标签 -->
@@ -403,20 +403,20 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
                 </div>
 
                 <!-- 操作栏 -->
-                <div class="flex items-center gap-4 border-t border-[#E2E8F0] dark:border-[#1E293B] pt-3 mb-4">
+                <div class="flex items-center gap-4 border-t border-[var(--color-border)] pt-3 mb-4">
                   <button
                     class="flex items-center gap-1.5 text-sm font-bold transition"
-                    :class="currentDiscussion.is_liked ? 'text-[#2563EB] dark:text-[#60A5FA]' : 'text-[#64748B] dark:text-[#94A3B8] hover:text-[#2563EB]'"
+                    :class="currentDiscussion.is_liked ? 'text-[var(--color-accent-text)]' : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-accent-text)]'"
                     @click="toggleLike(currentDiscussion)"
                   >
                      <Icon :icon="currentDiscussion.is_liked ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="h-4 w-4" />
                     点赞 {{ currentDiscussion.like_count || 0 }}
                   </button>
-                   <span class="inline-flex items-center gap-1 text-sm text-[#94A3B8]"><Icon icon="material-symbols:chat-bubble-outline" class="h-4 w-4" />回复 {{ currentDiscussion.reply_count || 0 }}</span>
-                   <span class="inline-flex items-center gap-1 text-sm text-[#94A3B8]"><Icon icon="material-symbols:visibility" class="h-4 w-4" />浏览 {{ currentDiscussion.view_count || 0 }}</span>
+                   <span class="inline-flex items-center gap-1 text-sm text-[var(--color-muted-foreground)]"><Icon icon="material-symbols:chat-bubble-outline" class="h-4 w-4" />回复 {{ currentDiscussion.reply_count || 0 }}</span>
+                   <span class="inline-flex items-center gap-1 text-sm text-[var(--color-muted-foreground)]"><Icon icon="material-symbols:visibility" class="h-4 w-4" />浏览 {{ currentDiscussion.view_count || 0 }}</span>
                   <button
                     v-if="canDeleteDiscussion(currentDiscussion.author_id)"
-                    class="ml-auto flex items-center gap-1 text-sm font-bold text-[#EF4444] transition hover:text-[#DC2626]"
+                    class="ml-auto flex items-center gap-1 text-sm font-bold text-[var(--color-danger-text)] transition hover:text-[var(--color-danger-text)]"
                     @click="deleteDiscussionById(currentDiscussion.id)"
                   >
                      <span class="inline-flex items-center gap-1"><Icon icon="material-symbols:delete-outline" class="h-4 w-4" />删除讨论</span>
@@ -424,24 +424,24 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
                 </div>
 
                 <!-- 回复列表 -->
-                <div class="border-t border-[#E2E8F0] dark:border-[#1E293B] pt-4">
-                  <h4 class="text-sm font-bold text-[#1E293B] dark:text-[#E5E7EB] mb-3">回复 ({{ currentDiscussion.replies?.length || 0 }})</h4>
+                <div class="border-t border-[var(--color-border)] pt-4">
+                  <h4 class="text-sm font-bold text-[var(--color-foreground)] mb-3">回复 ({{ currentDiscussion.replies?.length || 0 }})</h4>
                   <div v-if="detailLoading" class="space-y-3">
                     <div v-for="i in 3" :key="i" class="ui-skeleton h-16 w-full rounded-lg"></div>
                   </div>
                   <div v-else-if="currentDiscussion.replies && currentDiscussion.replies.length" class="space-y-3">
-                    <div v-for="r in currentDiscussion.replies" :key="r.id" class="rounded-lg border border-[#E2E8F0] dark:border-[#1E293B] p-3">
+                    <div v-for="r in currentDiscussion.replies" :key="r.id" class="rounded-lg border border-[var(--color-border)] p-3">
                       <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ r.author_name }}</span>
-                        <span class="text-[11px] text-[#94A3B8]">{{ formatTime(r.created_at) }}</span>
+                        <span class="text-xs font-bold text-[var(--color-foreground)]">{{ r.author_name }}</span>
+                        <span class="text-[11px] text-[var(--color-muted-foreground)]">{{ formatTime(r.created_at) }}</span>
                       </div>
-                      <div class="text-sm text-[#374151] dark:text-[#D1D5DB]">
+                      <div class="text-sm text-[var(--color-foreground)]">
                         <MarkdownComponent :content="{ content: r.content }" :show-nav="false" :show-heading-links="false" />
                       </div>
                        <div class="mt-2 flex items-center gap-3">
                          <button
                            class="flex items-center gap-1 text-xs font-bold transition"
-                           :class="r.is_liked ? 'text-[#2563EB] dark:text-[#60A5FA]' : 'text-[#94A3B8] hover:text-[#2563EB]'"
+                           :class="r.is_liked ? 'text-[var(--color-accent-text)]' : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-accent-text)]'"
                            @click="toggleReplyLike(r)"
                          >
                             <Icon :icon="r.is_liked ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="h-4 w-4" />
@@ -449,7 +449,7 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
                          </button>
                          <button
                            v-if="canDeleteDiscussion(r.author_id)"
-                           class="ml-auto flex items-center gap-1 text-xs font-bold text-[#EF4444] transition hover:text-[#DC2626]"
+                           class="ml-auto flex items-center gap-1 text-xs font-bold text-[var(--color-danger-text)] transition hover:text-[var(--color-danger-text)]"
                            @click="deleteReplyById(r)"
                          >
                             <span class="inline-flex items-center gap-1"><Icon icon="material-symbols:delete-outline" class="h-3.5 w-3.5" />删除</span>
@@ -457,14 +457,14 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
                        </div>
                     </div>
                   </div>
-                  <p v-else class="text-sm text-[#94A3B8] text-center py-4">暂无回复</p>
+                  <p v-else class="text-sm text-[var(--color-muted-foreground)] text-center py-4">暂无回复</p>
                 </div>
 
                 <!-- 发表回复 -->
-                <div v-if="authStore.isAuthenticated" class="border-t border-[#E2E8F0] dark:border-[#1E293B] pt-4 mt-4">
+                <div v-if="authStore.isAuthenticated" class="border-t border-[var(--color-border)] pt-4 mt-4">
                   <textarea
                     v-model="newReply"
-                    class="w-full rounded-lg border border-[#E2E8F0] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] p-3 text-sm text-[#1E293B] dark:text-[#E5E7EB] outline-none transition focus:border-[#2563EB] dark:focus:border-[#60A5FA] resize-none"
+                    class="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] dark:bg-[var(--color-background)] p-3 text-sm text-[var(--color-foreground)] outline-none transition focus:border-[var(--color-accent)] resize-none"
                     rows="3"
                     placeholder="写下你的回复..."
                   ></textarea>
@@ -478,8 +478,8 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
                     </button>
                   </div>
                 </div>
-                <p v-else class="text-center text-sm text-[#94A3B8] py-4 border-t border-[#E2E8F0] dark:border-[#1E293B] mt-4">
-                  <button class="font-bold text-[#2563EB] dark:text-[#60A5FA]" @click="goLogin">登录</button> 后参与讨论
+                <p v-else class="text-center text-sm text-[var(--color-muted-foreground)] py-4 border-t border-[var(--color-border)] mt-4">
+                  <button class="font-bold text-[var(--color-accent-text)]" @click="goLogin">登录</button> 后参与讨论
                 </p>
               </template>
             </div>
@@ -494,35 +494,35 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
         <div v-if="showCreate" class="disc-modal-overlay" @click.self="showCreate = false">
           <div class="disc-modal">
             <div class="disc-modal-header">
-              <h3 class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">发布讨论</h3>
+              <h3 class="font-bold text-[var(--color-foreground)]">发布讨论</h3>
                <button class="disc-modal-close" aria-label="关闭" @click="showCreate = false"><Icon icon="material-symbols:close" /></button>
             </div>
             <div class="disc-modal-body">
               <div class="space-y-4">
                 <div>
-                  <label class="mb-1 block text-xs font-bold text-[#64748B]">标题</label>
+                  <label class="mb-1 block text-xs font-bold text-[var(--color-muted-foreground)]">标题</label>
                   <input v-model="createForm.title" class="ui-input" placeholder="请输入标题" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-xs font-bold text-[#64748B]">分类</label>
+                  <label class="mb-1 block text-xs font-bold text-[var(--color-muted-foreground)]">分类</label>
                   <div class="flex flex-wrap gap-2">
                     <button
                       v-for="cat in ['问答', '分享', '闲聊', '综合']"
                       :key="cat"
                       class="rounded-md border px-3 py-1 text-xs font-medium transition-colors"
                       :class="createForm.category === cat
-                        ? 'border-[#2563EB] bg-[#EFF6FF] text-[#2563EB] dark:border-[#60A5FA] dark:bg-[#172554] dark:text-[#60A5FA]'
-                        : 'border-[#E2E8F0] text-[#64748B] dark:border-[#334155] dark:text-[#94A3B8]'"
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:border-[var(--color-accent)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]'
+                        : 'border-[var(--color-border)] text-[var(--color-muted-foreground)] dark:border-[var(--color-border-strong)] dark:text-[var(--color-muted-foreground)]'"
                       @click="createForm.category = cat"
                     >{{ cat }}</button>
                   </div>
                 </div>
                 <div>
-                  <label class="mb-1 block text-xs font-bold text-[#64748B]">标签（逗号分隔）</label>
+                  <label class="mb-1 block text-xs font-bold text-[var(--color-muted-foreground)]">标签（逗号分隔）</label>
                   <input v-model="createForm.tags" class="ui-input" placeholder="如：动态规划, 算法" />
                 </div>
                 <div>
-                  <label class="mb-1 block text-xs font-bold text-[#64748B]">内容（支持 Markdown）</label>
+                  <label class="mb-1 block text-xs font-bold text-[var(--color-muted-foreground)]">内容（支持 Markdown）</label>
                   <textarea
                     v-model="createForm.content"
                     class="ui-input min-h-[160px] resize-y"
@@ -555,10 +555,10 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #2563EB;
+  color: var(--color-accent-text);
 }
 .dark .cat-ico {
-  color: #4F8CFF;
+  color: var(--color-accent-text);
 }
 .cat-ico :deep(svg) {
   width: 20px;
@@ -580,30 +580,30 @@ onUnmounted(() => { pageAbort.abort(); document.removeEventListener('scroll', on
   max-width: 680px;
   max-height: 85vh;
   border-radius: 12px;
-  background: #fff;
+  background: var(--color-surface);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-html.dark .disc-modal { background: #1F2937; }
+html.dark .disc-modal { background: var(--color-surface-muted); }
 .disc-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
-html.dark .disc-modal-header { border-color: #374151; }
+html.dark .disc-modal-header { border-color: var(--color-border-strong); }
 .disc-modal-close {
   width: 28px; height: 28px;
   display: grid; place-items: center;
   border: none; border-radius: 6px;
-  background: transparent; color: #6B7280;
+  background: transparent; color: var(--color-muted-foreground);
   cursor: pointer; font-size: 14px;
 }
-.disc-modal-close:hover { background: #F3F4F6; }
+.disc-modal-close:hover { background: var(--color-muted); }
 .disc-modal-body {
   flex: 1;
   overflow-y: auto;
@@ -611,13 +611,13 @@ html.dark .disc-modal-header { border-color: #374151; }
 }
 .disc-content :deep(p) { margin: 0 0 12px; }
 .disc-content :deep(pre) {
-  background: #F8FAFC;
+  background: var(--color-surface-muted);
   padding: 12px;
   border-radius: 8px;
   font-size: 13px;
   overflow-x: auto;
 }
-html.dark .disc-content :deep(pre) { background: #111827; color: #E5E7EB; }
+html.dark .disc-content :deep(pre) { background: var(--color-surface); color: var(--color-foreground); }
 
 .modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.2s ease; }
 .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }

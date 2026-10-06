@@ -225,7 +225,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="problems-page bg-[#F6F8FC] dark:bg-[#0F172A]">
+  <div class="problems-page bg-[var(--color-background)]">
     <div class="app-container py-6">
       <div class="flex items-start gap-4 lg:gap-6">
         <!-- 左侧筛选 -->
@@ -295,11 +295,11 @@ onMounted(() => {
           <div class="problem-intro-card mb-4">
             <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
-                <h1 class="text-2xl font-semibold text-[#1E293B] dark:text-[#E5E7EB]">在线题库</h1>
+                <h1 class="text-2xl font-semibold text-[var(--color-foreground)]">在线题库</h1>
                 <p class="ui-section-sub mt-1">精选编程题目，持续提升你的编程能力。</p>
               </div>
               <div class="relative w-full xl:w-64">
-                <Icon icon="material-symbols:search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
+                <Icon icon="material-symbols:search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
                 <input
                   v-model="searchQuery"
                   type="text"
@@ -310,11 +310,43 @@ onMounted(() => {
             </div>
 
             <div data-testid="problem-toolbar" class="problem-toolbar mt-5">
-              <div class="flex flex-wrap gap-2">
-                <button class="problem-toolbar-tab" :class="{ active: statusFilter === '' }" @click="statusFilter = ''">全部题目</button>
-                <button class="problem-toolbar-tab" :class="{ active: statusFilter === 'favorite' }" @click="statusFilter = 'favorite'">我的收藏</button>
-                <button class="problem-toolbar-tab" :class="{ active: statusFilter === 'unsolved' }" @click="statusFilter = 'unsolved'">未解决</button>
-                <button class="problem-toolbar-tab" :class="{ active: statusFilter === 'solved' }" @click="statusFilter = 'solved'">已解决</button>
+              <div class="ui-segmented" role="group" aria-label="题目状态筛选">
+                <button
+                  type="button"
+                  class="ui-segmented-item"
+                  :class="{ 'is-active': statusFilter === '' }"
+                  :aria-pressed="statusFilter === ''"
+                  @click="statusFilter = ''"
+                >
+                  全部题目
+                </button>
+                <button
+                  type="button"
+                  class="ui-segmented-item"
+                  :class="{ 'is-active': statusFilter === 'favorite' }"
+                  :aria-pressed="statusFilter === 'favorite'"
+                  @click="statusFilter = 'favorite'"
+                >
+                  我的收藏
+                </button>
+                <button
+                  type="button"
+                  class="ui-segmented-item"
+                  :class="{ 'is-active': statusFilter === 'unsolved' }"
+                  :aria-pressed="statusFilter === 'unsolved'"
+                  @click="statusFilter = 'unsolved'"
+                >
+                  未解决
+                </button>
+                <button
+                  type="button"
+                  class="ui-segmented-item"
+                  :class="{ 'is-active': statusFilter === 'solved' }"
+                  :aria-pressed="statusFilter === 'solved'"
+                  @click="statusFilter = 'solved'"
+                >
+                  已解决
+                </button>
               </div>
               <div class="flex items-center gap-2">
                 <select v-model="sortMode" class="problem-sort" aria-label="题目排序">
@@ -330,10 +362,12 @@ onMounted(() => {
           </div>
 
           <!-- 移动端筛选 -->
-          <div class="mb-4 flex flex-wrap gap-2 lg:hidden">
+          <div class="ui-segmented ui-segmented-fill mb-4 lg:hidden" role="group" aria-label="难度与收藏筛选">
             <button
-              class="rounded-md border px-3 py-1 text-xs font-medium transition-colors"
-              :class="difficultyFilter === '' ? 'border-[#2563EB] bg-[#EFF6FF] text-[#2563EB] dark:border-[#60A5FA] dark:bg-[#172554] dark:text-[#60A5FA]' : 'border-[#E2E8F0] text-[#64748B] dark:border-[#334155] dark:text-[#94A3B8]'"
+              type="button"
+              class="ui-segmented-item"
+              :class="{ 'is-active': difficultyFilter === '' }"
+              :aria-pressed="difficultyFilter === ''"
               @click="difficultyFilter = ''"
             >
               全部
@@ -341,24 +375,28 @@ onMounted(() => {
             <button
               v-for="d in ['简单', '中等', '困难']"
               :key="d"
-              class="rounded-md border px-3 py-1 text-xs font-medium transition-colors"
-              :class="difficultyFilter === d ? 'border-[#2563EB] bg-[#EFF6FF] text-[#2563EB] dark:border-[#60A5FA] dark:bg-[#172554] dark:text-[#60A5FA]' : 'border-[#E2E8F0] text-[#64748B] dark:border-[#334155] dark:text-[#94A3B8]'"
+              type="button"
+              class="ui-segmented-item"
+              :class="{ 'is-active': difficultyFilter === d }"
+              :aria-pressed="difficultyFilter === d"
               @click="difficultyFilter = difficultyFilter === d ? '' : (d as any)"
             >
               {{ d }}
             </button>
             <button
-              class="rounded-md border px-3 py-1 text-xs font-medium transition-colors"
-              :class="statusFilter === 'favorite' ? 'border-[#2563EB] bg-[#EFF6FF] text-[#2563EB] dark:border-[#60A5FA] dark:bg-[#172554] dark:text-[#60A5FA]' : 'border-[#E2E8F0] text-[#64748B] dark:border-[#334155] dark:text-[#94A3B8]'"
+              type="button"
+              class="ui-segmented-item"
+              :class="{ 'is-active': statusFilter === 'favorite' }"
+              :aria-pressed="statusFilter === 'favorite'"
               @click="statusFilter = statusFilter === 'favorite' ? '' : 'favorite'"
             >
               收藏
             </button>
           </div>
 
-          <div class="overflow-hidden rounded-md border border-[#E2E8F0] bg-white dark:border-[#1E293B] dark:bg-[#111827]">
+          <div class="overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] dark:border-[var(--color-border)] dark:bg-[var(--color-surface)]">
             <!-- 表头 48px -->
-             <div class="hidden grid-cols-[2.5rem_minmax(0,1fr)_5rem_5rem_5rem] items-center gap-4 border-b border-[#E2E8F0] px-4 text-xs font-medium text-[#64748B] dark:border-[#1E293B] sm:grid" style="height:40px">
+             <div class="hidden grid-cols-[2.5rem_minmax(0,1fr)_5rem_5rem_5rem] items-center gap-4 border-b border-[var(--color-border)] px-4 text-xs font-medium text-[var(--color-muted-foreground)] dark:border-[var(--color-border)] sm:grid" style="height:40px">
               <span>状态</span>
               <span>题目</span>
               <span class="text-center">难度</span>
@@ -372,14 +410,14 @@ onMounted(() => {
 
             <div v-else-if="loadError" class="ui-empty m-4">
               <Icon icon="material-symbols:cloud-off-rounded" class="mb-2 h-10 w-10 text-rose-400" />
-              <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">加载失败</p>
-              <p class="text-sm text-[#64748B] dark:text-[#94A3B8]">{{ loadError }}</p>
+              <p class="font-bold text-[var(--color-foreground)]">加载失败</p>
+              <p class="text-sm text-[var(--color-muted-foreground)]">{{ loadError }}</p>
               <button class="ui-btn ui-btn-primary ui-btn-sm mt-2" @click="loadProblems">重新加载</button>
             </div>
 
             <div v-else-if="filteredProblems.length === 0" class="ui-empty m-4">
-              <Icon icon="material-symbols:search-off" class="mb-2 h-10 w-10 text-[#94A3B8]" />
-              <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">没有找到匹配的题目</p>
+              <Icon icon="material-symbols:search-off" class="mb-2 h-10 w-10 text-[var(--color-muted-foreground)]" />
+              <p class="font-bold text-[var(--color-foreground)]">没有找到匹配的题目</p>
               <button class="ui-btn ui-btn-secondary ui-btn-sm mt-2" @click="resetFilters">清除筛选</button>
             </div>
 
@@ -387,7 +425,7 @@ onMounted(() => {
               <button
                 v-for="p in filteredProblems"
                 :key="p.id"
-                 class="problem-row grid w-full grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-4 px-4 py-2.5 text-left transition-colors hover:bg-[#EFF6FF] dark:hover:bg-[#172554] sm:grid-cols-[2.5rem_minmax(0,1fr)_5rem_5rem_5rem]"
+                 class="problem-row grid w-full grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-4 px-4 py-2.5 text-left transition-colors hover:bg-[var(--color-accent-soft)] sm:grid-cols-[2.5rem_minmax(0,1fr)_5rem_5rem_5rem]"
                 @click="openProblem(p.id)"
               >
                 <span class="flex justify-center">
@@ -401,32 +439,32 @@ onMounted(() => {
                     icon="material-symbols:pending"
                     class="h-5 w-5 text-amber-500"
                   />
-                  <Icon v-else icon="material-symbols:circle" class="h-4 w-4 text-[#CBD5E1] dark:text-[#475569]" />
+                  <Icon v-else icon="material-symbols:circle" class="h-4 w-4 text-[var(--color-foreground)] dark:text-[var(--color-muted-foreground)]" />
                 </span>
                 <span class="min-w-0">
                   <span class="flex items-center gap-2">
-                    <span class="shrink-0 text-xs font-mono text-[#94A3B8]">#{{ p.sourceNumber ?? p.id }}</span>
-                    <span class="truncate font-semibold text-[#1E293B] dark:text-[#E5E7EB]">{{ p.title }}</span>
+                    <span class="shrink-0 text-xs font-mono text-[var(--color-muted-foreground)]">#{{ p.sourceNumber ?? p.id }}</span>
+                    <span class="truncate font-semibold text-[var(--color-foreground)]">{{ p.title }}</span>
                   </span>
                   <span class="mt-1 flex flex-wrap gap-1.5">
                     <span
                       v-for="tag in p.tags.slice(0, 3)"
                       :key="tag"
-                      class="rounded-md bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]"
+                      class="rounded-md bg-[var(--color-muted)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-muted-foreground)] dark:bg-[var(--color-surface-muted)] dark:text-[var(--color-muted-foreground)]"
                     >{{ tag }}</span>
                   </span>
                 </span>
                 <span class="hidden justify-center sm:flex">
                   <span :class="difficultyClass(p.difficulty)">{{ p.difficulty }}</span>
                 </span>
-                <span class="hidden text-center text-sm font-semibold text-[#475569] dark:text-[#CBD5E1] sm:block">
+                <span class="hidden text-center text-sm font-semibold text-[var(--color-muted-foreground)] dark:text-[var(--color-foreground)] sm:block">
                   {{ p.acceptRate != null ? p.acceptRate + '%' : '—' }}
                 </span>
-                <span class="hidden text-center text-sm text-[#94A3B8] sm:block">{{ p.stat.submissions }}</span>
+                <span class="hidden text-center text-sm text-[var(--color-muted-foreground)] sm:block">{{ p.stat.submissions }}</span>
                 <span class="col-span-2 flex justify-end sm:col-span-1">
                   <button
                     class="ui-icon-btn !h-8 !w-8"
-                    :class="isFavorited(p.id) ? 'text-amber-400' : 'text-[#94A3B8]'"
+                    :class="isFavorited(p.id) ? 'text-amber-400' : 'text-[var(--color-muted-foreground)]'"
                     :title="isFavorited(p.id) ? '取消收藏' : '收藏题目'"
                     @click="toggleFavorite(p, $event)"
                   >
@@ -447,52 +485,47 @@ onMounted(() => {
 
 .filter-item {
   @apply flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors;
-  color: #475569;
+  color: var(--color-muted-foreground);
 }
 .problem-filter-card,
 .problem-intro-card {
-  @apply rounded-md border border-[#E2E8F0] bg-white p-4 dark:border-[#1E293B] dark:bg-[#111827];
+  @apply rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-4 dark:border-[var(--color-border)] dark:bg-[var(--color-surface)];
 }
 .problem-intro-card {
   @apply p-5;
 }
 .problem-toolbar {
-  @apply flex flex-col gap-3 border-t border-[#E2E8F0] pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-[#1E293B];
+  @apply flex flex-col gap-3 border-t border-[var(--color-border)] pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-[var(--color-border)];
 }
-.problem-toolbar-tab {
-  @apply inline-flex h-8 items-center justify-center rounded-md border border-[#E2E8F0] bg-white px-3 text-xs font-medium text-[#475569] transition-colors hover:border-[#CBD5E1] hover:bg-[#F8FAFC] dark:border-[#334155] dark:bg-[#111827] dark:text-[#CBD5E1] dark:hover:bg-[#1E293B];
-}
-.problem-toolbar-tab.active {
-  @apply border-[#2563EB] bg-[#2563EB] text-white hover:border-[#1D4ED8] hover:bg-[#1D4ED8] dark:border-[#3B82F6] dark:bg-[#2563EB];
-}
+/* 筛选项样式来自全局 .ui-segmented */
 .problem-sort {
-  @apply h-8 rounded-md border border-[#E2E8F0] bg-white px-2.5 text-xs font-medium text-[#475569] outline-none transition-colors focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/25 dark:border-[#334155] dark:bg-[#111827] dark:text-[#CBD5E1];
+  @apply h-8 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 text-xs font-medium text-[var(--color-muted-foreground)] outline-none transition-colors focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-ring)]/25 dark:border-[var(--color-border-strong)] dark:bg-[var(--color-surface)] dark:text-[var(--color-foreground)];
 }
 html:not(.dark) .filter-item:hover {
-  background: #F1F5F9;
+  background: var(--color-muted);
 }
 .dark .filter-item {
-  color: #CBD5E1;
+  color: var(--color-foreground);
 }
 .dark .filter-item:hover {
-  background: #1E293B;
+  background: var(--color-surface-muted);
 }
 .filter-item.active {
-  background: #EFF6FF;
-  color: #2563EB;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
 }
 .dark .filter-item.active {
-  background: #172554;
-  color: #60A5FA;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
 }
 .filter-scroll::-webkit-scrollbar {
   width: 6px;
 }
 .filter-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--color-muted);
   border-radius: 3px;
 }
 .dark .filter-scroll::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--color-muted);
 }
 </style>

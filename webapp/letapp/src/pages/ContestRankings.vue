@@ -62,7 +62,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[#F6F8FC] dark:bg-[#0F172A]">
+  <div class="min-h-[calc(100vh-var(--header-h,4rem))] bg-[var(--color-background)]">
     <div class="app-container max-w-[1200px] py-6">
       <button class="ui-btn ui-btn-secondary ui-btn-sm mb-4" @click="router.push(`/contests/${contestId}`)">
         ← 返回比赛
@@ -80,7 +80,7 @@ onUnmounted(() => {
             </span>
             <span v-if="contest" class="inline-flex items-center gap-1"><Icon icon="material-symbols:schedule" class="h-4 w-4" />{{ formatTime(contest.start_time) }} ~ {{ formatTime(contest.end_time) }}</span>
             <span v-if="contest?.is_frozen" class="ui-badge ui-badge-amber">已封榜 · 显示封榜前排名</span>
-            <span v-else class="text-[#94A3B8]">每 10 秒自动刷新</span>
+            <span v-else class="text-[var(--color-muted-foreground)]">每 10 秒自动刷新</span>
           </div>
         </div>
       </div>
@@ -93,7 +93,7 @@ onUnmounted(() => {
       <!-- 错误 -->
       <div v-else-if="error" class="ui-empty">
         <Icon icon="material-symbols:error-outline-rounded" class="mb-2 h-12 w-12 text-rose-500" />
-        <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">加载失败</p>
+        <p class="font-bold text-[var(--color-foreground)]">加载失败</p>
         <button class="ui-btn ui-btn-secondary ui-btn-sm mt-2" @click="loadData">重试</button>
       </div>
 
@@ -101,7 +101,7 @@ onUnmounted(() => {
       <div v-else-if="rankings.length" class="ui-card !p-0 overflow-x-auto">
         <table class="w-full border-collapse text-sm">
           <thead>
-            <tr class="border-b border-[#E2E8F0] text-xs font-bold text-[#64748B] dark:border-[#1E293B] dark:text-[#94A3B8]">
+            <tr class="border-b border-[var(--color-border)] text-xs font-bold text-[var(--color-muted-foreground)] dark:border-[var(--color-border)] dark:text-[var(--color-muted-foreground)]">
               <th class="px-4 py-3 text-left font-bold w-16">排名</th>
               <th class="px-4 py-3 text-left font-bold">用户</th>
               <th
@@ -119,19 +119,19 @@ onUnmounted(() => {
             <tr
               v-for="row in rankings"
               :key="row.user_id"
-              class="transition hover:bg-[#EFF6FF] dark:hover:bg-[#172554]"
+              class="transition hover:bg-[var(--color-accent-soft)]"
               :class="row.rank <= 3 ? 'ring-2 ring-inset ring-amber-200 dark:ring-amber-800' : ''"
             >
               <td class="px-4 py-3">
                  <Icon v-if="row.rank <= 3" icon="material-symbols:military-tech" class="h-8 w-8 text-amber-500" />
-                <span v-else class="text-lg font-bold text-[#64748B] dark:text-[#94A3B8]">#{{ row.rank }}</span>
+                <span v-else class="text-lg font-bold text-[var(--color-muted-foreground)]">#{{ row.rank }}</span>
               </td>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
-                  <div class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]">
+                  <div class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent-text)] dark:bg-[var(--color-accent-soft)] dark:text-[var(--color-accent-text)]">
                      <Icon icon="material-symbols:person-rounded" class="h-5 w-5" />
                   </div>
-                  <span class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ row.username }}</span>
+                  <span class="font-bold text-[var(--color-foreground)]">{{ row.username }}</span>
                 </div>
               </td>
               <td
@@ -154,14 +154,14 @@ onUnmounted(() => {
                 >
                   {{ isOI() ? (pr.score > 0 ? pr.score : '✗') : '✗' }}
                 </span>
-                <span v-else class="text-[#CBD5E1] dark:text-[#475569]">—</span>
+                <span v-else class="text-[var(--color-foreground)] dark:text-[var(--color-muted-foreground)]">—</span>
               </td>
               <td class="px-4 py-3 text-center">
-                <span class="text-lg font-bold text-[#2563EB] dark:text-[#60A5FA]">
+                <span class="text-lg font-bold text-[var(--color-accent-text)]">
                   {{ isOI() ? row.score : row.solved_count }}
                 </span>
               </td>
-              <td v-if="!isOI()" class="px-4 py-3 text-center text-[#64748B] dark:text-[#94A3B8]">
+              <td v-if="!isOI()" class="px-4 py-3 text-center text-[var(--color-muted-foreground)]">
                 {{ row.penalty }}
               </td>
             </tr>
@@ -172,8 +172,8 @@ onUnmounted(() => {
       <!-- 空态 -->
       <div v-else class="ui-empty mt-6">
         <Icon icon="material-symbols:leaderboard-rounded" class="mb-2 h-12 w-12 text-slate-400" />
-        <p class="font-bold text-[#1E293B] dark:text-[#E5E7EB]">暂无排名数据</p>
-        <p class="text-sm text-[#64748B] dark:text-[#94A3B8]">参赛并提交代码后即可上榜</p>
+        <p class="font-bold text-[var(--color-foreground)]">暂无排名数据</p>
+        <p class="text-sm text-[var(--color-muted-foreground)]">参赛并提交代码后即可上榜</p>
       </div>
     </div>
   </div>

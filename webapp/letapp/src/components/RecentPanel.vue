@@ -87,35 +87,35 @@ function timeAgo(ts: number): string {
   align-items: center;
   justify-content: space-between;
   padding: 0 4px 12px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 8px;
 }
-:global(html.dark) .recent-header { border-bottom-color: #1e293b; }
+:global(html.dark) .recent-header { border-bottom-color: var(--color-border); }
 .recent-title {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 14px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-foreground);
 }
-:global(html.dark) .recent-title { color: #e5e7eb; }
+:global(html.dark) .recent-title { color: var(--color-foreground); }
 .recent-title-icon {
   width: 18px;
   height: 18px;
-  color: #2563eb;
+  color: var(--color-accent-text);
 }
 .recent-clear {
   background: none;
   border: none;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--color-muted-foreground);
   padding: 4px;
   border-radius: 6px;
   display: flex;
 }
-.recent-clear:hover { color: #ef4444; background: #fef2f2; }
-:global(html.dark) .recent-clear:hover { background: #1e293b; }
+.recent-clear:hover { color: var(--color-danger-text); background: var(--color-danger-soft); }
+:global(html.dark) .recent-clear:hover { background: var(--color-surface-muted); }
 
 .recent-empty {
   display: flex;
@@ -123,22 +123,22 @@ function timeAgo(ts: number): string {
   align-items: center;
   text-align: center;
   padding: 40px 16px;
-  color: #94a3b8;
+  color: var(--color-muted-foreground);
 }
 .recent-empty-icon {
   width: 30px;
   height: 30px;
   margin-bottom: 8px;
-  color: #cbd5e1;
+  color: var(--color-foreground);
 }
-:global(html.dark) .recent-empty-icon { color: #475569; }
+:global(html.dark) .recent-empty-icon { color: var(--color-muted-foreground); }
 .recent-empty p {
   margin: 0;
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-muted-foreground);
   font-weight: 600;
 }
-:global(html.dark) .recent-empty p { color: #94a3b8; }
+:global(html.dark) .recent-empty p { color: var(--color-muted-foreground); }
 .recent-empty span {
   font-size: 11px;
   margin-top: 4px;
@@ -161,15 +161,15 @@ function timeAgo(ts: number): string {
   cursor: pointer;
   transition: background 0.13s;
 }
-.recent-item:hover { background: #f1f5f9; }
-:global(html.dark) .recent-item:hover { background: #1e293b; }
+.recent-item:hover { background: var(--color-muted); }
+:global(html.dark) .recent-item:hover { background: var(--color-surface-muted); }
 .recent-item-icon {
   width: 18px;
   height: 18px;
-  color: #2563eb;
+  color: var(--color-accent-text);
   flex-shrink: 0;
 }
-:global(html.dark) .recent-item-icon { color: #60a5fa; }
+:global(html.dark) .recent-item-icon { color: var(--color-accent-text); }
 .recent-item-body {
   flex: 1;
   min-width: 0;
@@ -179,16 +179,16 @@ function timeAgo(ts: number): string {
 }
 .recent-item-title {
   font-size: 13px;
-  color: #334155;
+  color: var(--color-foreground);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-:global(html.dark) .recent-item-title { color: #cbd5e1; }
+:global(html.dark) .recent-item-title { color: var(--color-foreground); }
 .recent-item-meta {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--color-muted-foreground);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -196,7 +196,7 @@ function timeAgo(ts: number): string {
 .recent-item-arrow {
   width: 16px;
   height: 16px;
-  color: #cbd5e1;
+  color: var(--color-foreground);
   flex-shrink: 0;
   opacity: 0;
   transition: opacity 0.13s;

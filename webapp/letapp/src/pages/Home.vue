@@ -11,57 +11,25 @@ const terminalRef = ref<HTMLElement | null>(null);
 const currentLanguage = ref("cpp");
 
 const languages = markRaw([
-  {
-    name: "JavaScript",
-    value: "javascript",
-    icon: "vscode-icons:file-type-js-official",
-  },
-  {
-    name: "Python",
-    value: "python",
-    icon: "vscode-icons:file-type-python",
-  },
-  {
-    name: "Java",
-    value: "java",
-    icon: "vscode-icons:file-type-java",
-  },
-  {
-    name: "C++",
-    value: "cpp",
-    icon: "vscode-icons:file-type-cpp",
-  },
-  {
-    name: "Go",
-    value: "go",
-    icon: "vscode-icons:file-type-go",
-  },
-  {
-    name: "Rust",
-    value: "rust",
-    icon: "vscode-icons:file-type-rust",
-  },
-  {
-    name: "Swift",
-    value: "swift",
-    icon: "vscode-icons:file-type-swift",
-  },
-  {
-    name: "Kotlin",
-    value: "kotlin",
-    icon: "vscode-icons:file-type-kotlin",
-  },
+  { name: "JavaScript", value: "javascript", icon: "vscode-icons:file-type-js-official" },
+  { name: "Python", value: "python", icon: "vscode-icons:file-type-python" },
+  { name: "Java", value: "java", icon: "vscode-icons:file-type-java" },
+  { name: "C++", value: "cpp", icon: "vscode-icons:file-type-cpp" },
+  { name: "Go", value: "go", icon: "vscode-icons:file-type-go" },
+  { name: "Rust", value: "rust", icon: "vscode-icons:file-type-rust" },
+  { name: "Swift", value: "swift", icon: "vscode-icons:file-type-swift" },
+  { name: "Kotlin", value: "kotlin", icon: "vscode-icons:file-type-kotlin" },
 ]);
 
 const codeSamples: Record<string, string> = {
-  cpp: `<span class="code-directive">#include</span> <span class="code-muted">&lt;iostream&gt;</span>\n\n<span class="code-type">int</span> <span class="code-function">main</span>() {\n  <span class="code-object">std::cout</span> <span class="code-muted">&lt;&lt;</span> <span class="code-string">"Hello, Let Coding!"</span> <span class="code-muted">&lt;&lt;</span> <span class="code-string">'\\n'</span>;\n  <span class="code-keyword">return</span> <span class="code-number">0</span>;\n}`,
-  python: `<span class="code-keyword">print</span>(<span class="code-string">"Hello, Let Coding!"</span>)`,
-  javascript: `<span class="code-object">console</span>.<span class="code-function">log</span>(<span class="code-string">"Hello, Let Coding!"</span>);`,
-  java: `<span class="code-keyword">public</span> <span class="code-type">class</span> <span class="code-function">Main</span> {\n  <span class="code-keyword">public</span> <span class="code-type">static void</span> <span class="code-function">main</span>(<span class="code-object">String</span>[] args) {\n    <span class="code-object">System.out</span>.<span class="code-function">println</span>(<span class="code-string">"Hello, Let Coding!"</span>);\n  }\n}`,
-  go: `<span class="code-keyword">package</span> <span class="code-function">main</span>\n<span class="code-keyword">import</span> <span class="code-string">"fmt"</span>\n\n<span class="code-type">func</span> <span class="code-function">main</span>() {\n  <span class="code-object">fmt</span>.<span class="code-function">Println</span>(<span class="code-string">"Hello, Let Coding!"</span>)\n}`,
-  rust: `<span class="code-type">fn</span> <span class="code-function">main</span>() {\n  <span class="code-object">println!</span>(<span class="code-string">"Hello, Let Coding!"</span>);\n}`,
-  swift: `<span class="code-keyword">print</span>(<span class="code-string">"Hello, Let Coding!"</span>)`,
-  kotlin: `<span class="code-type">fun</span> <span class="code-function">main</span>() {\n  <span class="code-object">println</span>(<span class="code-string">"Hello, Let Coding!"</span>)\n}`,
+  cpp: `<span class="tok-directive">#include</span> <span class="tok-muted">&lt;iostream&gt;</span>\n\n<span class="tok-type">int</span> <span class="tok-function">main</span>() {\n  <span class="tok-object">std::cout</span> <span class="tok-muted">&lt;&lt;</span> <span class="tok-string">"Hello, Let Coding!"</span> <span class="tok-muted">&lt;&lt;</span> <span class="tok-string">'\\n'</span>;\n  <span class="tok-keyword">return</span> <span class="tok-number">0</span>;\n}`,
+  python: `<span class="tok-keyword">print</span>(<span class="tok-string">"Hello, Let Coding!"</span>)`,
+  javascript: `<span class="tok-object">console</span>.<span class="tok-function">log</span>(<span class="tok-string">"Hello, Let Coding!"</span>);`,
+  java: `<span class="tok-keyword">public</span> <span class="tok-type">class</span> <span class="tok-function">Main</span> {\n  <span class="tok-keyword">public</span> <span class="tok-type">static void</span> <span class="tok-function">main</span>(<span class="tok-object">String</span>[] args) {\n    <span class="tok-object">System.out</span>.<span class="tok-function">println</span>(<span class="tok-string">"Hello, Let Coding!"</span>);\n  }\n}`,
+  go: `<span class="tok-keyword">package</span> <span class="tok-function">main</span>\n<span class="tok-keyword">import</span> <span class="tok-string">"fmt"</span>\n\n<span class="tok-type">func</span> <span class="tok-function">main</span>() {\n  <span class="tok-object">fmt</span>.<span class="tok-function">Println</span>(<span class="tok-string">"Hello, Let Coding!"</span>)\n}`,
+  rust: `<span class="tok-type">fn</span> <span class="tok-function">main</span>() {\n  <span class="tok-object">println!</span>(<span class="tok-string">"Hello, Let Coding!"</span>);\n}`,
+  swift: `<span class="tok-keyword">print</span>(<span class="tok-string">"Hello, Let Coding!"</span>)`,
+  kotlin: `<span class="tok-type">fun</span> <span class="tok-function">main</span>() {\n  <span class="tok-object">println</span>(<span class="tok-string">"Hello, Let Coding!"</span>)\n}`,
 };
 
 const extMap: Record<string, string> = {
@@ -146,11 +114,39 @@ const difficultyRows = computed(() => {
   const { easy, mid, hard } = difficultyDist.value;
   const total = easy + mid + hard || 1;
   return [
-    { key: "easy", label: "简单", value: easy, pct: Math.round((easy / total) * 100), textClass: "text-emerald-600 dark:text-emerald-400", barClass: "bg-emerald-500" },
-    { key: "mid", label: "中等", value: mid, pct: Math.round((mid / total) * 100), textClass: "text-amber-600 dark:text-amber-400", barClass: "bg-amber-500" },
-    { key: "hard", label: "困难", value: hard, pct: Math.round((hard / total) * 100), textClass: "text-rose-600 dark:text-rose-400", barClass: "bg-rose-500" },
+    {
+      key: "easy",
+      label: "简单",
+      value: easy,
+      pct: Math.round((easy / total) * 100),
+      badgeClass: "ui-diff-easy",
+      barColor: "var(--color-signal)",
+    },
+    {
+      key: "mid",
+      label: "中等",
+      value: mid,
+      pct: Math.round((mid / total) * 100),
+      badgeClass: "ui-diff-mid",
+      barColor: "var(--color-warning)",
+    },
+    {
+      key: "hard",
+      label: "困难",
+      value: hard,
+      pct: Math.round((hard / total) * 100),
+      badgeClass: "ui-diff-hard",
+      barColor: "var(--color-danger)",
+    },
   ];
 });
+
+const metrics = computed(() => [
+  { key: "solved", label: "已解决", value: solvedCount.value, icon: "material-symbols:check-circle-rounded" },
+  { key: "submissions", label: "提交总数", value: submissionTotal.value, icon: "material-symbols:history-rounded" },
+  { key: "favorites", label: "收藏", value: favoriteCount.value, icon: "material-symbols:star-rounded" },
+  { key: "problems", label: "题库题量", value: totalProblems.value, icon: "material-symbols:library-books-rounded" },
+]);
 
 const loadDashboard = async () => {
   dashboardLoading.value = true;
@@ -213,41 +209,37 @@ onMounted(loadDashboard);
 </script>
 
 <template>
-  <main class="home-shell">
-    <section class="hero-section">
-      <div class="hero-grid" aria-hidden="true"></div>
-      <div class="hero-layout">
+  <div class="home">
+    <!-- ============ Hero ============ -->
+    <section class="hero">
+      <div class="app-container hero-layout">
         <div class="hero-copy">
-          <span class="code-mark mark-tag" aria-hidden="true">&lt;/&gt;</span>
-          <span class="code-mark mark-brace" aria-hidden="true">{ }</span>
-          <span class="code-mark mark-comment" aria-hidden="true">//</span>
-          <span class="hero-label intro intro-label">
-            <span class="status-dot"></span>
+          <p class="hero-eyebrow">
+            <span class="hero-dot" aria-hidden="true"></span>
             Let Coding · 在线评测
-          </span>
-
-          <h1 class="hero-title">
-            <span class="title-line intro intro-title-one">写代码</span>
-            <span class="title-line title-accent intro intro-title-two">更加顺手</span>
-          </h1>
-
-          <p class="hero-desc intro intro-desc">
-            在线编写、运行和提交代码，支持多语言判题。
           </p>
 
-          <div class="hero-actions intro intro-actions">
+          <h1 class="hero-title">写代码，更加顺手</h1>
+
+          <p class="hero-desc">
+            在线编写、运行和提交代码，支持多语言判题与实时反馈。
+          </p>
+
+          <div class="hero-actions">
             <button
-              class="hero-button hero-primary"
+              type="button"
+              class="ui-btn ui-btn-primary ui-btn-lg hero-cta"
               @click="router.push('/playground')"
             >
-              <Icon icon="material-symbols:play-arrow" />
+              <Icon icon="material-symbols:play-arrow-rounded" class="h-5 w-5" aria-hidden="true" />
               <span>进入在线编辑器</span>
             </button>
             <button
-              class="hero-button hero-secondary"
+              type="button"
+              class="ui-btn ui-btn-secondary ui-btn-lg hero-cta"
               @click="router.push('/learn')"
             >
-              <Icon icon="material-symbols:school" />
+              <Icon icon="material-symbols:school-rounded" class="h-5 w-5" aria-hidden="true" />
               <span>查看学习资源</span>
             </button>
           </div>
@@ -255,7 +247,7 @@ onMounted(loadDashboard);
 
         <div
           ref="terminalRef"
-          class="terminal-stage intro intro-terminal"
+          class="terminal"
           role="link"
           tabindex="0"
           aria-label="进入在线编辑器"
@@ -264,68 +256,69 @@ onMounted(loadDashboard);
         >
           <div class="terminal-frame">
             <div class="terminal-toolbar">
-              <div class="window-controls" aria-hidden="true">
+              <div class="terminal-dots" aria-hidden="true">
                 <span></span><span></span><span></span>
               </div>
-              <div class="file-path">playground/main.{{ currentFileExt }}</div>
+              <div class="terminal-path">playground/main.{{ currentFileExt }}</div>
               <Icon
                 icon="material-symbols:terminal-rounded"
-                class="toolbar-icon"
+                class="terminal-toolbar-icon"
+                aria-hidden="true"
               />
             </div>
 
             <div class="terminal-workspace">
-              <section class="code-panel">
-                <div class="panel-heading">
-                  <span><Icon icon="material-symbols:code" />Sample Code</span>
-                </div>
+              <section class="terminal-code">
+                <h2 class="panel-heading">
+                  <Icon icon="material-symbols:code-rounded" aria-hidden="true" />
+                  Sample Code
+                </h2>
                 <div class="editor-body">
-                  <div class="active-line" aria-hidden="true"></div>
-                  <div class="line-numbers" aria-hidden="true">
+                  <div class="editor-active-line" aria-hidden="true"></div>
+                  <div class="editor-gutter" aria-hidden="true">
                     <span v-for="line in 7" :key="line">{{ line }}</span>
                   </div>
                   <pre><code v-html="currentCode"></code></pre>
                 </div>
               </section>
 
-              <aside class="terminal-side">
-                <section class="result-panel">
-                  <div class="panel-heading">
-                    <span>运行结果</span>
-                  </div>
-                  <div class="judge-timeline">
-                    <div class="judge-status status-compiling">
-                      <span></span>Compiling
-                    </div>
-                    <div class="judge-status status-running">
-                      <span></span>Running
-                    </div>
-                    <div class="judge-status status-accepted">
-                      <Icon
-                        icon="material-symbols:check-circle-rounded"
-                      />Accepted
-                    </div>
-                  </div>
-                  <div class="preview-output">Hello, Let Coding!</div>
-                </section>
-              </aside>
+              <section class="terminal-result">
+                <h2 class="panel-heading">运行结果</h2>
+                <ol class="judge-timeline">
+                  <li class="judge-step is-compiling">
+                    <Icon icon="material-symbols:build-rounded" aria-hidden="true" />
+                    <span>Compiling</span>
+                  </li>
+                  <li class="judge-step is-running">
+                    <Icon icon="material-symbols:play-arrow-rounded" aria-hidden="true" />
+                    <span>Running</span>
+                  </li>
+                  <li class="judge-step is-accepted">
+                    <Icon icon="material-symbols:check-circle-rounded" aria-hidden="true" />
+                    <span>Accepted</span>
+                  </li>
+                </ol>
+                <p class="judge-output">
+                  <span class="judge-output-label">stdout</span>
+                  <span class="judge-output-value">Hello, Let Coding!</span>
+                </p>
+              </section>
             </div>
 
             <section class="language-panel">
-              <div class="panel-heading">
-                <span>支持语言</span>
-              </div>
+              <h2 class="panel-heading">支持语言</h2>
               <div class="language-grid">
                 <button
                   v-for="language in languages"
                   :key="language.value"
                   type="button"
                   class="language-button"
-                  :class="{ active: currentLanguage === language.value }"
+                  :class="{ 'is-active': currentLanguage === language.value }"
                   :aria-label="language.name"
+                  :aria-pressed="currentLanguage === language.value"
                   @click.stop="selectLanguage(language)"
                 >
-                  <Icon :icon="language.icon" />
+                  <Icon :icon="language.icon" aria-hidden="true" />
                 </button>
               </div>
             </section>
@@ -334,916 +327,816 @@ onMounted(loadDashboard);
       </div>
     </section>
 
-    <section class="home-dashboard border-t border-[#E2E8F0] py-6 dark:border-[#1E293B]">
+    <!-- ============ Dashboard ============ -->
+    <section class="dashboard" v-if="authStore.isAuthenticated">
       <div class="app-container">
-        <div class="ui-card mb-4 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex items-center gap-3">
-            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-[#2563EB] dark:bg-[#172554] dark:text-[#60A5FA]"><Icon icon="material-symbols:menu-book-rounded" class="h-5 w-5" /></span>
-            <div>
-              <h2 class="ui-section-title leading-tight">{{ authStore.isAuthenticated ? (authStore.displayName || '同学') : '登录后开始刷题' }}</h2>
-              <p class="text-xs text-[#64748B] dark:text-[#94A3B8]">{{ authStore.isAuthenticated ? '查看最近提交与学习进度' : '同步提交记录、收藏与学习进度' }}</p>
+        <div class="ui-panel dash-panel">
+          <!-- 行动条 -->
+          <div class="dash-action">
+            <div class="dash-action-identity">
+              <Icon
+                :icon="
+                  authStore.isAuthenticated
+                    ? 'material-symbols:account-circle-rounded'
+                    : 'material-symbols:login-rounded'
+                "
+                class="dash-action-icon"
+                aria-hidden="true"
+              />
+              <div class="dash-action-text">
+                <h2 class="ui-section-title">
+                  {{
+                    authStore.isAuthenticated
+                      ? authStore.displayName || "同学"
+                      : "登录后开始刷题"
+                  }}
+                </h2>
+                <p class="ui-section-sub">
+                  {{
+                    authStore.isAuthenticated
+                      ? "查看最近提交与学习进度"
+                      : "同步提交记录、收藏与学习进度"
+                  }}
+                </p>
+              </div>
             </div>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <router-link to="/problems" class="hero-dash-btn hero-dash-primary !px-3 !py-2 text-xs">
-              <Icon icon="material-symbols:play-arrow-rounded" class="h-4 w-4" />
-              开始刷题
-            </router-link>
-            <router-link to="/playground" class="hero-dash-btn hero-dash-secondary !px-3 !py-2 text-xs">
-              <Icon icon="material-symbols:code-rounded" class="h-4 w-4" />
-              打开编辑器
-            </router-link>
-            <router-link to="/contests" class="hero-dash-btn hero-dash-outline !px-3 !py-2 text-xs">
-              <Icon icon="material-symbols:trophy-rounded" class="h-4 w-4" />
-              查看比赛
-            </router-link>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div class="ui-card flex items-center gap-2.5 p-3">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#F1F5F9] text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]"><Icon icon="material-symbols:check-circle-rounded" class="h-4 w-4" /></span>
-            <div class="min-w-0">
-              <p class="truncate text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">已解决</p>
-              <p class="text-xl font-bold leading-tight">{{ dashboardLoading ? '—' : solvedCount }}</p>
-            </div>
-          </div>
-          <div class="ui-card flex items-center gap-2.5 p-3">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#F1F5F9] text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]"><Icon icon="material-symbols:history-rounded" class="h-4 w-4" /></span>
-            <div class="min-w-0">
-              <p class="truncate text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">提交总数</p>
-              <p class="text-xl font-bold leading-tight">{{ dashboardLoading ? '—' : submissionTotal }}</p>
-            </div>
-          </div>
-          <div class="ui-card flex items-center gap-2.5 p-3">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#F1F5F9] text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]"><Icon icon="material-symbols:star-rounded" class="h-4 w-4" /></span>
-            <div class="min-w-0">
-              <p class="truncate text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">收藏</p>
-              <p class="text-xl font-bold leading-tight">{{ dashboardLoading ? '—' : favoriteCount }}</p>
-            </div>
-          </div>
-          <div class="ui-card flex items-center gap-2.5 p-3">
-            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#F1F5F9] text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]"><Icon icon="material-symbols:library-books-rounded" class="h-4 w-4" /></span>
-            <div class="min-w-0">
-              <p class="truncate text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">题库题量</p>
-              <p class="text-xl font-bold leading-tight">{{ dashboardLoading ? '—' : totalProblems }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-4 grid gap-4 lg:grid-cols-2">
-          <div class="ui-card p-4">
-            <div class="mb-3 flex items-center justify-between">
-              <h3 class="ui-section-title">继续学习</h3>
-              <router-link to="/problems" class="text-xs font-medium text-[#2563EB] dark:text-[#60A5FA]">全部题目</router-link>
-            </div>
-            <div v-if="dashboardLoading" class="space-y-1.5">
-              <div v-for="i in 6" :key="i" class="ui-skeleton h-9 rounded-lg"></div>
-            </div>
-            <div v-else-if="recentProblems.length" class="space-y-1">
-              <router-link
-                v-for="p in recentProblems"
-                :key="p.id"
-                :to="`/problems/${p.id}`"
-                class="flex items-center gap-2.5 rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-sm transition-colors hover:border-[#CBD5E1] hover:bg-[#F8FAFC] dark:border-[#1E293B] dark:hover:border-[#334155] dark:hover:bg-[#172554]"
-              >
-                <span class="min-w-0 flex-1 truncate font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ p.title }}</span>
-                <span v-if="p.difficulty" class="ui-diff text-[11px]" :class="p.difficulty === '简单' ? 'ui-diff-easy' : p.difficulty === '中等' ? 'ui-diff-mid' : 'ui-diff-hard'">{{ p.difficulty }}</span>
-                <span class="shrink-0 text-[11px] text-[#64748B] dark:text-[#94A3B8]">通过率 {{ formatRate(p.accepted_count, p.submission_count) }}</span>
+            <div class="dash-action-buttons">
+              <router-link to="/problems" class="ui-btn ui-btn-primary ui-btn-sm">
+                <Icon icon="material-symbols:play-arrow-rounded" class="h-4 w-4" aria-hidden="true" />
+                开始刷题
+              </router-link>
+              <router-link to="/playground" class="ui-btn ui-btn-secondary ui-btn-sm">
+                <Icon icon="material-symbols:code-rounded" class="h-4 w-4" aria-hidden="true" />
+                打开编辑器
+              </router-link>
+              <router-link to="/contests" class="ui-btn ui-btn-ghost ui-btn-sm">
+                <Icon icon="material-symbols:trophy-rounded" class="h-4 w-4" aria-hidden="true" />
+                查看比赛
               </router-link>
             </div>
-            <p v-else class="ui-empty">暂无题目</p>
           </div>
 
-          <div class="ui-card p-4">
-            <div class="mb-3 flex items-center justify-between">
-              <h3 class="ui-section-title">最近活动</h3>
-              <router-link to="/submissions" class="text-xs font-medium text-[#2563EB] dark:text-[#60A5FA]">全部记录</router-link>
-            </div>
-            <div v-if="dashboardLoading" class="space-y-1.5">
-              <div v-for="i in 6" :key="i" class="ui-skeleton h-9 rounded-lg"></div>
-            </div>
-            <div v-else-if="recentSubmissions.length" class="space-y-1">
-              <button
-                v-for="s in recentSubmissions"
-                :key="s.id"
-                type="button"
-                class="flex w-full items-center gap-2.5 rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-left text-sm transition-colors hover:border-[#CBD5E1] hover:bg-[#F8FAFC] dark:border-[#1E293B] dark:hover:border-[#334155] dark:hover:bg-[#172554]"
-                @click="goProblem(s.problem_id)"
-              >
-                <span class="ui-badge text-[11px]" :class="statusClass(s.status)">{{ statusLabel(s.status) }}</span>
-                <span class="min-w-0 flex-1 truncate font-bold text-[#1E293B] dark:text-[#E5E7EB]">{{ s.problem_title }}</span>
-                <span class="shrink-0 text-[11px] text-[#64748B] dark:text-[#94A3B8]">{{ formatDateShort(s.created_at) }}</span>
-              </button>
-            </div>
-            <p v-else class="ui-empty">暂无提交记录</p>
-          </div>
-        </div>
+          <hr class="ui-divider" />
 
-        <div class="ui-card mt-4 p-4">
-          <h3 class="ui-section-title mb-3">题库难度分布</h3>
-          <div class="grid gap-3 sm:grid-cols-3">
-            <div v-for="item in difficultyRows" :key="item.key" class="rounded-lg border border-[#E2E8F0] p-3 dark:border-[#1E293B]">
-              <div class="flex items-center justify-between text-xs font-bold">
-                <span :class="item.textClass">{{ item.label }}</span>
-                <span class="text-[#64748B] dark:text-[#94A3B8]">{{ item.value }} 题</span>
-              </div>
-              <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#E2E8F0] dark:bg-[#1E293B]">
-                <div class="h-full rounded-full" :class="item.barClass" :style="{ width: item.pct + '%' }"></div>
-              </div>
+          <!-- 指标横排 -->
+          <dl class="dash-metrics">
+            <div v-for="metric in metrics" :key="metric.key" class="dash-metric">
+              <dt class="dash-metric-label">
+                <Icon :icon="metric.icon" class="h-4 w-4" aria-hidden="true" />
+                {{ metric.label }}
+              </dt>
+              <dd class="dash-metric-value">
+                <span v-if="dashboardLoading" class="ui-skeleton dash-metric-skeleton"></span>
+                <template v-else>{{ metric.value }}</template>
+              </dd>
             </div>
+          </dl>
+
+          <hr class="ui-divider" />
+
+          <!-- 两列活动 -->
+          <div class="dash-lists">
+            <section class="dash-list">
+              <header class="dash-list-head">
+                <h3 class="ui-section-title">继续学习</h3>
+                <router-link to="/problems" class="ui-link text-xs">全部题目</router-link>
+              </header>
+              <div v-if="dashboardLoading" class="dash-list-skeleton">
+                <span v-for="i in 5" :key="i" class="ui-skeleton h-11"></span>
+              </div>
+              <ul v-else-if="recentProblems.length" class="dash-rows">
+                <li v-for="p in recentProblems" :key="p.id">
+                  <router-link :to="`/problems/${p.id}`" class="dash-row">
+                    <span class="dash-row-title">{{ p.title }}</span>
+                    <span
+                      v-if="p.difficulty"
+                      class="ui-diff"
+                      :class="
+                        p.difficulty === '简单'
+                          ? 'ui-diff-easy'
+                          : p.difficulty === '中等'
+                            ? 'ui-diff-mid'
+                            : 'ui-diff-hard'
+                      "
+                      >{{ p.difficulty }}</span
+                    >
+                    <span class="dash-row-meta">
+                      通过率 {{ formatRate(p.accepted_count, p.submission_count) }}
+                    </span>
+                  </router-link>
+                </li>
+              </ul>
+              <p v-else class="ui-empty">暂无题目</p>
+            </section>
+
+            <section class="dash-list">
+              <header class="dash-list-head">
+                <h3 class="ui-section-title">最近活动</h3>
+                <router-link to="/submissions" class="ui-link text-xs">全部记录</router-link>
+              </header>
+              <div v-if="dashboardLoading" class="dash-list-skeleton">
+                <span v-for="i in 5" :key="i" class="ui-skeleton h-11"></span>
+              </div>
+              <ul v-else-if="recentSubmissions.length" class="dash-rows">
+                <li v-for="s in recentSubmissions" :key="s.id">
+                  <button type="button" class="dash-row" @click="goProblem(s.problem_id)">
+                    <span class="ui-badge" :class="statusClass(s.status)">{{
+                      statusLabel(s.status)
+                    }}</span>
+                    <span class="dash-row-title">{{ s.problem_title }}</span>
+                    <span class="dash-row-meta">{{ formatDateShort(s.created_at) }}</span>
+                  </button>
+                </li>
+              </ul>
+              <p v-else class="ui-empty">暂无提交记录</p>
+            </section>
           </div>
+
+          <hr class="ui-divider" />
+
+          <!-- 难度分布 -->
+          <section class="dash-difficulty">
+            <h3 class="ui-section-title">题库难度分布</h3>
+            <ul class="difficulty-list">
+              <li v-for="item in difficultyRows" :key="item.key" class="difficulty-row">
+                <span class="ui-diff" :class="item.badgeClass">{{ item.label }}</span>
+                <div
+                  class="difficulty-bar"
+                  role="img"
+                  :aria-label="`${item.label} ${item.value} 题，占比 ${item.pct}%`"
+                >
+                  <span
+                    class="difficulty-bar-fill"
+                    :style="{ width: item.pct + '%', background: item.barColor }"
+                  ></span>
+                </div>
+                <span class="difficulty-value">{{ item.value }} 题</span>
+              </li>
+            </ul>
+          </section>
         </div>
       </div>
     </section>
-
-  </main>
+  </div>
 </template>
 
 <style scoped>
-.home-shell {
-  overflow: hidden;
-  background: #eef2f5;
-  color: #111827;
+@reference "tailwindcss";
+
+.home {
+  background: var(--color-background);
+  color: var(--color-foreground);
 }
-.hero-dash-btn {
-  display: inline-flex;
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-  cursor: pointer;
+  min-height: min(calc(100svh - var(--header-h, 4rem)), 52rem);
+  padding-block: clamp(2.5rem, 6vw, 5rem);
 }
-.hero-dash-primary {
-  background: #2563EB;
-  color: #fff;
-}
-.hero-dash-primary:hover {
-  background: #1D4ED8;
-}
-.hero-dash-secondary {
-  background: #EFF6FF;
-  color: #2563EB;
-  border: 1px solid #BFDBFE;
-}
-.hero-dash-secondary:hover {
-  background: #DBEAFE;
-  border-color: #93C5FD;
-}
-.hero-dash-outline {
-  background: transparent;
-  color: #475569;
-  border: 1px solid #CBD5E1;
-}
-.hero-dash-outline:hover {
-  background: #F8FAFC;
-  border-color: #94A3B8;
-  color: #1E293B;
-}
-.dark .hero-dash-secondary {
-  background: #172554;
-  color: #60A5FA;
-  border-color: #1E3A5F;
-}
-.dark .hero-dash-secondary:hover {
-  background: #1E3A5F;
-  border-color: #2563EB;
-}
-.dark .hero-dash-outline {
-  color: #94A3B8;
-  border-color: #334155;
-}
-.dark .hero-dash-outline:hover {
-  background: #1E293B;
-  border-color: #475569;
-  color: #E5E7EB;
-}
-.hero-section {
-  position: relative;
-  min-height: calc(100svh - var(--header-h, 5rem));
-  border-bottom: 1px solid #cbd5e1;
-  background: #f3f6f8;
-  overflow: hidden;
-}
-.hero-grid {
-  position: absolute;
-  inset: 0;
-  opacity: 0.4;
-  background-image:
-    linear-gradient(rgba(71, 85, 105, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(71, 85, 105, 0.08) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
-}
+
 .hero-layout {
-  position: relative;
-  z-index: 1;
   display: grid;
-  width: min(100% - 2rem, 82rem);
-  min-height: calc(100svh - var(--header-h, 5rem));
-  margin: auto;
   align-items: center;
-  gap: clamp(2rem, 5vw, 5rem);
-  padding: 3.5rem 0;
+  gap: clamp(2rem, 5vw, 4.5rem);
 }
+
 .hero-copy {
-  position: relative;
   min-width: 0;
 }
-.hero-label,
-.hero-title,
-.hero-desc,
-.hero-actions {
-  position: relative;
-  z-index: 1;
-}
-.code-mark {
-  position: absolute;
-  pointer-events: none;
-  user-select: none;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-.mark-tag {
-  top: -1.5rem;
-  left: 0.1rem;
-  z-index: 5;
-  font-size: 0.9rem;
-  color: #0891b2;
-  opacity: 0.45;
-}
-.mark-brace {
-  top: 5%;
-  right: -3rem;
-  z-index: 0;
-  font-size: 6rem;
-  line-height: 1;
-  color: #9fb4c4;
-  opacity: 0.06;
-}
-.mark-comment {
-  right: 0.5rem;
-  bottom: 0.6rem;
-  z-index: 5;
-  font-size: 0.8rem;
-  color: #5b6b7a;
-  opacity: 0.4;
-}
-.hero-label {
+
+.hero-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  border: 1px solid #aebac5;
-  background: rgba(248, 250, 252, 0.82);
-  padding: 0.55rem 0.8rem;
-  color: #0e7490;
-  font-size: 0.7rem;
-  font-weight: 600;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--color-muted-foreground);
 }
-.status-dot {
-  width: 0.45rem;
-  height: 0.45rem;
-  background: #06b6d4;
-  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12);
+.hero-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-signal);
 }
+
 .hero-title {
-  margin: 1.5rem 0 0;
-  font-size: clamp(2.8rem, 7vw, 6.4rem);
+  margin: 1.25rem 0 0;
+  font-size: clamp(2.25rem, 5.2vw, 3.75rem);
   font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: 0;
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+  color: var(--color-foreground);
+  text-wrap: balance;
 }
-.title-line {
-  display: block;
+
+.hero-desc {
+  margin: 1.125rem 0 0;
+  max-width: 34rem;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--color-muted-foreground);
 }
-.title-accent {
-  position: relative;
-  width: fit-content;
-  margin-top: 0.85rem;
-  padding-block: 0.35rem;
-  font-size: 1.06em;
-  line-height: 1.28;
-  color: #0e7490;
-}
-.dark .title-accent {
-  color: #67e8f9;
-}
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.8rem;
+  margin-top: 2rem;
 }
-.hero-desc {
-  margin: 0.9rem 0 0;
-  max-width: 32rem;
-  color: #5b6b7a;
-  font-size: 1.05rem;
-  font-weight: 500;
-  line-height: 1.6;
+.hero-cta {
+  @apply min-w-[10.5rem];
 }
-.hero-button {
-  display: inline-flex;
-  min-height: 3rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  border: 1px solid #9aa9b6;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-.hero-button:hover {
-  border-color: #64748b;
-  color: #0f172a;
-}
-.hero-button svg {
-  width: 1.2rem;
-  height: 1.2rem;
-}
-.hero-primary {
-  border-color: #0e7490;
-  background: #0e7490;
-  color: white;
-}
-.hero-primary:hover {
-  border-color: #155e75;
-  background: #155e75;
-  color: #ffffff;
-}
-.hero-secondary {
-  background: rgba(248, 250, 252, 0.8);
-  color: #334155;
-}
-.hero-secondary:hover {
-  background: #eef2f5;
-}
-.terminal-stage {
-  position: relative;
-  isolation: isolate;
+
+/* ============================================================
+   终端：首页唯一重点视觉（固定深色表面）
+   ============================================================ */
+.terminal {
   min-width: 0;
   cursor: pointer;
   outline: none;
 }
-.terminal-stage::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  border: 1px solid #52616d;
-  border-radius: 0.85rem;
-  transform: translate(8px, 8px);
-  pointer-events: none;
+.terminal:focus-visible .terminal-frame {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 3px;
 }
-.terminal-stage:focus-visible .terminal-frame {
-  border-color: #22d3ee;
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
-}
+
 .terminal-frame {
-  position: relative;
+  /* 终端是固定深色表面，其调色板独立于页面主题（深色主题下自动抬升一档） */
+  --t-bg: var(--color-term-bg);
+  --t-surface: var(--color-term-surface);
+  --t-line: var(--color-term-line);
+  --t-line-soft: var(--color-term-line-soft);
+  --t-muted: var(--color-term-muted);
+  --t-accent: var(--color-term-accent);
+  --t-ok: #4ade80;
+  --t-warn: #efc463;
+
   overflow: hidden;
-  border: 1px solid #8393a1;
-  border-radius: 0.75rem;
-  background: #111820;
-  box-shadow: 0 8px 24px rgba(2, 8, 12, 0.18);
+  border: 1px solid var(--t-line);
+  border-radius: var(--radius-tool);
+  background: var(--t-bg);
+  box-shadow: var(--shadow-tool);
 }
-.terminal-frame::before {
-  content: "";
-  position: absolute;
-  z-index: 4;
-  inset: 0;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: inherit;
-  pointer-events: none;
-}
+
 .terminal-toolbar {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  min-height: 3.1rem;
-  border-bottom: 1px solid #34414c;
-  background: #1b252e;
+  min-height: 2.75rem;
+  border-bottom: 1px solid var(--t-line);
+  background: var(--t-surface);
   padding: 0 1rem;
 }
-.window-controls {
+.terminal-dots {
   display: flex;
-  gap: 0.45rem;
+  gap: 0.4rem;
 }
-.window-controls span {
-  width: 0.55rem;
-  height: 0.55rem;
-  border: 1px solid #61717f;
-  background: #26343f;
+.terminal-dots span {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 999px;
+  background: #2b3946;
 }
-.window-controls span:nth-child(2) {
-  border-color: #b78b2e;
-  background: #d3a63f;
+.terminal-dots span:first-child {
+  background: #3d4b58;
 }
-.file-path {
-  max-width: 13rem;
+.terminal-dots span:nth-child(2) {
+  background: #4a4530;
+}
+.terminal-path {
+  max-width: 14rem;
   overflow: hidden;
-  color: #aab8c4;
-  font: 500 0.7rem/1.2 monospace;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: #93a3b1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.toolbar-icon {
+.terminal-toolbar-icon {
   justify-self: end;
-  color: #67e8f9;
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--t-accent);
 }
+
 .terminal-workspace {
   display: grid;
-  min-height: 24.5rem;
-  grid-template-columns: minmax(0, 68fr) minmax(11.5rem, 32fr);
+  grid-template-columns: minmax(0, 68fr) minmax(11rem, 32fr);
+  min-height: 21rem;
 }
-.code-panel {
-  min-width: 0;
-  border-right: 1px solid #34414c;
-  background: #0b1117;
-}
-.terminal-side {
-  display: block;
-  min-width: 0;
-}
+
 .panel-heading {
-  display: flex;
-  min-height: 2.6rem;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #2d3943;
-  padding: 0 0.9rem;
-  color: #8193a0;
-  font: 700 0.65rem/1 monospace;
-  text-transform: uppercase;
-}
-.panel-heading span {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  min-height: 2.4rem;
+  margin: 0;
+  border-bottom: 1px solid var(--t-line-soft);
+  padding: 0 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--t-muted);
 }
-.panel-heading svg {
-  width: 1rem;
-  height: 1rem;
-  color: #22d3ee;
+.panel-heading :deep(svg) {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--t-accent);
 }
+
+.terminal-code {
+  min-width: 0;
+  border-right: 1px solid var(--t-line);
+  background: var(--t-bg);
+}
+
 .editor-body {
   position: relative;
   display: grid;
-  grid-template-columns: 2.4rem minmax(0, 1fr);
-  height: calc(100% - 2.6rem);
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  height: calc(100% - 2.4rem);
   overflow: hidden;
-  padding: 1.2rem 0.6rem 1rem 0;
+  padding: 1rem 0.75rem 1rem 0;
 }
-.line-numbers {
+.editor-gutter {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #40505d;
-  font: 0.75rem/1.72rem monospace;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.7rem;
+  color: #3e4c58;
   user-select: none;
 }
 .editor-body pre {
   margin: 0;
-  overflow: auto hidden;
-  color: #c5d1d9;
-  font:
-    0.78rem/1.72rem "Cascadia Code",
-    Consolas,
-    monospace;
-  scrollbar-width: none;
+  overflow-x: auto;
+  color: var(--color-term-text);
+  font-family: var(--font-mono);
+  font-size: 0.78125rem;
+  line-height: 1.7rem;
 }
 .editor-body code {
   white-space: pre;
 }
-.active-line {
+.editor-active-line {
   position: absolute;
   z-index: 0;
-  top: calc(1.2rem + 3 * 1.72rem);
+  top: calc(1rem + 3 * 1.7rem);
   right: 0;
-  left: 2.4rem;
-  height: 1.72rem;
-  border-left: 2px solid #22d3ee;
-  background: rgba(34, 211, 238, 0.065);
+  left: 2.5rem;
+  height: 1.7rem;
+  border-left: 2px solid var(--t-accent);
+  background: rgba(56, 198, 212, 0.07);
 }
-.line-numbers,
+.editor-gutter,
 .editor-body pre {
   position: relative;
   z-index: 1;
 }
-:deep(.code-directive),
-:deep(.code-type) {
-  color: #67e8f9;
+
+/* 代码语义色：浅色令牌在深色终端内单独定义，保证对比度 */
+:deep(.tok-directive),
+:deep(.tok-type) {
+  color: #6fd8e4;
 }
-:deep(.code-muted) {
-  color: #71808d;
+:deep(.tok-muted) {
+  color: #6b7a88;
 }
-:deep(.code-function),
-:deep(.code-number) {
-  color: #f0c75e;
+:deep(.tok-function),
+:deep(.tok-number) {
+  color: #efc463;
 }
-:deep(.code-object) {
-  color: #9fb7c8;
+:deep(.tok-object) {
+  color: #a8becd;
 }
-:deep(.code-string) {
-  color: #7dd3a8;
+:deep(.tok-string) {
+  color: #7ed9a6;
 }
-:deep(.code-keyword) {
-  color: #f09da8;
+:deep(.tok-keyword) {
+  color: #f0a6b0;
 }
-.result-panel {
+
+.terminal-result {
   display: flex;
-  height: 100%;
+  min-width: 0;
   flex-direction: column;
-  background: #131c24;
+  background: var(--t-surface);
 }
+
 .judge-timeline {
-  position: relative;
   display: grid;
   gap: 0.15rem;
-  padding: 1rem;
+  margin: 0;
+  padding: 0.9rem;
+  list-style: none;
 }
-.judge-timeline::before {
-  content: "";
-  position: absolute;
-  top: 1.55rem;
-  bottom: 1.55rem;
-  left: 1.19rem;
-  width: 1px;
-  background: #3c4b56;
-}
-.judge-status {
+.judge-step {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  min-height: 2.1rem;
-  padding-left: 0;
-  color: #687986;
-  font: 700 0.7rem/1 monospace;
+  gap: 0.5rem;
+  min-height: 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
 }
-.judge-status span {
-  width: 0.4rem;
-  height: 0.4rem;
-  border: 1px solid #526571;
-  background: #17222b;
-  position: relative;
-  z-index: 1;
+.judge-step :deep(svg) {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
 }
-.status-accepted {
-  color: #8ce8ae;
+/* 状态同时使用图标 + 文字 + 颜色，不依赖单一颜色差异 */
+.is-compiling {
+  color: var(--t-warn);
 }
-.status-accepted svg {
-  position: relative;
-  z-index: 1;
-  width: 0.85rem;
-  height: 0.85rem;
-  background: #131c24;
+.is-running {
+  color: var(--t-accent);
 }
-.preview-output {
-  margin: auto 1rem 1rem;
-  border: 1px solid #2d3b46;
-  background: #0b1117;
-  padding: 0.8rem;
-  color: #8ce8ae;
-  font: 0.72rem/1.4 monospace;
+.is-accepted {
+  color: var(--t-ok);
 }
+
+.judge-output {
+  display: grid;
+  gap: 0.35rem;
+  margin: auto 0.9rem 0.9rem;
+  border: 1px solid var(--t-line);
+  border-radius: var(--radius-card);
+  background: var(--t-bg);
+  padding: 0.7rem 0.8rem;
+}
+.judge-output-label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  color: var(--t-muted);
+}
+.judge-output-value {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #7ed9a6;
+}
+
 .language-panel {
   display: grid;
   grid-template-columns: 7.5rem minmax(0, 1fr);
-  border-top: 1px solid #34414c;
-  background: #101820;
+  border-top: 1px solid var(--t-line);
+  background: var(--t-surface);
 }
 .language-panel > .panel-heading {
-  min-height: 3.65rem;
-  border-right: 1px solid #2d3943;
+  min-height: 3.4rem;
+  border-right: 1px solid var(--t-line-soft);
   border-bottom: 0;
+  padding: 0 1rem;
 }
 .language-grid {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 1px;
-  background: #2d3943;
+  background: var(--t-line-soft);
 }
 .language-button {
   display: grid;
-  position: relative;
   min-width: 0;
-  min-height: 3.65rem;
+  min-height: 3.4rem;
   place-items: center;
   border: 0;
-  background: #151f27;
-  filter: grayscale(1);
-  opacity: 0.42;
+  background: var(--t-surface);
+  cursor: pointer;
+  opacity: 0.5;
   transition:
-    background 0.15s ease,
-    filter 0.15s ease,
+    background-color 0.15s ease,
     opacity 0.15s ease;
 }
+.language-button :deep(svg) {
+  width: 1.3rem;
+  height: 1.3rem;
+}
 .language-button:hover,
-.language-button.active {
-  background: #1e2b35;
-  filter: grayscale(0);
+.language-button.is-active {
   opacity: 1;
+  background: var(--color-term-hover);
 }
-.language-button.active {
-  box-shadow: inset 0 -2px #22d3ee;
+.language-button.is-active {
+  box-shadow: inset 0 -2px 0 var(--t-accent);
 }
-.language-button svg {
-  width: 1.45rem;
-  height: 1.45rem;
+
+/* ============================================================
+   Dashboard：平面分组 + 分隔线，不做卡片嵌套
+   ============================================================ */
+.dashboard {
+  padding-block: clamp(2rem, 4vw, 3rem);
 }
-.intro {
-  opacity: 0;
-  transform: translateY(12px);
-  animation: intro-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+
+.dash-panel {
+  overflow: hidden;
 }
-.intro-label {
-  animation-delay: 0.2s;
+
+.dash-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
 }
-.intro-title-one {
-  animation-delay: 0.35s;
+.dash-action-identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.85rem;
 }
-.intro-title-two {
-  animation-delay: 0.46s;
+.dash-action-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  color: var(--color-accent);
 }
-.intro-actions {
-  animation-delay: 0.6s;
+.dash-action-text {
+  min-width: 0;
 }
-.intro-desc {
-  animation-delay: 0.53s;
+.dash-action-text .ui-section-title,
+.dash-action-text .ui-section-sub {
+  @apply truncate;
 }
-.intro-terminal {
-  animation-delay: 0.7s;
+.dash-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
-html:not(.dark) .terminal-stage::before {
-  border-color: #a7b4be;
+
+.dash-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
 }
-html:not(.dark) .terminal-frame {
-  border-color: #9eacb7;
-  background: #eef3f6;
-  box-shadow: 0 8px 24px rgba(51, 65, 85, 0.12);
+.dash-metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.25rem;
+  border-left: 1px solid var(--color-border);
 }
-html:not(.dark) .terminal-frame::before {
-  border-color: rgba(71, 85, 105, 0.16);
+.dash-metric:first-child,
+.dash-metric:nth-child(2n + 1) {
+  border-left: 0;
 }
-html:not(.dark) .terminal-toolbar {
-  border-color: #bac6cf;
-  background: #e3e9ed;
+.dash-metric:nth-child(n + 3) {
+  border-top: 1px solid var(--color-border);
 }
-html:not(.dark) .window-controls span {
-  border-color: #9aa9b4;
-  background: #c5d0d7;
+.dash-metric-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-muted-foreground);
 }
-html:not(.dark) .window-controls span:nth-child(2) {
-  border-color: #b78b2e;
-  background: #d3a63f;
+.dash-metric-value {
+  margin: 0;
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-foreground);
 }
-html:not(.dark) .file-path {
-  color: #425466;
+.dash-metric-skeleton {
+  display: inline-block;
+  width: 3rem;
+  height: 1.5rem;
 }
-html:not(.dark) .toolbar-icon,
-html:not(.dark) .panel-heading svg {
-  color: #087c93;
+
+.dash-lists {
+  display: grid;
 }
-html:not(.dark) .code-panel {
-  border-color: #bdc8d0;
-  background: #f5f7f9;
+.dash-list {
+  min-width: 0;
+  padding: 1.25rem;
 }
-html:not(.dark) .panel-heading {
-  border-color: #c4ced5;
-  color: #526371;
+.dash-list + .dash-list {
+  border-top: 1px solid var(--color-border);
 }
-html:not(.dark) .line-numbers {
-  color: #8b9aa6;
+.dash-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
 }
-html:not(.dark) .editor-body pre {
-  color: #1e293b;
+/* 次级文字链接补足 44px 触控区域，内边距由等量负外边距抵消，不产生位移 */
+.dash-list-head .ui-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding-inline: 0.5rem;
+  margin: -0.875rem -0.5rem;
 }
-html:not(.dark) .active-line {
-  border-color: #0891b2;
-  background: rgba(8, 145, 178, 0.08);
+.dash-list-skeleton {
+  display: grid;
+  gap: 0.375rem;
 }
-html:not(.dark) .result-panel {
-  background: #eaf0f3;
+
+/* 面板本身已提供分组边界，内部空状态不再叠加一层描边 */
+.dash-list .ui-empty {
+  border: 0;
+  background: transparent;
+  padding-block: 2rem;
 }
-html:not(.dark) .judge-timeline::before {
-  background: #b6c2ca;
+
+.dash-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-html:not(.dark) .judge-status {
-  color: #61717d;
+.dash-rows > li + li {
+  border-top: 1px solid var(--color-border);
 }
-html:not(.dark) .judge-status span {
-  border-color: #93a4af;
-  background: #edf2f5;
+.dash-row {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.65rem;
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  transition: background-color 0.15s ease;
 }
-html:not(.dark) .status-accepted {
-  color: #15803d;
+.dash-row:hover {
+  background: var(--color-surface-muted);
 }
-html:not(.dark) .status-accepted svg {
-  background: #eaf0f3;
+.dash-row-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-html:not(.dark) .preview-output {
-  border-color: #bdc8d0;
-  background: #f8fafc;
-  color: #15803d;
+.dash-row-meta {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted-foreground);
 }
-html:not(.dark) .language-panel {
-  border-color: #b8c4cc;
-  background: #e3e9ed;
+
+.dash-difficulty {
+  padding: 1.25rem;
 }
-html:not(.dark) .language-panel > .panel-heading {
-  border-color: #bdc8d0;
+.difficulty-list {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  list-style: none;
 }
-html:not(.dark) .language-grid {
-  background: #c3cdd4;
+.difficulty-row {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) 4rem;
+  align-items: center;
+  gap: 0.85rem;
 }
-html:not(.dark) .language-button {
-  background: #f1f5f7;
+.difficulty-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-muted);
 }
-html:not(.dark) .language-button:hover,
-html:not(.dark) .language-button.active {
-  background: #e5f5f7;
+.difficulty-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
 }
-.dark .home-shell {
-  background: #070c11;
-  color: #e6edf2;
+.difficulty-value {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--color-muted-foreground);
 }
-.dark .hero-section {
-  border-color: #26343e;
-  background: #080e13;
+
+/* ============================================================
+   响应式
+   ============================================================ */
+@media (min-width: 640px) {
+  .dash-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .dash-metric:nth-child(2n + 1) {
+    border-left: 1px solid var(--color-border);
+  }
+  .dash-metric:first-child {
+    border-left: 0;
+  }
+  .dash-metric:nth-child(n + 3) {
+    border-top: 0;
+  }
 }
-.dark .hero-grid {
-  opacity: 0.3;
-  background-image:
-    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+
+/* Hero 双栏需要终端有足够宽度，窄于此宽度改为上下堆叠，避免代码被截断 */
+@media (min-width: 1120px) {
+  .hero-layout {
+    grid-template-columns: minmax(0, 0.85fr) minmax(30rem, 1.15fr);
+  }
 }
-.dark .hero-label {
-  border-color: #344550;
-  background: rgba(11, 18, 24, 0.8);
-  color: #67e8f9;
-}
-.dark .hero-secondary {
-  border-color: #45545f;
-  background: rgba(15, 23, 31, 0.8);
-  color: #d2dce3;
-}
-.dark .hero-desc {
-  color: #aab6c2;
-}
-.dark .mark-tag {
-  color: #22d3ee;
-}
-.dark .mark-brace {
-  color: #4b6275;
-}
-.dark .mark-comment {
-  color: #7c8a97;
-}
+
 @media (min-width: 1024px) {
-  .hero-layout {
-    grid-template-columns: minmax(22rem, 0.82fr) minmax(31rem, 1.18fr);
+  .dash-lists {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dash-list + .dash-list {
+    border-top: 0;
+    border-left: 1px solid var(--color-border);
   }
 }
-@media (max-width: 1023px) {
-  .hero-layout {
-    align-content: center;
-    padding-block: 4.5rem;
-  }
-  .terminal-stage {
+
+@media (max-width: 1119px) {
+  .terminal {
     width: min(100%, 44rem);
+    justify-self: center;
   }
 }
-@media (max-width: 640px) {
-  .hero-layout {
-    width: min(100% - 1.25rem, 82rem);
-    gap: 2.75rem;
-    padding-block: 3rem;
-  }
-  .hero-title {
-    font-size: clamp(2.55rem, 13.5vw, 4rem);
+
+@media (max-width: 639px) {
+  .hero {
+    padding-block: 2.5rem;
   }
   .hero-actions {
     display: grid;
     grid-template-columns: 1fr;
   }
-  .hero-button {
+  .hero-cta {
     width: 100%;
   }
   .terminal-workspace {
-    min-height: 0;
     grid-template-columns: 1fr;
+    min-height: 0;
   }
-  .code-panel {
-    min-height: 18rem;
+  .terminal-code {
     border-right: 0;
-    border-bottom: 1px solid #34414c;
+    border-bottom: 1px solid var(--t-line);
   }
-  .terminal-side {
-    display: block;
+  .editor-body {
+    min-height: 15rem;
   }
-  .editor-body pre {
-    font-size: 0.69rem;
+  .editor-body pre,
+  .editor-gutter {
+    font-size: 0.6875rem;
     line-height: 1.55rem;
   }
-  .line-numbers {
-    line-height: 1.55rem;
-  }
-  .active-line {
-    top: calc(1.2rem + 3 * 1.55rem);
+  .editor-active-line {
+    top: calc(1rem + 3 * 1.55rem);
     height: 1.55rem;
   }
-  .result-panel {
-    min-height: 13.5rem;
+  .terminal-result {
+    min-height: 12rem;
   }
-  .file-path {
-    max-width: 10rem;
-  }
-  .terminal-frame {
-    box-shadow: 8px 10px 0 rgba(15, 23, 42, 0.1);
-  }
-  .terminal-stage::before {
-    transform: translate(6px, 6px);
+  .terminal-path {
+    max-width: 8.5rem;
   }
   .language-panel {
     grid-template-columns: 1fr;
   }
   .language-panel > .panel-heading {
-    min-height: 2.35rem;
+    min-height: 2.25rem;
     border-right: 0;
-    border-bottom: 1px solid #2d3943;
+    border-bottom: 1px solid var(--t-line-soft);
+  }
+  .language-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .language-button {
-    min-height: 2.8rem;
+    min-height: 3rem;
   }
-  .language-button svg {
-    width: 1.15rem;
-    height: 1.15rem;
+  .dash-action {
+    padding: 1rem;
+  }
+  .dash-action-buttons {
+    width: 100%;
+  }
+  .dash-list,
+  .dash-difficulty {
+    padding: 1rem;
+  }
+  .difficulty-row {
+    grid-template-columns: 3.25rem minmax(0, 1fr) 3.25rem;
+    gap: 0.65rem;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
-  .intro {
-    animation: none !important;
-    opacity: 1;
-    transform: none;
-  }
-  .terminal-frame,
-  .hero-button,
-  .language-button {
+  .language-button,
+  .dash-row {
     transition-duration: 0.01ms !important;
   }
-}
-@keyframes intro-in {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>
-
-<style>
-html:not(.dark) .home-shell .editor-body code {
-  color: #0f172a;
-}
-
-html:not(.dark) .home-shell .code-directive,
-html:not(.dark) .home-shell .code-type {
-  color: #00677f;
-  font-weight: 600;
-}
-
-html:not(.dark) .home-shell .code-muted {
-  color: #475569;
-}
-
-html:not(.dark) .home-shell .code-function,
-html:not(.dark) .home-shell .code-number {
-  color: #854d0e;
-  font-weight: 600;
-}
-
-html:not(.dark) .home-shell .code-object {
-  color: #075985;
-}
-
-html:not(.dark) .home-shell .code-string {
-  color: #166534;
-}
-
-html:not(.dark) .home-shell .code-keyword {
-  color: #9f1239;
-  font-weight: 600;
 }
 </style>
