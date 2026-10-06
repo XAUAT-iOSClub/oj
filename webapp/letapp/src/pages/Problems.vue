@@ -157,6 +157,12 @@ const filteredProblems = computed(() => {
     });
 });
 
+// 只有当结果中确实存在统计数据时才为统计列预留宽度，
+// 否则难度标签会因为一列空文本而漂在行中间。
+const hasAnyStats = computed(() =>
+  filteredProblems.value.some((p) => p.acceptRate != null || p.stat.submissions > 0)
+);
+
 const openProblem = (id: number) => {
   router.push(`/problems/${id}`);
 };
@@ -196,6 +202,10 @@ const toggleFavorite = async (problem: Problem, event: MouseEvent) => {
     message.error(error instanceof Error ? error.message : '操作失败，请稍后重试');
   }
 };
+
+// 状态不只靠颜色传达：图标形状不同，同时提供文字供辅助技术读取
+const rowStatusText = (p: { isAccepted: boolean; isAttempted: boolean }) =>
+  p.isAccepted ? '已解决' : p.isAttempted ? '尝试过' : '未解决';
 
 const difficultyClass = (d: string) =>
   d === '简单'
@@ -394,85 +404,77 @@ onMounted(() => {
             </button>
           </div>
 
-          <div class="overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] dark:border-[var(--color-border)] dark:bg-[var(--color-surface)]">
-            <!-- 表头 48px -->
-             <div class="hidden grid-cols-[2.5rem_minmax(0,1fr)_5rem_5rem_5rem] items-center gap-4 border-b border-[var(--color-border)] px-4 text-xs font-medium text-[var(--color-muted-foreground)] dark:border-[var(--color-border)] sm:grid" style="height:40px">
-              <span>状态</span>
-              <span>题目</span>
-              <span class="text-center">难度</span>
-              <span class="text-center">通过率</span>
-              <span class="text-center">提交</span>
-            </div>
+          <p v-if="!isLoading && !loadError && filteredProblems.length" class="problem-list-caption">
+            共 {{ problems.length }} 道题目<template v-if="filteredProblems.length !== problems.length">，当前筛选 {{ filteredProblems.length }} 道</template>
+          </p>
 
+          <div class="problem-list" :class="{ 'has-stats': hasAnyStats }">
             <div v-if="isLoading" class="space-y-2 p-4">
-              <div v-for="i in 6" :key="i" class="ui-skeleton h-12 w-full"></div>
+              <div v-for="i in 6" :key="i" class="ui-skeleton h-10 w-full"></div>
             </div>
 
-            <div v-else-if="loadError" class="ui-empty m-4">
-              <Icon icon="material-symbols:cloud-off-rounded" class="mb-2 h-10 w-10 text-rose-400" />
-              <p class="font-bold text-[var(--color-foreground)]">加载失败</p>
-              <p class="text-sm text-[var(--color-muted-foreground)]">{{ loadError }}</p>
-              <button class="ui-btn ui-btn-primary ui-btn-sm mt-2" @click="loadProblems">重新加载</button>
+            <div v-else-if="loadError" class="problem-list__empty">
+              <Icon icon="material-symbols:cloud-off-rounded" class="problem-list__empty-icon is-error" />
+              <p class="problem-list__empty-title">加载失败</p>
+              <p>{{ loadError }}</p>
+              <button class="ui-btn ui-btn-primary ui-btn-sm" @click="loadProblems">重新加载</button>
             </div>
 
-            <div v-else-if="filteredProblems.length === 0" class="ui-empty m-4">
-              <Icon icon="material-symbols:search-off" class="mb-2 h-10 w-10 text-[var(--color-muted-foreground)]" />
-              <p class="font-bold text-[var(--color-foreground)]">没有找到匹配的题目</p>
-              <button class="ui-btn ui-btn-secondary ui-btn-sm mt-2" @click="resetFilters">清除筛选</button>
+            <div v-else-if="filteredProblems.length === 0" class="problem-list__empty">
+              <Icon icon="material-symbols:search-off" class="problem-list__empty-icon" />
+              <p class="problem-list__empty-title">没有找到匹配的题目</p>
+              <button class="ui-btn ui-btn-secondary ui-btn-sm" @click="resetFilters">清除筛选</button>
             </div>
 
-            <div v-else class="divide-y divide-[#F1F5F9] dark:divide-[#1E293B]">
-              <button
-                v-for="p in filteredProblems"
-                :key="p.id"
-                 class="problem-row grid w-full grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-4 px-4 py-2.5 text-left transition-colors hover:bg-[var(--color-accent-soft)] sm:grid-cols-[2.5rem_minmax(0,1fr)_5rem_5rem_5rem]"
-                @click="openProblem(p.id)"
-              >
-                <span class="flex justify-center">
-                  <Icon
-                    v-if="p.isAccepted"
-                    icon="material-symbols:check-circle"
-                    class="h-5 w-5 text-emerald-500"
-                  />
-                  <Icon
-                    v-else-if="p.stat.attempted"
-                    icon="material-symbols:pending"
-                    class="h-5 w-5 text-amber-500"
-                  />
-                  <Icon v-else icon="material-symbols:circle" class="h-4 w-4 text-[var(--color-foreground)] dark:text-[var(--color-muted-foreground)]" />
-                </span>
-                <span class="min-w-0">
-                  <span class="flex items-center gap-2">
-                    <span class="shrink-0 text-xs font-mono text-[var(--color-muted-foreground)]">#{{ p.sourceNumber ?? p.id }}</span>
-                    <span class="truncate font-semibold text-[var(--color-foreground)]">{{ p.title }}</span>
+            <template v-else>
+              <div v-for="p in filteredProblems" :key="p.id" class="problem-row">
+                <button type="button" class="problem-row__body" @click="openProblem(p.id)">
+                  <span class="problem-row__status">
+                    <Icon
+                      v-if="p.isAccepted"
+                      icon="material-symbols:check-circle-rounded"
+                      class="problem-row__glyph is-done"
+                    />
+                    <Icon
+                      v-else-if="p.isAttempted"
+                      icon="material-symbols:pending"
+                      class="problem-row__glyph is-tried"
+                    />
+                    <Icon v-else icon="material-symbols:radio-button-unchecked" class="problem-row__glyph is-todo" />
+                    <span class="sr-only">{{ rowStatusText(p) }}</span>
                   </span>
-                  <span class="mt-1 flex flex-wrap gap-1.5">
-                    <span
-                      v-for="tag in p.tags.slice(0, 3)"
-                      :key="tag"
-                      class="rounded-md bg-[var(--color-muted)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-muted-foreground)] dark:bg-[var(--color-surface-muted)] dark:text-[var(--color-muted-foreground)]"
-                    >{{ tag }}</span>
+                  <span class="problem-row__text">
+                    <span class="problem-row__headline">
+                      <span class="problem-row__number">#{{ p.sourceNumber ?? p.id }}</span>
+                      <span class="problem-row__name">{{ p.title }}</span>
+                    </span>
+                    <span v-if="p.tags.length" class="problem-row__tags">{{ p.tags.slice(0, 3).join(' · ') }}</span>
                   </span>
-                </span>
-                <span class="hidden justify-center sm:flex">
-                  <span :class="difficultyClass(p.difficulty)">{{ p.difficulty }}</span>
-                </span>
-                <span class="hidden text-center text-sm font-semibold text-[var(--color-muted-foreground)] dark:text-[var(--color-foreground)] sm:block">
-                  {{ p.acceptRate != null ? p.acceptRate + '%' : '—' }}
-                </span>
-                <span class="hidden text-center text-sm text-[var(--color-muted-foreground)] sm:block">{{ p.stat.submissions }}</span>
-                <span class="col-span-2 flex justify-end sm:col-span-1">
-                  <button
-                    class="ui-icon-btn !h-8 !w-8"
-                    :class="isFavorited(p.id) ? 'text-amber-400' : 'text-[var(--color-muted-foreground)]'"
-                    :title="isFavorited(p.id) ? '取消收藏' : '收藏题目'"
-                    @click="toggleFavorite(p, $event)"
-                  >
-                    <Icon :icon="isFavorited(p.id) ? 'material-symbols:star-rounded' : 'material-symbols:star-outline-rounded'" class="h-5 w-5" />
-                  </button>
-                </span>
-              </button>
-            </div>
+                  <span class="problem-row__detail">
+                    <span :class="difficultyClass(p.difficulty)">{{ p.difficulty }}</span>
+                    <span class="problem-row__stats">
+                      <span v-if="p.acceptRate != null">通过率 {{ p.acceptRate }}%</span>
+                      <span v-if="p.acceptRate != null && p.stat.submissions" class="problem-row__dot" aria-hidden="true">·</span>
+                      <span v-if="p.stat.submissions">{{ p.stat.submissions }} 次提交</span>
+                    </span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="problem-row__star"
+                  :class="{ 'is-on': isFavorited(p.id) }"
+                  :aria-pressed="isFavorited(p.id)"
+                  :aria-label="isFavorited(p.id) ? `取消收藏 ${p.title}` : `收藏 ${p.title}`"
+                  @click="toggleFavorite(p, $event)"
+                >
+                  <Icon
+                    :icon="isFavorited(p.id) ? 'material-symbols:star-rounded' : 'material-symbols:star-outline-rounded'"
+                    class="h-[19px] w-[19px]"
+                  />
+                </button>
+                <Icon class="problem-row__chevron" icon="material-symbols:chevron-right-rounded" aria-hidden="true" />
+              </div>
+            </template>
           </div>
         </section>
       </div>
@@ -518,6 +520,206 @@ html:not(.dark) .filter-item:hover {
   background: var(--color-accent-soft);
   color: var(--color-accent-text);
 }
+/* ---- 题库列表：iOS 分组列表。分隔线内缩到正文起始处，尾部为细节文本与展开指示 ---- */
+.problem-list-caption {
+  margin: 0 0 0.5rem;
+  padding: 0 0.25rem;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-muted-foreground);
+}
+.problem-list {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.problem-list__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3.5rem 1rem;
+  text-align: center;
+  font-size: 14px;
+  color: var(--color-muted-foreground);
+}
+.problem-list__empty-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--color-muted-foreground);
+}
+.problem-list__empty-icon.is-error {
+  color: var(--color-danger);
+}
+.problem-list__empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+.problem-row {
+  /* 1rem 行内边距 + 1.5rem 状态列 + 0.75rem 列间距 */
+  --row-inset: 3.25rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.18s ease;
+}
+.problem-row + .problem-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--row-inset);
+  right: 0.5rem;
+  height: 1px;
+  background: var(--color-border);
+  pointer-events: none;
+}
+.problem-row:hover {
+  background: var(--color-surface-muted);
+}
+.problem-row:active {
+  background: var(--color-muted);
+}
+.problem-row__body {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  min-height: 64px;
+  padding: 0.625rem 0.5rem 0.625rem 1rem;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.problem-row__body:focus-visible {
+  outline-offset: -2px;
+}
+.problem-row__status {
+  display: flex;
+  justify-content: center;
+}
+.problem-row__glyph {
+  width: 20px;
+  height: 20px;
+}
+.problem-row__glyph.is-done {
+  color: var(--color-signal);
+}
+.problem-row__glyph.is-tried {
+  color: var(--color-warning);
+}
+.problem-row__glyph.is-todo {
+  color: var(--color-border-strong);
+}
+.problem-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.problem-row__headline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.problem-row__number {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted-foreground);
+}
+.problem-row__name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-foreground);
+}
+.problem-row__tags {
+  overflow: hidden;
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-muted-foreground);
+}
+.problem-row__detail {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+.problem-row__stats {
+  display: none;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-muted-foreground);
+}
+.problem-row__dot {
+  opacity: 0.6;
+}
+.problem-row__star {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+.problem-row__star:hover {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+}
+.problem-row__star.is-on {
+  color: var(--color-warning);
+}
+.problem-row__chevron {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-right: 0.5rem;
+  color: var(--color-muted-foreground);
+  opacity: 0.45;
+}
+/* 桌面端把难度标签与统计文本一起贴到行的尾部 */
+@media (min-width: 640px) {
+  .problem-row__detail {
+    justify-content: flex-end;
+    gap: 0.875rem;
+  }
+  /* 固定统计列宽度，让「通过率」在多行之间保持同一条竖向基线 */
+  .problem-list.has-stats .problem-row__stats {
+    display: flex;
+    flex: 0 0 auto;
+    width: 11rem;
+  }
+}
+@media (pointer: coarse) {
+  .problem-row__star {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 .filter-scroll::-webkit-scrollbar {
   width: 6px;
 }
