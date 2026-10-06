@@ -25,6 +25,8 @@ const props = defineProps<{
   tree: TreeNode[];
   currentPath?: string;
   headings?: HeadingItem[];
+  /** 正文里当前滚动到的小节 id，用于高亮目录项。 */
+  activeHeading?: string;
   searchQuery?: string;
 }>();
 
@@ -42,14 +44,9 @@ const effectiveSearch = computed(() => props.searchQuery || localSearch.value);
 const expandedPaths = ref<Set<string>>(new Set());
 const STORAGE_KEY = 'learn_sidebar_expanded';
 
-/** ====== 递归：文件夹优先 + 自然（数值）排序 ====== */
-function sortNodes(nodes: TreeNode[]): TreeNode[] {
-  return sortNodesFoldersFirst(nodes);
-}
-
 /** ====== 递归：搜索过滤 ====== */
 function filterTree(nodes: TreeNode[], q: string): TreeNode[] {
-  if (!q) return sortNodes(nodes);
+  if (!q) return sortNodesFoldersFirst(nodes);
   const lower = q.toLowerCase();
   const result: TreeNode[] = [];
   for (const node of nodes) {
@@ -62,7 +59,7 @@ function filterTree(nodes: TreeNode[], q: string): TreeNode[] {
       result.push(node);
     }
   }
-  return sortNodes(result);
+  return sortNodesFoldersFirst(result);
 }
 
 const displayTree = computed(() => filterTree(props.tree, effectiveSearch.value));
@@ -92,7 +89,7 @@ watch(() => props.currentPath, (p) => {
   if (p) {
     expandAncestors(p);
     nextTick(() => {
-      const el = document.querySelector('.tree-node-active');
+      const el = document.querySelector('.fn-active');
       if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     });
   }
@@ -107,29 +104,29 @@ function toggleExpand(path: string) {
   if (next.has(path)) next.delete(path); else next.add(path);
   expandedPaths.value = next;
 }
-
-function handleSelect(path: string) {
-  emit('select', path);
-}
-
-function handleBrowse(path: string) {
-  emit('browse', path);
-}
 </script>
 
 <template>
   <div class="learn-sidebar">
     <!-- 搜索框 -->
     <div class="sidebar-search">
-      <Icon icon="material-symbols:search" class="search-icon" />
+      <Icon icon="material-symbols:search-rounded" class="search-icon" aria-hidden="true" />
+      <label class="sr-only" for="learn-sidebar-search">搜索学习资料</label>
       <input
+        id="learn-sidebar-search"
         v-model="localSearch"
-        type="text"
-        placeholder="搜索资料…"
+        type="search"
+        placeholder="搜索资料"
         class="search-input"
       />
-      <button v-if="localSearch" class="search-clear" @click="localSearch = ''">
-        <Icon icon="material-symbols:close" class="h-3 w-3" />
+      <button
+        v-if="localSearch"
+        type="button"
+        class="search-clear"
+        aria-label="清空搜索"
+        @click="localSearch = ''"
+      >
+        <Icon icon="material-symbols:close-rounded" class="h-3.5 w-3.5" aria-hidden="true" />
       </button>
     </div>
 
@@ -158,7 +155,7 @@ function handleBrowse(path: string) {
       <button
         v-if="activeTab === 'files'"
         type="button"
-        class="tab-rescan"
+        class="tab-icon-btn"
         aria-label="重新扫描目录"
         @click="emit('rescan')"
       >
@@ -169,7 +166,7 @@ function handleBrowse(path: string) {
     <!-- 文件树 -->
     <div v-show="activeTab === 'files'" class="tree-content">
       <div v-if="displayTree.length === 0" class="tree-empty">
-        <Icon icon="material-symbols:folder-off" class="empty-icon" />
+        <Icon icon="material-symbols:folder-off" class="empty-icon" aria-hidden="true" />
         <p class="empty-text">{{ effectiveSearch ? '无匹配结果' : '暂无学习资料' }}</p>
       </div>
       <template v-else>
@@ -181,8 +178,8 @@ function handleBrowse(path: string) {
           :expanded-paths="expandedPaths"
           :depth="0"
           @toggle="toggleExpand"
-          @select="handleSelect"
-          @browse="handleBrowse"
+          @select="(p: string) => emit('select', p)"
+          @browse="(p: string) => emit('browse', p)"
         />
       </template>
     </div>
@@ -190,105 +187,237 @@ function handleBrowse(path: string) {
     <!-- 本文目录 -->
     <div v-show="activeTab === 'headings'" class="tree-content">
       <div v-if="!headings || headings.length === 0" class="tree-empty">
-        <Icon icon="material-symbols:text-snippet" class="empty-icon" />
+        <Icon icon="material-symbols:text-snippet" class="empty-icon" aria-hidden="true" />
         <p class="empty-text">无标题结构</p>
       </div>
-      <div v-else>
+      <nav v-else class="heading-nav" aria-label="本文目录">
         <button
-          v-for="(h, i) in headings"
-          :key="i"
-          :class="['heading-item', `heading-level-${h.level}`]"
+          v-for="h in headings"
+          :key="h.id"
+          type="button"
+          :class="[
+            'heading-item',
+            `heading-level-${h.level}`,
+            h.id === activeHeading && 'is-active',
+          ]"
+          :aria-current="h.id === activeHeading ? 'true' : undefined"
           @click="emit('heading', h.id)"
         >
-          <span class="heading-text">{{ h.text }}</span>
+          {{ h.text }}
         </button>
-      </div>
+      </nav>
     </div>
   </div>
 </template>
 
 <style scoped>
 .learn-sidebar {
-  width: 280px;
-  min-width: 280px;
-  height: 100vh;
-  position: sticky;
-  top: 76px;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  z-index: 20;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
-:global(html.dark) .learn-sidebar {
-  background: var(--color-surface);
-  border-right-color: var(--color-border);
-}
 
+/* ---------- 搜索：无边框填充式，贴近 macOS 搜索框 ---------- */
 .sidebar-search {
-  padding: 12px 12px 0;
   position: relative;
+  flex-shrink: 0;
+  padding: 4px 10px 10px;
 }
 .search-icon {
-  position: absolute; left: 24px; top: 30px; transform: translateY(-50%);
-  color: var(--color-muted-foreground); width: 16px; height: 16px;
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  width: 15px;
+  height: 15px;
+  margin-top: -7.5px;
+  color: var(--color-muted-foreground);
+  pointer-events: none;
 }
 .search-input {
-  width: 100%; height: 38px; padding: 0 32px;
-  border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px;
-  outline: none; background: var(--color-surface-muted); color: var(--color-foreground); transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  height: 32px;
+  padding: 0 30px 0 30px;
+  border: none;
+  border-radius: 7px;
+  background: var(--color-surface-muted);
+  color: var(--color-foreground);
+  font-size: 13px;
+  outline: none;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.search-input::placeholder {
+  color: var(--color-muted-foreground);
+}
+.search-input::-webkit-search-cancel-button {
+  appearance: none;
 }
 .search-input:focus {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgb(14 165 183 / 0.12);
-}
-.search-input::placeholder { color: var(--color-muted-foreground); }
-:global(html.dark) .search-input {
-  background: var(--color-surface-muted); border-color: var(--color-border-strong); color: var(--color-foreground);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 .search-clear {
-  position: absolute; right: 24px; top: 30px; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; color: var(--color-muted-foreground); padding: 2px;
+  position: absolute;
+  right: 18px;
+  top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -7.5px;
+  padding: 2px;
+  border: none;
+  background: none;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
 }
-.search-clear:hover { color: var(--color-muted-foreground); }
+.search-clear:hover {
+  color: var(--color-foreground);
+}
 
+/* ---------- 视图切换 ---------- */
 .sidebar-tabs {
-  display: flex; align-items: center; padding: 12px; gap: 8px;
-  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px 10px;
 }
-:global(html.dark) .sidebar-tabs { border-bottom-color: var(--color-border); }
-/* 分段控件样式来自全局 .ui-segmented */
-.tab-rescan {
-  display: inline-flex; width: 40px; height: 40px; flex-shrink: 0;
-  align-items: center; justify-content: center;
-  border: none; background: none; cursor: pointer;
-  color: var(--color-muted-foreground); border-radius: 8px; transition: color 0.18s, background-color 0.18s;
+.sidebar-tabs .ui-segmented-item {
+  min-height: 30px;
+  padding-inline: 8px;
+  font-size: 12.5px;
 }
-.tab-rescan:hover { color: var(--color-accent-text); background: var(--color-accent-soft); }
+/* 分段控件的 44px 触控规格来自设计系统，这里只收紧字号的默认值，不覆盖触屏。 */
+@media (pointer: coarse) {
+  .sidebar-tabs .ui-segmented-item {
+    min-height: 44px;
+  }
+}
+.tab-icon-btn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.tab-icon-btn:hover {
+  color: var(--color-foreground);
+  background: var(--color-muted);
+}
 
+/* ---------- 内容区：只有这里滚动，搜索与切换常驻 ---------- */
 .tree-content {
-  flex: 1; overflow-y: auto; padding: 8px 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 0 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
-.tree-content::-webkit-scrollbar { width: 4px; }
-.tree-content::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: 2px; }
-:global(html.dark) .tree-content::-webkit-scrollbar-thumb { background: var(--color-muted); }
+.tree-content::-webkit-scrollbar {
+  width: 10px;
+}
+.tree-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tree-content::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 5px;
+  background-color: var(--color-border);
+  background-clip: content-box;
+}
+.tree-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-muted-foreground);
+  background-clip: content-box;
+}
 
-.tree-empty { padding: 32px 16px; text-align: center; }
-.empty-icon { width: 32px; height: 32px; color: var(--color-foreground); margin-bottom: 8px; }
-:global(html.dark) .empty-icon { color: var(--color-muted-foreground); }
-.empty-text { font-size: 12px; color: var(--color-muted-foreground); margin: 0; }
+.tree-empty {
+  padding: 32px 16px;
+  text-align: center;
+}
+.empty-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+  color: var(--color-border-strong);
+}
+.empty-text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-muted-foreground);
+}
 
+/* ---------- 本文目录 ---------- */
+.heading-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 8px;
+}
 .heading-item {
-  display: block; width: 100%; text-align: left; border: none; background: none;
-  cursor: pointer; font-size: 13px; color: var(--color-muted-foreground); padding: 5px 12px;
-  transition: background 0.12s, color 0.12s; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; font-family: inherit;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-muted-foreground);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
-.heading-item:hover { background: var(--color-muted); color: var(--color-accent-text); }
-:global(html.dark) .heading-item { color: var(--color-foreground); }
-:global(html.dark) .heading-item:hover { background: var(--color-surface-muted); color: var(--color-accent-text); }
-.heading-level-1 { padding-left: 12px; font-weight: 600; }
-.heading-level-2 { padding-left: 24px; }
-.heading-level-3 { padding-left: 36px; font-size: 12px; }
+.heading-item:hover {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+}
+.heading-item.is-active,
+.heading-item.is-active:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+.heading-level-1 {
+  font-weight: 600;
+}
+.heading-level-2 {
+  padding-left: 20px;
+}
+.heading-level-3 {
+  padding-left: 32px;
+  font-size: 12.5px;
+}
+/* 语料里 h4 不少（约 120 个），必须继续缩进，否则会比 h3 还靠左。 */
+.heading-level-4 {
+  padding-left: 44px;
+  font-size: 12.5px;
+}
+.heading-level-5 {
+  padding-left: 56px;
+  font-size: 12.5px;
+}
+.heading-level-6 {
+  padding-left: 68px;
+  font-size: 12.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-input,
+  .tab-icon-btn,
+  .heading-item {
+    transition-duration: 0.01ms;
+  }
+}
 </style>

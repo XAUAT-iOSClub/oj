@@ -45,6 +45,13 @@ interface HeadingItem {
   children: HeadingItem[];
 }
 
+/** 抛给父级的扁平标题大纲，用于把目录渲染到组件外（例如学习页的侧栏）。 */
+interface HeadingOutline {
+  id: string;
+  text: string;
+  level: number;
+}
+
 const props = withDefaults(defineProps<{
   content?: Content;
   source?: string;
@@ -59,6 +66,8 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   (e: 'navigate', file: string): void;
+  (e: 'headings', headings: HeadingOutline[]): void;
+  (e: 'active-heading', id: string): void;
 }>();
 
 const route = useRoute();
@@ -335,8 +344,15 @@ md.core.ruler.push('resolve_images', (state) => {
   });
 });
 
+// \u5fc5\u987b\u4e0e markdown-it-anchor \u7684\u9ed8\u8ba4 slugify \u4fdd\u6301\u4e00\u81f4\uff0c\u5426\u5219\u76ee\u5f55\u62ff\u5230\u7684 id \u4e0e\u6807\u9898\u5b9e\u9645
+// \u5199\u5165 DOM \u7684 id \u4e0d\u540c\uff0c\u951a\u70b9\u8df3\u8f6c\u548c\u5f53\u524d\u5c0f\u8282\u9ad8\u4eae\u90fd\u4f1a\u5931\u6548\u3002
+const slugifyHeading = (text: string) =>
+  encodeURIComponent(text.trim().toLowerCase().replace(/\s+/g, '-'));
+
 const extractHeadings = (tokens: ReturnType<typeof md.parse>) => {
   const extractedHeadings: HeadingItem[] = [];
+  // markdown-it-anchor \u4f1a\u7ed9\u91cd\u590d\u6807\u9898\u4f9d\u6b21\u8ffd\u52a0 -1\u3001-2\uff0c\u8fd9\u91cc\u590d\u73b0\u540c\u6837\u7684\u53bb\u91cd\u89c4\u5219\u3002
+  const usedSlugs = new Set<string>();
 
   for (let i = 0; i < tokens.length; i += 1) {
     const token = tokens[i];
@@ -348,10 +364,21 @@ const extractHeadings = (tokens: ReturnType<typeof md.parse>) => {
     const nextToken = tokens[i + 1];
 
     if (nextToken?.type === 'inline') {
-      const text = nextToken.content;
-      const id = text.toLowerCase()
-        .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+      // \u4e0e markdown-it-anchor \u7684 getTokensText \u4e00\u81f4\uff1a\u53ea\u53d6\u6587\u672c\u4e0e\u884c\u5185\u4ee3\u7801\u3002
+      // permalinkSpace \u4f1a\u5f80 children \u91cc\u585e\u4e00\u4e2a " "\uff0c\u5fc5\u987b trim \u6389\u518d\u4f5c\u4e3a\u6807\u9898\u6587\u672c\u3002
+      const text = (nextToken.children || [])
+        .filter((child) => child.type === 'text' || child.type === 'code_inline')
+        .map((child) => child.content)
+        .join('')
+        .trim();
+      const base = slugifyHeading(text);
+      let id = base;
+      let suffix = 1;
+      while (usedSlugs.has(id)) {
+        id = `${base}-${suffix}`;
+        suffix += 1;
+      }
+      usedSlugs.add(id);
 
       extractedHeadings.push({
         id,
@@ -399,10 +426,23 @@ const buildHeadingTree = (flatHeadings: HeadingItem[]) => {
   return tree;
 };
 
+/** 按阅读顺序摊平标题树，父级在前、子级紧随其后。 */
+function flattenHeadings(nodes: HeadingItem[]): HeadingOutline[] {
+  return nodes.flatMap((node) => [
+    { id: node.id, text: node.text, level: node.level },
+    ...flattenHeadings(node.children),
+  ]);
+}
+
 const render = async (markdown: string) => {
   const env = { baseDir: props.baseDir };
   const tokens = md.parse(markdown, env);
-  headings.value = buildHeadingTree(extractHeadings(tokens));
+  const tree = buildHeadingTree(extractHeadings(tokens));
+  headings.value = tree;
+  // 换文档时先清掉上一份的当前小节，避免滚动前残留高亮。
+  activeHeadingId.value = '';
+  // immediate 时本函数仍在 setup 期间执行，推迟一拍再通知父级，避免父级在渲染中被改写。
+  void nextTick(() => emit('headings', flattenHeadings(tree)));
   const renderedHtml = md.renderer.render(tokens, md.options, env);
   const finalHtml = props.showHeadingLinks
     ? renderedHtml
@@ -475,6 +515,9 @@ watch(
   { immediate: true },
 );
 
+// 当前小节由窗口滚动驱动，这里只把它转告给父级（例如学习页的侧栏目录）。
+watch(activeHeadingId, (id) => emit('active-heading', id));
+
 const anchorLinks = computed(() => headings.value);
 import { formatDate } from '../utils/time';
 const date = computed(() => (props.content?.date ? formatDate(props.content?.date) : ''));
@@ -482,7 +525,8 @@ const hasHeaderMeta = computed(() => Boolean(props.content?.title || props.conte
 
 const handleAnchorClick = (event: Event, href: string) => {
   event.preventDefault();
-  const targetElement = document.querySelector(href);
+  // id 经过 encodeURIComponent，含 % 无法直接拼进 CSS 选择器，只能按 id 查找。
+  const targetElement = document.getElementById(href.replace(/^#/, ''));
 
   if (targetElement) {
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -916,6 +960,13 @@ onUnmounted(() => {
   line-height: 1.4;
 }
 
+/* 正文首行的标题就是文档标题，上方已有页面工具条，不需要再加一段间距。 */
+.markdown-content :deep(> h1:first-child),
+.markdown-content :deep(h1:first-child) {
+  margin-top: 0;
+  letter-spacing: -0.02em;
+}
+
 .markdown-content :deep(h3) {
   font-size: 18px;
   font-weight: 600;
@@ -965,6 +1016,8 @@ onUnmounted(() => {
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.15s;
+  /* 正文里常有整条 URL，窄屏必须允许在任意位置断行，否则会撑出横向滚动。 */
+  overflow-wrap: anywhere;
 }
 
 .markdown-content :deep(a:hover) {

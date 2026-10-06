@@ -74,6 +74,8 @@ function handleClick() {
         isOnActivePath && 'fn-on-path',
       ]"
       :style="{ paddingLeft }"
+      :aria-expanded="isFolder ? isExpanded : undefined"
+      :aria-current="isActive ? 'true' : undefined"
       @click="handleClick"
     >
       <template v-if="isFolder">
@@ -114,62 +116,45 @@ function handleClick() {
 .fn-node {
   display: flex;
   align-items: center;
-  min-height: 36px;
-  text-align: left;
+  gap: 6px;
+  width: calc(100% - 12px);
+  min-height: 32px;
+  margin: 1px 6px;
+  padding: 5px 8px;
   border: none;
+  border-radius: 6px;
   background: none;
-  cursor: pointer;
+  font-family: inherit;
   font-size: 13px;
-  color: var(--color-muted-foreground);
-  padding: 7px 12px;
-  transition: background 0.13s, color 0.13s;
+  line-height: 1.45;
+  text-align: left;
   white-space: nowrap;
   overflow: hidden;
-  font-family: inherit;
-  line-height: 1.45;
-  border-radius: 6px;
-  margin: 1px 6px;
-  width: calc(100% - 12px);
+  color: var(--color-muted-foreground);
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 .fn-node:hover {
   background: var(--color-muted);
-}
-:global(html.dark) .fn-node {
-  color: var(--color-foreground);
-}
-:global(html.dark) .fn-node:hover {
-  background: var(--color-surface-muted);
 }
 
 .fn-folder {
   font-weight: 600;
 }
-.fn-folder.fn-depth-deep {
-  font-weight: 500;
-}
 .fn-on-path {
   color: var(--color-foreground);
 }
-:global(html.dark) .fn-on-path {
-  color: var(--color-foreground);
-}
 
-.fn-active {
-  background: var(--color-accent-soft) !important;
-  color: var(--color-accent-text) !important;
+/* 当前项：软色填充 + 强调文字，不再用实心竖条。 */
+.fn-active,
+.fn-active:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
   font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--color-accent);
-}
-:global(html.dark) .fn-active {
-  background: var(--color-accent-soft) !important;
-  color: var(--color-accent-text) !important;
-  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
 .fn-arrow {
   width: 16px;
   height: 16px;
-  margin-right: 2px;
   flex-shrink: 0;
   color: var(--color-muted-foreground);
   transition: transform 0.16s ease;
@@ -180,19 +165,11 @@ function handleClick() {
 .fn-icon {
   width: 18px;
   height: 18px;
-  margin-right: 6px;
   flex-shrink: 0;
-}
-.fn-icon-folder {
-  color: var(--color-warning-text);
-}
-.fn-icon-file {
+  /* 图标保持单色：警示色只留给真正的警告状态。 */
   color: var(--color-muted-foreground);
 }
-.fn-active .fn-icon-file {
-  color: var(--color-accent-text);
-}
-:global(html.dark) .fn-active .fn-icon-file {
+.fn-active .fn-icon {
   color: var(--color-accent-text);
 }
 
@@ -205,22 +182,10 @@ function handleClick() {
 }
 
 .fn-count {
+  flex-shrink: 0;
+  margin-left: 6px;
   font-size: 11px;
   color: var(--color-muted-foreground);
-  margin-left: 6px;
-  flex-shrink: 0;
-  background: var(--color-muted);
-  border-radius: 10px;
-  padding: 1px 7px;
-  font-weight: 500;
-}
-:global(html.dark) .fn-count {
-  background: var(--color-surface-muted);
-  color: var(--color-muted-foreground);
-}
-
-.fn-children {
-  /* 子节点缩进由 depth 控制 */
 }
 
 /* 展开动画 */
@@ -230,5 +195,16 @@ function handleClick() {
 .fn-expand-enter-from {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fn-node,
+  .fn-arrow,
+  .fn-expand-enter-active {
+    transition-duration: 0.01ms;
+  }
+  .fn-expand-enter-from {
+    transform: none;
+  }
 }
 </style>
