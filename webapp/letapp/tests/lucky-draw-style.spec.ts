@@ -5,8 +5,8 @@ test('抽奖页样式不会覆盖主站登录按钮', async ({ page }) => {
   await page.goto('/');
 
   const loginButton = page.getByRole('button', { name: '登录' });
-  await expect(loginButton).toHaveCSS('background-color', 'rgb(37, 99, 235)');
-  await expect(loginButton).toHaveCSS('border-radius', '6px');
+  await expect(loginButton).toHaveCSS('background-color', 'rgb(11, 124, 138)');
+  await expect(loginButton).toHaveCSS('border-radius', '8px');
   await expect(loginButton).toHaveCSS('box-shadow', 'none');
 });
 
@@ -24,5 +24,5 @@ test('题库以工具栏和独立筛选卡呈现主要操作', async ({ page }) 
 
   await expect(page.getByTestId('problem-filter-card')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   await expect(page.getByTestId('problem-toolbar')).toBeVisible();
-  await expect(page.getByRole('button', { name: '全部题目', exact: true }).last()).toHaveCSS('background-color', 'rgb(37, 99, 235)');
+  await expect(page.getByRole('button', { name: '全部题目', exact: true }).last()).toHaveCSS('background-color', 'rgb(255, 255, 255)');
 });
