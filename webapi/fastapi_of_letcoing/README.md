@@ -33,7 +33,7 @@ uv run python -m pytest -q
 ### CI/CD 与服务器部署
 
 - **验收**：`.github/workflows/backend.yml` 在每次 push/PR 上跑后端测试、依赖审计、Sandbox 集成和前端契约；`release-gate` 是唯一发布门禁。
-- **镜像**：`.github/workflows/publish-images.yml` 在验收工作流于 `main` 上成功后触发（也可手动 `workflow_dispatch`），构建并推送：
+- **镜像**：`.github/workflows/backend.yml` 的验收全部成功后，在 `main` push 或手动 `workflow_dispatch` 时构建并推送：
   - `ghcr.io/xauat-iosclub/oj-api`
   - `ghcr.io/xauat-iosclub/oj-worker`
   - `ghcr.io/xauat-iosclub/oj-sandbox`

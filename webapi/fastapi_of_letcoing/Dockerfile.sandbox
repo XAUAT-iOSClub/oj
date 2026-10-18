@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm
+FROM docker.io/library/python:3.13-slim-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ nodejs openjdk-17-jdk golang-go \
     && rm -rf /var/lib/apt/lists/*

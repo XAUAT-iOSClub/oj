@@ -4,7 +4,8 @@ permissions:
   contents: read
 concurrency:
   group: reliability-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # 发布 job 与验收共用一个 workflow；不要因后续 push 取消正在发布的镜像。
+  cancel-in-progress: false
 jobs:
   backend:
     runs-on: ubuntu-24.04
@@ -70,6 +71,66 @@ jobs:
           BACKEND_RESULT: ${{ needs.backend.result }}
           FRONTEND_RESULT: ${{ needs.frontend-contract.result }}
         run: test "$BACKEND_RESULT" = success && test "$FRONTEND_RESULT" = success
+
+  publish-images:
+    name: Build and push backend images
+    needs: [release-gate]
+    if: >-
+      needs.release-gate.result == 'success' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    concurrency:
+      group: publish-images
+      cancel-in-progress: false
+    env:
+      IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+      RELEASE_SHA: ${{ github.sha }}
+    defaults:
+      run:
+        working-directory: webapi/fastapi_of_letcoing
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Resolve image names
+        id: image
+        shell: bash
+        run: |
+          prefix="$(echo "$IMAGE_PREFIX" | tr '[:upper:]' '[:lower:]')"
+          {
+            echo "api=${prefix}-api"
+            echo "worker=${prefix}-worker"
+            echo "sandbox=${prefix}-sandbox"
+          } >> "$GITHUB_OUTPUT"
+      - name: Sign in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Build and push sandbox image
+        timeout-minutes: 20
+        run: |
+          image="${{ steps.image.outputs.sandbox }}"
+          docker build -f Dockerfile.sandbox -t "$image:${RELEASE_SHA}" -t "$image:latest" .
+          docker push "$image:${RELEASE_SHA}"
+          docker push "$image:latest"
+      - name: Build and push API image
+        timeout-minutes: 25
+        run: |
+          image="${{ steps.image.outputs.api }}"
+          docker build -t "$image:${RELEASE_SHA}" -t "$image:latest" .
+          docker push "$image:${RELEASE_SHA}"
+          docker push "$image:latest"
+          docker tag "$image:${RELEASE_SHA}" letcoding-api:local
+      - name: Build and push Worker image
+        timeout-minutes: 20
+        run: |
+          image="${{ steps.image.outputs.worker }}"
+          docker build -f Dockerfile.worker -t "$image:${RELEASE_SHA}" -t "$image:latest" .
+          docker push "$image:${RELEASE_SHA}"
+          docker push "$image:latest"
 
   promote-production:
     name: Promote verified commit to production

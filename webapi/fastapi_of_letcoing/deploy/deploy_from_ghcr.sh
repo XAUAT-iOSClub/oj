@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 服务器端部署：从 GHCR 拉取 CI（.github/workflows/publish-images.yml）
+# 服务器端部署：从 GHCR 拉取 CI（.github/workflows/backend.yml）
 # 已经构建好的镜像，用本目录的 compose 定义重启 API 或 Worker。
 #
 # 为什么是"拉"而不是"构建"：服务器上从源码构建要装 uv、拉 Python 基础镜像、跑
