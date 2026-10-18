@@ -30,6 +30,28 @@ uv run python -m pytest -q
 - OAuth 浏览器回调只携带一次性 code；`POST /auth/exchange` 结合浏览器会话兑换令牌。
 - 提交记录仅本人及 manager 可查询；响应不返回隐藏测试输入或答案。
 
+### CI/CD 与服务器部署
+
+- **验收**：`.github/workflows/backend.yml` 在每次 push/PR 上跑后端测试、依赖审计、Sandbox 集成和前端契约；`release-gate` 是唯一发布门禁。
+- **镜像**：`.github/workflows/publish-images.yml` 在验收工作流于 `main` 上成功后触发（也可手动 `workflow_dispatch`），构建并推送：
+  - `ghcr.io/xauat-iosclub/oj-api`
+  - `ghcr.io/xauat-iosclub/oj-worker`
+  - `ghcr.io/xauat-iosclub/oj-sandbox`
+
+  每个镜像带两个 tag：完整提交 SHA（不可变，用于回滚）和 `latest`。
+- **服务器部署**：在服务器上的仓库检出中执行 `deploy/deploy_from_ghcr.sh`。它把 tag 解析成 `repo@sha256:...` 摘要后传给 compose（`check_release.py` 要求不可变引用），再重启对应服务：
+
+  ```sh
+  # API 主机（需要 .env.production）
+  ./deploy/deploy_from_ghcr.sh api            # latest
+  ./deploy/deploy_from_ghcr.sh api <commit>   # 指定提交 / 回滚
+
+  # 判题主机（需要 .env.worker.production，且宿主机可访问 Docker socket）
+  ./deploy/deploy_from_ghcr.sh worker <commit>
+  ```
+
+  私有包先 `docker login ghcr.io`（PAT 需 `read:packages`），或用 `PULL_USERNAME` / `PULL_TOKEN` 让脚本临时登录。API 主机只解析 Sandbox 摘要、不拉取 Sandbox 镜像；判题主机会拉取并实际执行它。
+
 生产保障、迁移与验收要求：[PRODUCTION_READINESS.md](PRODUCTION_READINESS.md)。
 
 本轮启动修复、性能优化与平台接入步骤：[DEPLOYMENT_UPGRADE.md](DEPLOYMENT_UPGRADE.md)。
