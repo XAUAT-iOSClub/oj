@@ -29,6 +29,12 @@ from utils.oauth_utils import merge_oidc_identity_claims, normalize_provider_sco
 from utils.role_utils import extract_highest_role
 
 
+# 这些提供商的 id_token 已知 at_hash 与 access_token 不匹配（或 JWKS 不可稳定拉取），
+# 默认改用经 access_token 鉴权的 userinfo 端点。仍可通过
+# skip_id_token_validation=false / validate_id_token=true 显式恢复校验。
+_DEFAULT_SKIP_ID_TOKEN_VALIDATION = frozenset({'iosclub'})
+
+
 def _safe_client_id(client_id: Any) -> str:
     """
     安全地展示客户端 ID（隐藏中间部分）
@@ -403,7 +409,8 @@ class OIDCService(Injectable, IOIDCService):
         if 'validate_id_token' in provider_config:
             return provider_config.get('validate_id_token') is False
 
-        return False
+        # 未显式配置时，对已知 id_token 不合法的提供商默认跳过校验。
+        return str(provider).casefold() in _DEFAULT_SKIP_ID_TOKEN_VALIDATION
 
     def _authorize_access_token_without_id_token_validation(self, client, redirect_uri: Optional[str] = None) -> Dict[str, Any]:
         """

@@ -314,7 +314,7 @@ def _provider_redirect_uri_result(provider: str, callback_provider: Optional[str
 
     优先级：
     1. 环境变量中 `${PROVIDER}_REDIRECT_URI` 的配置
-    2. PUBLIC_BACKEND_URL + "/auth/callback/{provider}"
+    2. PUBLIC_BACKEND_URL（保留其路径前缀，如 /api）+ "/auth/callback/{provider}"
     3. request.url_root（当前请求的基础 URL）
     4. OIDC_PROVIDERS 配置中的 redirect_uri 字段
     5. OIDC_PROVIDERS 配置中的 callback_url 字段
@@ -337,12 +337,14 @@ def _provider_redirect_uri_result(provider: str, callback_provider: Optional[str
     if env_uri:
         return str(env_uri), env_key
 
-    # 优先级 2：基于 PUBLIC_BACKEND_URL 构建
+    # 优先级 2：基于 PUBLIC_BACKEND_URL 构建（保留 /api 等反向代理挂载路径）
     public_backend_url = config_service.get_config('PUBLIC_BACKEND_URL')
     if public_backend_url:
         parsed_url = urlparse(str(public_backend_url))
-        backend_origin = urlunparse((parsed_url.scheme, parsed_url.netloc, '', '', '', ''))
-        return f"{backend_origin.rstrip('/')}/auth/callback/{callback_provider}", 'PUBLIC_BACKEND_URL'
+        backend_base = urlunparse(
+            (parsed_url.scheme, parsed_url.netloc, parsed_url.path.rstrip('/'), '', '', '')
+        )
+        return f"{backend_base}/auth/callback/{callback_provider}", 'PUBLIC_BACKEND_URL'
 
     # 优先级 3：基于当前请求的根 URL
     request_base_url = request.url_root.rstrip('/')

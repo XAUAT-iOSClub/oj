@@ -97,6 +97,27 @@ def test_oidc_defaults_to_validation_and_ignores_unverified_claims():
     assert service._get_user_info('oidc', client, token)['role'] == 'member'
 
 
+def test_iosclub_skips_broken_id_token_by_default_but_can_explicitly_validate():
+    from services.oidc_service import OIDCService
+    provider = {'name': 'iOSClub', 'issuer': 'https://id.test', 'client_id': 'id', 'client_secret': 'secret'}
+    service = OIDCService(ConfigService({'OIDC_PROVIDERS': [provider]}), Mock())
+    assert service._should_skip_id_token_validation('iOSClub')
+    validating = OIDCService(ConfigService({'OIDC_PROVIDERS': [{**provider, 'validate_id_token': True}]}), Mock())
+    assert not validating._should_skip_id_token_validation('iOSClub')
+    skipping_disabled = OIDCService(ConfigService({'OIDC_PROVIDERS': [{**provider, 'skip_id_token_validation': False}]}), Mock())
+    assert not skipping_disabled._should_skip_id_token_validation('iOSClub')
+
+
+def test_public_backend_url_mount_path_is_kept_in_oauth_callback(app):
+    from controllers.auth_controller import _provider_redirect_uri_result
+    config = ConfigService({'PUBLIC_BACKEND_URL': 'https://oj.test/api'})
+    with app.test_request_context('/auth/login/iOSClub'):
+        with patch('controllers.auth_controller.inject', return_value=config):
+            uri, source = _provider_redirect_uri_result('iOSClub')
+    assert uri == 'https://oj.test/api/auth/callback/iOSClub'
+    assert source == 'PUBLIC_BACKEND_URL'
+
+
 def test_browser_refresh_retries_lost_response_but_rejects_different_replay(db):
     import logging
     from services.jwt_service import JWTService
