@@ -10,7 +10,8 @@ services:
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    tmpfs: [/tmp:size=128m,mode=1777]
+    tmpfs:
+      - "/tmp:size=128m,mode=1777"
   api:
     depends_on:
       migrate:
@@ -28,7 +29,8 @@ services:
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    tmpfs: [/tmp:size=256m,mode=1777]
+    tmpfs:
+      - "/tmp:size=256m,mode=1777"
     volumes:
       - /var/lib/letcoding/uploads:/var/lib/letcoding/uploads
     mem_limit: 1g

@@ -18,7 +18,8 @@ services:
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    tmpfs: [/tmp:size=128m,mode=1777]
+    tmpfs:
+      - "/tmp:size=128m,mode=1777"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       # Docker daemon 解析宿主机路径，两侧必须是同一个绝对路径。
