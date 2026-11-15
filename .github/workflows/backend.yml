@@ -161,3 +161,95 @@ jobs:
         env:
           ACCEPTED_SHA: ${{ github.sha }}
         run: python3 webapi/fastapi_of_letcoing/deploy/promote_release.py --sha "$ACCEPTED_SHA"
+
+  deploy-api:
+    name: Deploy API over SSH
+    needs: [publish-images]
+    if: >-
+      needs.publish-images.result == 'success' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    steps:
+      # scp-action 从工作区打包文件，部署 job 必须先 checkout。
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Resolve deployment image prefix
+        id: image
+        shell: bash
+        run: echo "prefix=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      # 与 LuckyVerify 一致：只在 SSH 相关 secrets 齐全时部署；缺失时只推送镜像并给出提示，
+      # 不把未配置的仓库视为失败，也不会用空 key 去尝试连接。
+      # secrets 在 job 级 if 中不可用，因此把探测放在步骤内，依赖 environment 读取环境级 secrets。
+      - name: Detect SSH deployment secrets
+        id: detect
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          if [[ -n "$SSH_HOST" && -n "$SSH_USER" && -n "$SSH_PRIVATE_KEY" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=跳过自动部署::未配置 SSH_HOST / SSH_USER / SSH_PRIVATE_KEY；镜像已推送，可继续按 README 手动部署。"
+          fi
+      - name: Create deployment directory
+        if: steps.detect.outputs.enabled == 'true'
+        uses: appleboy/ssh-action@2ead5e36573f08b82fbfce1504f1a4b05a647c6f # v1.2.2
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
+          script: mkdir -p ~/letcoding
+      # 只同步 deploy/ 目录；~/.env.production 含密钥，由运维在服务器上自行维护，绝不经过工作流。
+      - name: Upload deployment definitions
+        if: steps.detect.outputs.enabled == 'true'
+        uses: appleboy/scp-action@917f8b81dfc1ccd331fef9e2d61bdc6c8be94634 # v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
+          source: webapi/fastapi_of_letcoing/deploy
+          target: ~/letcoding
+          strip_components: 2
+      - name: Pull and restart API
+        if: steps.detect.outputs.enabled == 'true'
+        uses: appleboy/ssh-action@2ead5e36573f08b82fbfce1504f1a4b05a647c6f # v1.2.2
+        env:
+          IMAGE_PREFIX: ${{ steps.image.outputs.prefix }}
+          IMAGE_TAG: ${{ github.sha }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
+          envs: IMAGE_PREFIX,IMAGE_TAG,REGISTRY_USER,REGISTRY_TOKEN
+          command_timeout: 30m
+          script_stop: true
+          script: |
+            set -eu
+            cd ~/letcoding/deploy
+            # 脚本自行解析不可变摘要、登录/登出 GHCR，并在 /readyz 就绪后才返回成功。
+            export IMAGE_PREFIX IMAGE_TAG
+            export PULL_USERNAME="$REGISTRY_USER"
+            export PULL_TOKEN="$REGISTRY_TOKEN"
+            bash ./deploy_from_ghcr.sh api "$IMAGE_TAG"

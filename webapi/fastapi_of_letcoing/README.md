@@ -39,7 +39,8 @@ uv run python -m pytest -q
   - `ghcr.io/xauat-iosclub/oj-sandbox`
 
   每个镜像带两个 tag：完整提交 SHA（不可变，用于回滚）和 `latest`。
-- **服务器部署**：在服务器上的仓库检出中执行 `deploy/deploy_from_ghcr.sh`。它把 tag 解析成 `repo@sha256:...` 摘要后传给 compose（`check_release.py` 要求不可变引用），再重启对应服务：
+- **自动部署**：在仓库 Settings → Environments 的 `production`（或仓库级 secrets）配置 `SSH_HOST`、`SSH_USER`、`SSH_PRIVATE_KEY` 后，推送 `main` 或手动运行会在镜像推送成功后，通过 SSH 把 `webapi/fastapi_of_letcoing/deploy/` 同步到部署主机 `~/letcoding/deploy/`，并以本次提交 SHA 执行 `deploy_from_ghcr.sh api`：解析不可变摘要、拉取镜像、重启服务并等待 `/readyz` 通过。建议同时配置 `SSH_HOST_FINGERPRINT`（服务器 SSH 主机密钥的 SHA256 指纹，例如 `ssh-keyscan -t ed25519 <host> | ssh-keygen -lf -`）、私钥有密码时的 `SSH_PASSPHRASE`，以及非 22 端口的 `SSH_PORT`。缺少三个必需 secrets 时工作流只推送镜像并输出跳过提示。首次部署前须在服务器创建 `~/letcoding/.env.production`（工作流只上传 `deploy/`，含密钥的 `.env` 永不经过 CI）。判题主机出于隔离仍手动执行 `deploy_from_ghcr.sh worker <commit>`。
+- **手动部署 / 回滚**：在服务器上的仓库检出中执行 `deploy/deploy_from_ghcr.sh`。它把 tag 解析成 `repo@sha256:...` 摘要后传给 compose（`check_release.py` 要求不可变引用），再重启对应服务：
 
   ```sh
   # API 主机（需要 .env.production）
