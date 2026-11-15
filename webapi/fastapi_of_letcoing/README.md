@@ -53,6 +53,8 @@ uv run python -m pytest -q
 
   私有包先 `docker login ghcr.io`（PAT 需 `read:packages`），或用 `PULL_USERNAME` / `PULL_TOKEN` 让脚本临时登录。API 主机只解析 Sandbox 摘要、不拉取 Sandbox 镜像；判题主机会拉取并实际执行它。
 
+  API 默认监听 `127.0.0.1:8080`；在 `.env.production` 中设置 `APP_PORT`（默认 `8080`）或 `LISTEN_ADDRESS`（默认 `127.0.0.1`）即可修改。部署脚本从容器的实际端口映射读取探活地址，`/readyz` 检查不依赖固定端口。
+
 生产保障、迁移与验收要求：[PRODUCTION_READINESS.md](PRODUCTION_READINESS.md)。
 
 本轮启动修复、性能优化与平台接入步骤：[DEPLOYMENT_UPGRADE.md](DEPLOYMENT_UPGRADE.md)。

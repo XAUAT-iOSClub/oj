@@ -190,6 +190,18 @@ if [[ -z "$container_id" ]]; then
   exit 1
 fi
 
+# 宿主机端口可以通过 .env.production 的 APP_PORT / LISTEN_ADDRESS 调整，
+# 所以从容器实际端口映射读取探活地址，不能假设仍是 127.0.0.1:8080。
+published="$(docker port "$container_id" 8080/tcp 2>/dev/null | head -n 1 || true)"
+ready_addr="${published%:*}"
+ready_port="${published##*:}"
+if [[ -z "$published" || -z "$ready_port" ]]; then
+  ready_addr="127.0.0.1"
+  ready_port="8080"
+elif [[ "$ready_addr" == "0.0.0.0" || "$ready_addr" == "[::]" ]]; then
+  ready_addr="127.0.0.1"
+fi
+
 if [[ "$ROLE" == "api" ]]; then
   # 启动即失败的两大原因：迁移失败（migrate 服务非 0 退出）和运行时配置不合法
   # （deploy/start_api.py 预检直接抛）。所以不只看容器在不在跑：/healthz 只证明
@@ -199,7 +211,7 @@ if [[ "$ROLE" == "api" ]]; then
     deadline=$(( SECONDS + READY_TIMEOUT ))
     ready=0
     while (( SECONDS < deadline )); do
-      if curl -fsS --max-time 2 "http://127.0.0.1:8080/readyz" >/dev/null 2>&1; then
+      if curl -fsS --max-time 2 "http://${ready_addr}:${ready_port}/readyz" >/dev/null 2>&1; then
         ready=1
         break
       fi
@@ -252,7 +264,7 @@ if [[ -n "$previous_image" && "$previous_image" != "$role_ref" ]]; then
   echo "           上次运行的镜像引用：$previous_image"
 fi
 if [[ "$ROLE" == "api" ]]; then
-  echo "    自检 : curl -fsS http://127.0.0.1:8080/healthz && curl -fsS http://127.0.0.1:8080/readyz"
+  echo "    自检 : curl -fsS http://${ready_addr}:${ready_port}/healthz && curl -fsS http://${ready_addr}:${ready_port}/readyz"
   echo "    排障 : docker logs -f $container_id"
 else
   echo "    排障 : docker logs -f $container_id"

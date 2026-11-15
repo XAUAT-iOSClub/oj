@@ -23,7 +23,8 @@ services:
       DB_MIGRATION_MODE: check
       PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus
     command: [sh, -c, 'mkdir -p /tmp/prometheus && exec python -m deploy.start_api']
-    ports: ["127.0.0.1:8080:8080"]
+    # 默认只监听本机 8080；与 LuckyVerify 一样可通过 LISTEN_ADDRESS / APP_PORT 覆盖。
+    ports: ["${LISTEN_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}:8080"]
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
